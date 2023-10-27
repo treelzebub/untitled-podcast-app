@@ -1,3 +1,6 @@
+### Project-specific ###
+examples/
+
 ### Android ###
 # Gradle files
 .gradle/

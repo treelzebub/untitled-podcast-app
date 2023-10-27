@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "net.treelzebub.podcasts"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "net.treelzebub.podcasts"
         minSdk = 28
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -59,6 +59,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics:$compose")
     implementation("androidx.compose.ui:ui-tooling-preview:$compose")
     implementation("androidx.compose.material3:material3:1.1.2")
+
+    implementation("androidx.media3:media3-exoplayer:1.1.1")
+    implementation("androidx.media3:media3-exoplayer-dash:1.1.1")
+    implementation("androidx.media3:media3-ui:1.1.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling:$compose")
     debugImplementation("androidx.compose.ui:ui-test-manifest:$compose")
