@@ -64,6 +64,8 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-dash:1.1.1")
     implementation("androidx.media3:media3-ui:1.1.1")
 
+    implementation("com.prof18.rssparser:rssparser:6.0.3")
+
     debugImplementation("androidx.compose.ui:ui-tooling:$compose")
     debugImplementation("androidx.compose.ui:ui-test-manifest:$compose")
 

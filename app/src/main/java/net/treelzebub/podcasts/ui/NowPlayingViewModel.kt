@@ -1,22 +1,20 @@
 package net.treelzebub.podcasts.ui
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import net.treelzebub.podcasts.media.PodcastPlayer
 
-class NowPlayingViewModel(context: Context, uri: Uri) : ViewModel() {
+class NowPlayingViewModel(context: Context, uri: String) : ViewModel() {
 
     companion object {
         private val TAG = NowPlayingViewModel::class.java.simpleName
     }
 
-    private val media = MediaItem.fromUri(uri)
-    val player = ExoPlayer.Builder(context.applicationContext)
+    private val media = MediaItem.Builder().setUri(uri).setMimeType("audio/mpeg").build()
+    private val player = ExoPlayer.Builder(context.applicationContext)
         .build()
         .apply {
             setMediaItem(media)
@@ -24,7 +22,8 @@ class NowPlayingViewModel(context: Context, uri: Uri) : ViewModel() {
         }
 
     val play = {
-        Log.d(TAG, "Playing...")
+        Log.d(TAG, "Play/Pause...")
+        player.availableCommands
         if (player.isPlaying) {
             player.pause()
         } else {
@@ -34,6 +33,7 @@ class NowPlayingViewModel(context: Context, uri: Uri) : ViewModel() {
     val stop = {
         Log.d(TAG, "Stopping...")
         player.stop()
+        player.release()
     }
 
     fun listen(fn: (Player) -> Unit) {
@@ -41,6 +41,11 @@ class NowPlayingViewModel(context: Context, uri: Uri) : ViewModel() {
             override fun onEvents(player: Player, events: Player.Events) {
                 super.onEvents(player, events)
                 fn(player)
+            }
+
+            override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
+                super.onAvailableCommandsChanged(availableCommands)
+
             }
         })
     }
