@@ -12,10 +12,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import net.treelzebub.podcasts.data.ui.ChannelUi
 import net.treelzebub.podcasts.ui.NowPlayingViewModel
-import net.treelzebub.podcasts.ui.compose.TempMediaPlayer
+import net.treelzebub.podcasts.ui.episodes.EpisodesList
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,10 +30,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PodcastsTheme {
+                var channels by remember {
+                    mutableStateOf(listOf<ChannelUi>())
+                }
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    var isPlaying by remember { mutableStateOf(false) }
-                    vm.listen { isPlaying = it.isPlaying }
-                    TempMediaPlayer(vm.play, vm.stop, isPlaying)
+//                    var isPlaying by remember { mutableStateOf(false) }
+//                    vm.listen { isPlaying = it.isPlaying }
+//                    TempMediaPlayer(vm.play, vm.stop, isPlaying)
+                    vm.listenForEpisodes { channels = it }
+                    EpisodesList(channel = channels.firstOrNull())
                 }
             }
         }

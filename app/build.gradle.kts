@@ -61,6 +61,8 @@ dependencies {
     // todo move to version catalog
     val compose_bom = "2023.10.01"
     val compose = "1.5.4"
+    val exoplayer = "1.1.1"
+    val coil = "2.4.0"
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
@@ -77,11 +79,11 @@ dependencies {
     implementation("app.cash.sqldelight:android-driver:2.0.0")
     implementation("com.prof18.rssparser:rssparser:6.0.3")
 
-    implementation("androidx.media3:media3-exoplayer:1.1.1")
-    implementation("androidx.media3:media3-exoplayer-dash:1.1.1")
-    implementation("androidx.media3:media3-ui:1.1.1")
-
-
+    implementation("androidx.media3:media3-exoplayer:$exoplayer")
+    implementation("androidx.media3:media3-exoplayer-dash:$exoplayer")
+    implementation("androidx.media3:media3-ui:$exoplayer")
+    implementation("io.coil-kt:coil:$coil")
+    implementation("io.coil-kt:coil-compose:$coil")
 
     debugImplementation("androidx.compose.ui:ui-tooling:$compose")
     debugImplementation("androidx.compose.ui:ui-test-manifest:$compose")

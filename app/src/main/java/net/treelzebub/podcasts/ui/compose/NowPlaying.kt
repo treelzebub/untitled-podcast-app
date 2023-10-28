@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import net.treelzebub.podcasts.media.PodcastPlayer
 
 @Composable
 fun TempMediaPlayer(play: () -> Unit, stop: () -> Unit, isPlaying: Boolean) {

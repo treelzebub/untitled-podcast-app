@@ -30,15 +30,15 @@ class DatabaseManager(context: Context) {
         db.transaction {
             with(channel) {
                 db.channelsQueries.insert(
-                    rssLink, title!!, link!!, description!!, image?.url,
+                    link!!.sanitize(), rssLink.sanitize(), title!!, link!!.sanitize(), description!!, image?.url?.sanitize(),
                     lastBuildDate, updatePeriod, itunesChannelData
                 )
             }
             channel.items.forEach {
                 with(it) {
                     db.episodesQueries.insert(
-                        guid!!, channel.link!!, title!!, author.orEmpty(), link!!, pubDate, description,
-                        content, image, audio, sourceName, itunesItemData, commentsUrl
+                        guid!!, channel.link!!.sanitize(), channel.title!!, title!!, author.orEmpty(), link!!.sanitize(), pubDate, description,
+                        content, channel.image?.url?.sanitize(), audio, sourceName, sourceUrl?.sanitize(), itunesItemData, commentsUrl?.sanitize()
                     )
                 }
             }
@@ -48,4 +48,17 @@ class DatabaseManager(context: Context) {
     suspend fun getEpisodesFromChannel(channelId: String): List<Episode> {
         return db.episodesQueries.get_episodes_by_channel_id(channelId).executeAsList()
     }
+
+    suspend fun getAllChannels(): List<Channel> {
+        return db.channelsQueries.get_all_channels().executeAsList()
+    }
+
+    fun getAllChannelsWithEpisodes(): Map<Channel, List<Episode>> {
+        val channels = db.channelsQueries.get_all_channels().executeAsList()
+        return channels.associateWith {
+            db.episodesQueries.get_episodes_by_channel_id(it.rss_link).executeAsList()
+        }
+    }
+
+    private fun String.sanitize(): String = replace("&amp;", "&")
 }

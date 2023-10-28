@@ -3,6 +3,7 @@ import com.prof18.rssparser.model.ItunesItemData;
 CREATE TABLE episode (
     id TEXT PRIMARY KEY NOT NULL,
     channel_id TEXT NOT NULL,
+    channel_title TEXT NOT NULL,
     title TEXT NOT NULL,
     author TEXT NOT NULL,
     link TEXT NOT NULL,
@@ -12,21 +13,22 @@ CREATE TABLE episode (
     image TEXT,
     audio TEXT,
     source_name TEXT,
+    source_url TEXT,
     itunes_item_data TEXT AS ItunesItemData,
     comments_url TEXT,
 
   FOREIGN KEY (channel_id)
-    REFERENCES channel(link)
+    REFERENCES channel(id)
     ON DELETE CASCADE
 );
 
 insert:
 INSERT OR REPLACE INTO episode(
-    id, channel_id, title, author, link, pubDate, description, content,
-    image, audio, source_name, itunes_item_data, comments_url)
+    id, channel_id, channel_title, title, author, link, pubDate, description, content,
+    image, audio, source_name, source_url, itunes_item_data, comments_url)
 VALUES (
-    :id, :channel_id, :title, :author, :link, :pubDate, :description, :content,
-    :image, :audio, :source_name, :itunes_item_data, :comments_url);
+    :id, :channel_id, :channel_title, :title, :author, :link, :pubDate, :description, :content,
+    :image, :audio, :source_name, :source_url, :itunes_item_data, :comments_url);
 
 get_all_episodes:
 SELECT * FROM episode;

@@ -10,6 +10,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.DatabaseManager
 import net.treelzebub.podcasts.data.RssParser
+import net.treelzebub.podcasts.data.ui.ChannelUi
+import net.treelzebub.podcasts.data.ui.toUi
 
 class NowPlayingViewModel(context: Context, uri: String) : ViewModel() {
 
@@ -35,6 +37,28 @@ class NowPlayingViewModel(context: Context, uri: String) : ViewModel() {
 
             val episodes = db.getEpisodesFromChannel(channel.link!!)
             Log.d("TEST", "DB insert complete. Got ${episodes.size} episodes!")
+        }
+    }
+
+    fun listenForEpisodes(listener: (List<ChannelUi>) -> Unit) {
+        db.episodeQueries.get_all_episodes().addListener {
+            val map = db.getAllChannelsWithEpisodes()
+            val channels = map.map {
+                val channel = it.key
+                val episodes = it.value
+                ChannelUi(
+                    channel.id,
+                    channel.rss_link,
+                    channel.title,
+                    channel.link,
+                    channel.description,
+                    channel.image!!,
+                    channel.lastBuildDate!!,
+                    channel.itunesChannelData?.duration.orEmpty(),
+                    episodes.toUi()
+                )
+            }
+            listener(channels)
         }
     }
 
