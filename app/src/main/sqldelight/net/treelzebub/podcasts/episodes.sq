@@ -21,7 +21,7 @@ CREATE TABLE episode (
 );
 
 insert:
-INSERT INTO episode(
+INSERT OR REPLACE INTO episode(
     id, channel_id, title, author, link, pubDate, description, content,
     image, audio, source_name, itunes_item_data, comments_url)
 VALUES (
