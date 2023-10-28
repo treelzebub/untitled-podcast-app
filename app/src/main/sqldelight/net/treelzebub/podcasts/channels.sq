@@ -1,0 +1,19 @@
+import com.prof18.rssparser.model.ItunesChannelData;
+
+CREATE TABLE channel (
+    id TEXT PRIMARY KEY NOT NULL,
+    rss_link TEXT NOT NULL,
+    title TEXT NOT NULL,
+    link TEXT NOT NULL,
+    description TEXT NOT NULL,
+    image TEXT,
+    lastBuildDate TEXT,
+    updatePeriod TEXT,
+    episodeId TEXT NOT NULL,
+    itunesChannelData TEXT AS ItunesChannelData
+);
+
+get_episodes:
+SELECT *
+FROM episode
+WHERE channel_id = :channelId;

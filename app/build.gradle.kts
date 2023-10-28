@@ -1,7 +1,18 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+
+    id("app.cash.sqldelight") version "2.0.0"
 }
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("net.treelzebub.podcasts")
+        }
+    }
+}
+
 
 android {
     namespace = "net.treelzebub.podcasts"
@@ -60,11 +71,15 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:$compose")
     implementation("androidx.compose.material3:material3:1.1.2")
 
+    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
+    implementation("app.cash.sqldelight:android-driver:2.0.0")
+    implementation("com.prof18.rssparser:rssparser:6.0.3")
+
     implementation("androidx.media3:media3-exoplayer:1.1.1")
     implementation("androidx.media3:media3-exoplayer-dash:1.1.1")
     implementation("androidx.media3:media3-ui:1.1.1")
 
-    implementation("com.prof18.rssparser:rssparser:6.0.3")
+
 
     debugImplementation("androidx.compose.ui:ui-tooling:$compose")
     debugImplementation("androidx.compose.ui:ui-test-manifest:$compose")

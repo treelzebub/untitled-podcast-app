@@ -1,0 +1,36 @@
+import com.prof18.rssparser.model.ItunesItemData;
+
+CREATE TABLE episode (
+    id TEXT PRIMARY KEY NOT NULL,
+    channel_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    link TEXT NOT NULL,
+    pubDate TEXT,
+    description TEXT,
+    content TEXT,
+    image TEXT,
+    audio TEXT,
+    source_name TEXT,
+    itunes_item_data TEXT AS ItunesItemData,
+    comments_url TEXT,
+
+  FOREIGN KEY (channel_id)
+    REFERENCES channel(id)
+    ON DELETE CASCADE
+);
+
+get_episode:
+SELECT *
+FROM episode
+WHERE id = :id;
+
+get_episodes_for_channel:
+SELECT *
+FROM episode
+WHERE channel_id = :channelId;
+
+search_titles:
+SELECT *
+FROM episode
+WHERE title LIKE (:term || '%');
