@@ -2,10 +2,11 @@ package net.treelzebub.podcasts.data
 
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 class MoshiSerializer<T>(private val clazz: Class<T>) : Serializer<T> {
 
-    private val moshi = Moshi.Builder().build()
+    private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 
     override fun <T> serialize(input: T): String {
         val moshi = moshi.adapter<T>(clazz)

@@ -16,16 +16,27 @@ CREATE TABLE episode (
     comments_url TEXT,
 
   FOREIGN KEY (channel_id)
-    REFERENCES channel(id)
+    REFERENCES channel(link)
     ON DELETE CASCADE
 );
+
+insert:
+INSERT INTO episode(
+    id, channel_id, title, author, link, pubDate, description, content,
+    image, audio, source_name, itunes_item_data, comments_url)
+VALUES (
+    :id, :channel_id, :title, :author, :link, :pubDate, :description, :content,
+    :image, :audio, :source_name, :itunes_item_data, :comments_url);
+
+get_all_episodes:
+SELECT * FROM episode;
 
 get_episode:
 SELECT *
 FROM episode
 WHERE id = :id;
 
-get_episodes_for_channel:
+get_episodes_by_channel_id:
 SELECT *
 FROM episode
 WHERE channel_id = :channelId;

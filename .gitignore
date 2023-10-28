@@ -1,5 +1,6 @@
 ### Project-specific ###
 examples/
+app/src/main/assets/
 
 ### Android ###
 # Gradle files

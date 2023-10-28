@@ -2,7 +2,6 @@ package net.treelzebub.podcasts
 
 import android.os.Bundle
 import android.text.Html
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.ui.NowPlayingViewModel
 import net.treelzebub.podcasts.ui.compose.TempMediaPlayer
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
@@ -30,7 +31,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PodcastsTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     var isPlaying by remember { mutableStateOf(false) }
                     vm.listen { isPlaying = it.isPlaying }
@@ -38,5 +38,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        vm.test(this)
     }
 }

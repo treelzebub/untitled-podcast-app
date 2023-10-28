@@ -3,9 +3,13 @@ package net.treelzebub.podcasts.ui
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import kotlinx.coroutines.launch
+import net.treelzebub.podcasts.data.DatabaseManager
+import net.treelzebub.podcasts.data.RssParser
 
 class NowPlayingViewModel(context: Context, uri: String) : ViewModel() {
 
@@ -20,6 +24,19 @@ class NowPlayingViewModel(context: Context, uri: String) : ViewModel() {
             setMediaItem(media)
             prepare()
         }
+
+    private val db = DatabaseManager(context)
+
+    fun test(context: Context) {
+        val rss = context.assets.open("test.rss").bufferedReader().use { it.readText() }
+        viewModelScope.launch {
+            val channel = RssParser().parseRss(rss)
+            db.insert(channel.link!!, channel)
+
+            val episodes = db.getEpisodesFromChannel(channel.link!!)
+            Log.d("TEST", "DB insert complete. Got ${episodes.size} episodes!")
+        }
+    }
 
     val play = {
         Log.d(TAG, "Play/Pause...")
