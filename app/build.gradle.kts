@@ -59,6 +59,7 @@ android {
 
 dependencies {
     // todo move to version catalog
+    val lifecycle = "2.6.2"
     val compose_bom = "2023.10.01"
     val compose = "1.5.4"
     val exoplayer = "1.1.1"
@@ -67,7 +68,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle")
     implementation("androidx.activity:activity-compose:1.8.0")
     implementation(platform("androidx.compose:compose-bom:$compose_bom"))
     implementation("androidx.compose.ui:ui:$compose")

@@ -1,6 +1,8 @@
 package net.treelzebub.podcasts.data
 
-import android.content.Context
+import android.app.Application
+import android.text.Html
+import app.cash.sqldelight.Query
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.prof18.rssparser.model.ItunesChannelData
@@ -9,47 +11,52 @@ import com.prof18.rssparser.model.RssChannel
 import net.treelzebub.podcasts.Channel
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.Episode
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-class DatabaseManager(context: Context) {
+object DatabaseManager {
 
-    private val driver: SqlDriver = AndroidSqliteDriver(Database.Schema, context.applicationContext, "podcasts.db")
-    private val itunesItemDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesItemData::class.java))
-    private val itunesChannelDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesChannelData::class.java))
-    private val db = Database(
-        driver,
-        Channel.Adapter(itunesChannelDataAdapter),
-        Episode.Adapter(itunesItemDataAdapter)
-    )
+    private lateinit var driver: SqlDriver
+    private lateinit var db: Database
 
-    // TODO remove after debugging
-    val episodeQueries = db.episodesQueries
-    val channelQueries = db.channelsQueries
+    fun init(app: Application) {
+        driver = AndroidSqliteDriver(Database.Schema, app, "podcasts.db")
+
+        val itunesItemDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesItemData::class.java))
+        val itunesChannelDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesChannelData::class.java))
+
+        db = Database(driver,
+            Channel.Adapter(itunesChannelDataAdapter),
+            Episode.Adapter(itunesItemDataAdapter)
+        )
+    }
 
     // TODO null safety
-    suspend fun insert(rssLink: String, channel: RssChannel) {
+    fun insert(rssLink: String, channel: RssChannel) {
         db.transaction {
             with(channel) {
                 db.channelsQueries.insert(
-                    link!!.sanitize(), rssLink.sanitize(), title!!, link!!.sanitize(), description!!, image?.url?.sanitize(),
-                    lastBuildDate, updatePeriod, itunesChannelData
+                    link!!.sanitizeUrl(), rssLink.sanitizeUrl(), title!!, link!!.sanitizeUrl(), description!!.sanitizeHtml(),
+                    image?.url?.sanitizeUrl(), lastBuildDate, updatePeriod, itunesChannelData
                 )
             }
             channel.items.forEach {
                 with(it) {
                     db.episodesQueries.insert(
-                        guid!!, channel.link!!.sanitize(), channel.title!!, title!!, author.orEmpty(), link!!.sanitize(), pubDate, description,
-                        content, channel.image?.url?.sanitize(), audio, sourceName, sourceUrl?.sanitize(), itunesItemData, commentsUrl?.sanitize()
+                        guid!!, channel.link!!.sanitizeUrl(), channel.title!!, title!!, author.orEmpty(), link!!.sanitizeUrl(),
+                        pubDate!!.formatDate(), description!!.sanitizeHtml(), content, channel.image?.url?.sanitizeUrl(),
+                        audio, sourceName, sourceUrl?.sanitizeUrl(), itunesItemData, commentsUrl?.sanitizeUrl()
                     )
                 }
             }
         }
     }
 
-    suspend fun getEpisodesFromChannel(channelId: String): List<Episode> {
+    fun getEpisodesFromChannel(channelId: String): List<Episode> {
         return db.episodesQueries.get_episodes_by_channel_id(channelId).executeAsList()
     }
 
-    suspend fun getAllChannels(): List<Channel> {
+    fun getAllChannels(): List<Channel> {
         return db.channelsQueries.get_all_channels().executeAsList()
     }
 
@@ -60,5 +67,16 @@ class DatabaseManager(context: Context) {
         }
     }
 
-    private fun String.sanitize(): String = replace("&amp;", "&")
+    fun listenForEpisodes(listener: Query.Listener) {
+        db.episodesQueries.get_all_episodes().addListener(listener)
+    }
+
+    private fun String.sanitizeUrl(): String = replace("&amp;", "&")
+    private fun String.sanitizeHtml(): String = Html.fromHtml(this).toString()
+
+    private fun String.formatDate(): String {
+        val localDateTime = LocalDateTime.parse(this, DateTimeFormatter.RFC_1123_DATE_TIME)
+        val displayFormat = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+        return localDateTime.format(displayFormat)
+    }
 }
