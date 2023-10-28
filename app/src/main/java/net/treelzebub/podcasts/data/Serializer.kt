@@ -4,6 +4,14 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
+
+interface Serializer<T> {
+
+    fun <T> serialize(input: T): String
+
+    fun <T> deserialize(input: String): T
+}
+
 class MoshiSerializer<T>(private val clazz: Class<T>) : Serializer<T> {
 
     private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -18,11 +26,4 @@ class MoshiSerializer<T>(private val clazz: Class<T>) : Serializer<T> {
         val moshi = moshi.adapter<T>(clazz)
         return moshi.fromJson(input)!!
     }
-}
-
-interface Serializer<T> {
-
-    fun <T> serialize(input: T): String
-
-    fun <T> deserialize(input: String): T
 }
