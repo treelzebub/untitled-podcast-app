@@ -1,6 +1,6 @@
 package net.treelzebub.podcasts.data
 
-import android.app.Application
+import android.content.Context
 import android.text.Html
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.db.SqlDriver
@@ -8,23 +8,25 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.prof18.rssparser.model.ItunesChannelData
 import com.prof18.rssparser.model.ItunesItemData
 import com.prof18.rssparser.model.RssChannel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import net.treelzebub.podcasts.Channel
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.Episode
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object DatabaseManager {
+@Singleton
+class DatabaseManager @Inject constructor(
+    @ApplicationContext context: Context,
+    driver: SqlDriver = AndroidSqliteDriver(Database.Schema, context, "podcasts.db")
+) {
+    private val db: Database
 
-    private lateinit var driver: SqlDriver
-    private lateinit var db: Database
-
-    fun init(app: Application) {
-        driver = AndroidSqliteDriver(Database.Schema, app, "podcasts.db")
-
+    init {
         val itunesItemDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesItemData::class.java))
         val itunesChannelDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesChannelData::class.java))
-
         db = Database(driver,
             Channel.Adapter(itunesChannelDataAdapter),
             Episode.Adapter(itunesItemDataAdapter)

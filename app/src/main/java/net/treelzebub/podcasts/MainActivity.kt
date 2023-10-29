@@ -12,11 +12,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dagger.hilt.android.AndroidEntryPoint
 import net.treelzebub.podcasts.data.ui.ChannelUi
 import net.treelzebub.podcasts.ui.episodes.EpisodesList
 import net.treelzebub.podcasts.ui.episodes.EpisodesViewModel
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
