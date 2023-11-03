@@ -1,5 +1,7 @@
 package net.treelzebub.podcasts.ui.models
 
+import net.treelzebub.podcasts.net.models.Feed
+
 data class ChannelUi(
     val id: String,
     val rssLink: String,

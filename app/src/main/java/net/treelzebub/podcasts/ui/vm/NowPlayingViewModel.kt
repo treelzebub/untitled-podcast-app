@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.ui
+package net.treelzebub.podcasts.ui.vm
 
 import android.content.Context
 import android.util.Log

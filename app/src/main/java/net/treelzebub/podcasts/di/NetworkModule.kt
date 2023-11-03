@@ -1,5 +1,8 @@
 package net.treelzebub.podcasts.di
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.addAdapter
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,10 +24,11 @@ class NetworkModule {
             it.setLevel(HttpLoggingInterceptor.Level.BODY)
         }
         val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
+        val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         return Retrofit.Builder()
             .baseUrl("https://podcastindex.org")
             .client(client)
-            .addConverterFactory(MoshiConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(moshi).asLenient())
             .build()
             .create(PodcastIndexService::class.java)
     }
