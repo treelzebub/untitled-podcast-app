@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.net.PodcastIndexService
@@ -19,17 +18,19 @@ class SearchFeedsViewModel @Inject constructor(
 
     data class SearchFeedsState(
         val feeds: List<Feed>
-    )
+    ) {
+        companion object {
+            val Initial = SearchFeedsState(listOf())
+        }
+    }
 
     private val _state: MutableStateFlow<SearchFeedsState> = MutableStateFlow(SearchFeedsState(listOf()))
-    private val state = _state.asStateFlow()
-
-    fun observe(fn: (SearchFeedsState) -> Unit) = state.onEach(fn)
+    val state = _state.asStateFlow()
 
     fun search(query: String) {
         viewModelScope.launch {
             val response = api.searchPodcasts(query)
-            _state.update { it.copy(feeds = response.feeds) }
+            _state.update { _state.value.copy(feeds = response.feeds) }
         }
     }
 }

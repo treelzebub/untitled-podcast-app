@@ -45,7 +45,7 @@ fun SearchFeeds(onSearch: (String) -> Unit) {
     var active by remember { mutableStateOf(false) }
     Box(
         Modifier
-            .fillMaxSize()
+            .wrapContentHeight()
             .semantics { isTraversalGroup = true }) {
         SearchBar(
             modifier = Modifier.fillMaxWidth(),
