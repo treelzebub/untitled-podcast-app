@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.data.ui
+package net.treelzebub.podcasts.ui.models
 
 data class ChannelUi(
     val id: String,
@@ -10,4 +10,7 @@ data class ChannelUi(
     val lastBuildDate: String,
     val duration: String,
     val episodes: List<EpisodeUi>
-)
+) {
+    val episodeCount: Int
+        get() = episodes.size
+}

@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.data.ui
+package net.treelzebub.podcasts.ui.models
 
 import net.treelzebub.podcasts.Episode
 

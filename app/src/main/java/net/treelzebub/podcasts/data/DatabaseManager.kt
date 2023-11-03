@@ -39,7 +39,7 @@ class DatabaseManager @Inject constructor(
             with(channel) {
                 db.channelsQueries.insert(
                     link!!.sanitizeUrl(), rssLink.sanitizeUrl(), title!!, link!!.sanitizeUrl(), description!!.sanitizeHtml(),
-                    image?.url?.sanitizeUrl(), lastBuildDate, updatePeriod, itunesChannelData
+                    image?.url?.sanitizeUrl(), lastBuildDate, updatePeriod, items.size.toLong(), itunesChannelData
                 )
             }
             channel.items.forEach {
@@ -67,6 +67,10 @@ class DatabaseManager @Inject constructor(
         return channels.associateWith {
             db.episodesQueries.get_episodes_by_channel_id(it.rss_link).executeAsList()
         }
+    }
+
+    fun listenForChannels(listener: Query.Listener) {
+        db.channelsQueries.get_all_channels().addListener(listener)
     }
 
     fun listenForEpisodes(listener: Query.Listener) {

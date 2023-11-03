@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.api
+package net.treelzebub.podcasts.net.models
 
 data class SearchByTermResponse(
     val status: Boolean,

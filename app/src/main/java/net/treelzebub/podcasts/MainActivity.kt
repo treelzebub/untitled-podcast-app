@@ -13,9 +13,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
-import net.treelzebub.podcasts.data.ui.ChannelUi
-import net.treelzebub.podcasts.ui.episodes.EpisodesList
-import net.treelzebub.podcasts.ui.episodes.EpisodesViewModel
+import net.treelzebub.podcasts.ui.models.ChannelUi
+import net.treelzebub.podcasts.ui.components.EpisodesList
+import net.treelzebub.podcasts.ui.vm.EpisodesViewModel
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
 
 @AndroidEntryPoint

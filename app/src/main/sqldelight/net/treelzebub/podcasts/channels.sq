@@ -9,12 +9,13 @@ CREATE TABLE channel (
     image TEXT,
     lastBuildDate TEXT,
     updatePeriod TEXT,
+    episodeCount INTEGER NOT NULL,
     itunesChannelData TEXT AS ItunesChannelData
 );
 
 insert:
-INSERT OR REPLACE INTO channel(id, rss_link, title, link, description, image, lastBuildDate, updatePeriod, itunesChannelData)
-VALUES (:id, :rss_link, :title, :link, :description, :image, :lastBuildDate, :updatePeriod, :itunesChannelData);
+INSERT OR REPLACE INTO channel(id, rss_link, title, link, description, image, lastBuildDate, updatePeriod, episodeCount, itunesChannelData)
+VALUES (:id, :rss_link, :title, :link, :description, :image, :lastBuildDate, :updatePeriod, :episodeCount, :itunesChannelData);
 
 get_all_channels:
 SELECT * FROM channel;

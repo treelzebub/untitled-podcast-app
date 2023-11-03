@@ -1,10 +1,8 @@
-package net.treelzebub.podcasts.ui.episodes
+package net.treelzebub.podcasts.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,17 +11,15 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import net.treelzebub.podcasts.data.ui.ChannelUi
-import net.treelzebub.podcasts.data.ui.EpisodeUi
+import net.treelzebub.podcasts.ui.models.ChannelUi
+import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Composable
@@ -74,11 +70,7 @@ fun EpisodesList(channel: ChannelUi?) {
 
 @Composable
 fun EpisodeItem(item: EpisodeUi) {
-    Card(
-        Modifier
-            .padding(start = 12.dp, top = 0.dp, end = 12.dp, bottom = 6.dp)
-            .height(IntrinsicSize.Min)
-    ) {
+    ItemCard {
         Column(
             Modifier
                 .weight(3.0f)

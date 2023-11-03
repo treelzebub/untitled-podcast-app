@@ -1,26 +1,13 @@
 package net.treelzebub.podcasts.data
 
-import android.content.Context
-import android.util.Log
 import net.treelzebub.podcasts.ui.models.ChannelUi
 import net.treelzebub.podcasts.ui.models.toUi
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class EpisodesRepo @Inject constructor(
-    private val db: DatabaseManager,
+class ChannelsRepo @Inject constructor(
+    private val db: DatabaseManager
 ) {
-    suspend fun test(context: Context) {
-        val rss = context.assets.open("test.rss").bufferedReader().use { it.readText() }
-        val channel = RssParser().parseRss(rss)
-        db.insert(channel.link!!, channel)
 
-        val episodes = db.getEpisodesFromChannel(channel.link!!)
-        Log.d("TEST", "DB insert complete. Got ${episodes.size} episodes!")
-    }
-
-    // TODO change this to listenForChannel and listen to a query for the single channel
     fun listenForChannels(listener: (List<ChannelUi>) -> Unit) {
         db.listenForEpisodes {
             val map = db.getAllChannelsWithEpisodes()
