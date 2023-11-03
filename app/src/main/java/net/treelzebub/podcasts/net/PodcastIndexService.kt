@@ -15,7 +15,7 @@ interface PodcastIndexService {
     /**
      * This call returns all of the feeds that match the search terms in the title, author or owner of the feed.
      */
-    @GET("/search/byterm?")
+    @GET("api/1.0/search/byterm?")
     suspend fun searchPodcasts(@Query("q") query: String): SearchPodcastsResponse
 }
 

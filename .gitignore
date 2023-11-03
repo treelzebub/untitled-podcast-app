@@ -1,6 +1,7 @@
 ### Project-specific ###
 examples/
 app/src/main/assets/
+**/PodcastIndexHeadersInterceptor.kt
 
 ### Android ###
 # Gradle files
