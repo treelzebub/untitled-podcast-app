@@ -5,13 +5,11 @@ import android.text.Html
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
-import com.prof18.rssparser.model.ItunesChannelData
-import com.prof18.rssparser.model.ItunesItemData
 import com.prof18.rssparser.model.RssChannel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import net.treelzebub.podcasts.Channel
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.Episode
+import net.treelzebub.podcasts.Podcast
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -25,29 +23,22 @@ class DatabaseManager @Inject constructor(
     private val db: Database
 
     init {
-        val itunesItemDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesItemData::class.java))
-        val itunesChannelDataAdapter = SerializedColumnAdapter(MoshiSerializer(ItunesChannelData::class.java))
-        db = Database(driver,
-            Channel.Adapter(itunesChannelDataAdapter),
-            Episode.Adapter(itunesItemDataAdapter)
-        )
+        db = Database(driver)
     }
 
     // TODO null safety
     fun insert(rssLink: String, channel: RssChannel) {
         db.transaction {
             with(channel) {
-                db.channelsQueries.insert(
-                    link!!.sanitizeUrl(), rssLink.sanitizeUrl(), title!!, link!!.sanitizeUrl(), description!!.sanitizeHtml(),
-                    image?.url?.sanitizeUrl(), lastBuildDate, updatePeriod, items.size.toLong(), itunesChannelData
+                db.podcastsQueries.upsert(
+                    link!!.sanitizeUrl(), title!!, description, itunesChannelData?.owner?.email,
+                    image?.url, lastBuildDate.orNow(), rssLink.sanitizeUrl()
                 )
             }
             channel.items.forEach {
                 with(it) {
-                    db.episodesQueries.insert(
-                        guid!!, channel.link!!.sanitizeUrl(), channel.title!!, title!!, author.orEmpty(), link!!.sanitizeUrl(),
-                        pubDate!!.formatDate(), description!!.sanitizeHtml(), content, channel.image?.url?.sanitizeUrl(),
-                        audio, sourceName, sourceUrl?.sanitizeUrl(), itunesItemData, commentsUrl?.sanitizeUrl()
+                    db.episodesQueries.upsert(
+                        guid!!, channel.link!!, title!!, description, pubDate, link!!.sanitizeUrl(), sourceUrl!!.sanitizeUrl(), image?.sanitizeUrl(), itunesItemData?.duration
                     )
                 }
             }
@@ -58,27 +49,28 @@ class DatabaseManager @Inject constructor(
         return db.episodesQueries.get_episodes_by_channel_id(channelId).executeAsList()
     }
 
-    fun getAllChannels(): List<Channel> {
-        return db.channelsQueries.get_all_channels().executeAsList()
+    fun getAllPodcasts(): List<Podcast> {
+        return db.podcastsQueries.get_all_podcasts().executeAsList()
     }
 
-    fun getAllChannelsWithEpisodes(): Map<Channel, List<Episode>> {
-        val channels = db.channelsQueries.get_all_channels().executeAsList()
-        return channels.associateWith {
+    fun getAllPodcastsWithEpisodes(): Map<Podcast, List<Episode>> {
+        val podcasts = db.podcastsQueries.get_all_podcasts().executeAsList()
+        return podcasts.associateWith {
             db.episodesQueries.get_episodes_by_channel_id(it.rss_link).executeAsList()
         }
     }
 
-    fun listenForChannels(listener: Query.Listener) {
-        db.channelsQueries.get_all_channels().addListener(listener)
+    fun listenForPodcasts(listener: Query.Listener) {
+        db.podcastsQueries.get_all_podcasts().addListener(listener)
     }
 
-    fun listenForEpisodes(listener: Query.Listener) {
-        db.episodesQueries.get_all_episodes().addListener(listener)
+    fun listenForEpisodes(channelId: String, listener: Query.Listener) {
+        db.episodesQueries.get_episodes_by_channel_id(channelId).addListener(listener)
     }
 
     private fun String.sanitizeUrl(): String = replace("&amp;", "&")
     private fun String.sanitizeHtml(): String = Html.fromHtml(this).toString()
+    private fun String?.orNow(): String = TODO()
 
     private fun String.formatDate(): String {
         val localDateTime = LocalDateTime.parse(this, DateTimeFormatter.RFC_1123_DATE_TIME)

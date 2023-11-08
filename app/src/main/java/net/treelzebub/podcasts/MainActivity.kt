@@ -18,9 +18,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
-import net.treelzebub.podcasts.ui.FeedsList
-import net.treelzebub.podcasts.ui.SearchFeeds
+import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
+import net.treelzebub.podcasts.ui.vm.EpisodesViewModel
 import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel
 import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel.SearchFeedsState
 
@@ -38,11 +38,17 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val temp = viewModel<EpisodesViewModel>()
+            temp.test(this)
+            var ep by remember { mutableStateOf(listOf<PodcastUi>()) }
+//            temp.listenForEpisodes() { ep = it }
+
             PodcastsTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        SearchFeeds { vm.search(it) }
-                        FeedsList(feeds = state.feeds)
+//                        SearchFeeds { vm.search(it) }
+//                        FeedsList(feeds = state.feeds)
+//                        EpisodesList(podcast = ep.firstOrNull())
                     }
                 }
             }

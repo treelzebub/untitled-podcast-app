@@ -18,28 +18,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import net.treelzebub.podcasts.Channel
+import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
-@Preview
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-fun ChannelsList(channels: List<Channel>) {
+fun PodcastList(podcasts: List<PodcastUi>) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        items(channels, key = { it.id }) {
-            ChannelItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), it)
+        items(podcasts, key = { it.link }) {
+            PodcastItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), it)
         }
     }
 }
 
 @Composable
-fun ChannelItem(modifier: Modifier, channel: Channel) {
+fun PodcastItem(modifier: Modifier, podcast: PodcastUi) {
     ItemCard {
         Row(
             modifier = Modifier
@@ -50,7 +48,7 @@ fun ChannelItem(modifier: Modifier, channel: Channel) {
         ) {
             AsyncImage(
                 modifier = Modifier.fillMaxSize().weight(1.0f),
-                model = channel.image,
+                model = podcast.imageUrl,
                 contentDescription = "Podcast Logo"
             )
             Column(
@@ -62,17 +60,17 @@ fun ChannelItem(modifier: Modifier, channel: Channel) {
                 BasicText(
                     modifier = Modifier.padding(bottom = 2.dp),
                     style = TextStyles.CardSubtitle,
-                    text = channel.title
+                    text = podcast.title
                 )
                 BasicText(
                     modifier = Modifier.padding(bottom = 2.dp),
                     style = TextStyles.CardDate,
-                    text = channel.description
+                    text = podcast.description
                 )
                 BasicText(
                     style = TextStyle(textAlign = TextAlign.Start),
                     overflow = TextOverflow.Ellipsis,
-                    text = "${channel.episodeCount} episodes"
+                    text = ""
                 )
             }
         }

@@ -6,7 +6,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.EpisodesRepo
-import net.treelzebub.podcasts.ui.models.ChannelUi
+import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
 
 @HiltViewModel
@@ -14,9 +15,9 @@ class EpisodesViewModel @Inject constructor(
     private val repo: EpisodesRepo
 ) : ViewModel() {
 
-    fun listenForEpisodes(listener: (List<ChannelUi>) -> Unit) {
+    fun listenForEpisodes(channelId: String, listener: (List<EpisodeUi>) -> Unit) {
         viewModelScope.launch {
-            repo.listenForChannels(listener)
+            repo.listenForEpisodes(channelId, listener)
         }
     }
     fun test(context: Context) {
