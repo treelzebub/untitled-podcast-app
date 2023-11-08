@@ -3,7 +3,6 @@ package net.treelzebub.podcasts
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -18,8 +17,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
-import net.treelzebub.podcasts.ui.FeedsList
-import net.treelzebub.podcasts.ui.SearchFeeds
+import net.treelzebub.podcasts.net.models.Feed
+import net.treelzebub.podcasts.ui.SearchScreen
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
 import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel
 import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel.SearchFeedsState
@@ -32,18 +31,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: SearchFeedsViewModel = viewModel()
             var state by remember { mutableStateOf(SearchFeedsState.Initial) }
+            val onSearch = { query: String -> vm.search(query) }
+            val onSelect = { feed: Feed -> vm.select(feed) }
+
             LaunchedEffect(vm.state) {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     vm.state.collectLatest { state = it }
                 }
             }
-
             PodcastsTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        SearchFeeds { vm.search(it) }
-                        FeedsList(feeds = state.feeds)
-                    }
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    SearchScreen(
+                        onSearch = onSearch,
+                        feeds = state.feeds,
+                        onSelect = onSelect
+                    )
                 }
             }
         }

@@ -15,7 +15,7 @@ class ChannelsViewModel @Inject constructor(
 
     fun listenForChannels(listener: (List<PodcastUi>) -> Unit) {
         viewModelScope.launch {
-            repo.listenForChannels(listener)
+            repo.listenForPodcasts(listener)
         }
     }
 }

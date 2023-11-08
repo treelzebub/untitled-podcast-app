@@ -1,7 +1,9 @@
 package net.treelzebub.podcasts.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,18 +42,27 @@ import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Composable
-fun SearchScreen(onSearch: (String) -> Unit) {
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+fun SearchScreen(
+    onSearch: (String) -> Unit,
+    feeds: List<Feed>,
+    onSelect: (Feed) -> Unit
+) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-
     ) { padding ->
-        padding
+        Column(Modifier.fillMaxSize()) {
+            SearchFeeds(onSearch)
+            ResultsList(feeds, onSelect)
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchFeeds(onSearch: (String) -> Unit) {
+fun SearchFeeds(
+    onSearch: (String) -> Unit
+) {
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
     Box(
@@ -76,26 +87,34 @@ fun SearchFeeds(onSearch: (String) -> Unit) {
 }
 
 @Composable
-fun ResultsList(results: List<Feed>) {
-    FeedsList(feeds = results)
-}
-
 @OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun FeedsList(feeds: List<Feed>) {
+fun ResultsList(
+    feeds: List<Feed>,
+    onSelect: (Feed) -> Unit
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         items(feeds, key = { it.id }) {
-            FeedItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), it)
+            FeedItem(
+                Modifier.animateItemPlacement(tween(durationMillis = 250)),
+                it,
+                onSelect
+            )
         }
     }
 }
 
 @Composable
-fun FeedItem(modifier: Modifier, feed: Feed) {
-    ItemCard {
+fun FeedItem(
+    modifier: Modifier,
+    feed: Feed,
+    onSelect: (Feed) -> Unit
+) {
+    ItemCard(
+        modifier = Modifier.clickable { onSelect(feed) }
+    ) {
         Row(
             modifier = Modifier
                 .wrapContentHeight()

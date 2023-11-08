@@ -7,7 +7,7 @@ class PodcastsRepo @Inject constructor(
     private val db: DatabaseManager
 ) {
 
-    fun listenForChannels(listener: (List<PodcastUi>) -> Unit) {
+    fun listenForPodcasts(listener: (List<PodcastUi>) -> Unit) {
         db.listenForPodcasts {
             val raw = db.getAllPodcasts()
             val podcasts = raw.map {

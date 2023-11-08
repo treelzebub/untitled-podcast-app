@@ -1,7 +1,7 @@
 package net.treelzebub.podcasts.ui.vm
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,5 +33,9 @@ class SearchFeedsViewModel @Inject constructor(
             val response = api.searchPodcasts(query)
             _state.update { _state.value.copy(feeds = response.feeds) }
         }
+    }
+
+    fun select(feed: Feed) {
+        Log.d("TEST", "Clicked on: ${feed.title}")
     }
 }
