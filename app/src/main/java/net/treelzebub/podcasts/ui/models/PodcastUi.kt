@@ -4,11 +4,11 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class PodcastUi(
-    public val link: String,
-    public val title: String,
-    public val description: String,
-    public val email: String,
-    public val imageUrl: String,
-    public val lastFetched: String,
-    public val rssLink: String
+    val link: String,
+    val title: String,
+    val description: String,
+    val email: String,
+    val imageUrl: String,
+    val lastFetched: String,
+    val rssLink: String
 )
