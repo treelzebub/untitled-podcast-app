@@ -41,12 +41,11 @@ import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Composable
 fun SearchScreen(onSearch: (String) -> Unit) {
-    val scaffold =
     Scaffold(
         modifier = Modifier.fillMaxSize(),
 
-    ) {
-
+    ) { padding ->
+        padding
     }
 }
 
@@ -76,11 +75,13 @@ fun SearchFeeds(onSearch: (String) -> Unit) {
     }
 }
 
+@Composable
 fun ResultsList(results: List<Feed>) {
     FeedsList(feeds = results)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
 fun FeedsList(feeds: List<Feed>) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
