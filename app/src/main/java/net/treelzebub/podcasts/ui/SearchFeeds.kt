@@ -76,7 +76,10 @@ fun SearchFeeds(onSearch: (String) -> Unit) {
     }
 }
 
-@Composable
+fun ResultsList(results: List<Feed>) {
+    FeedsList(feeds = results)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 fun FeedsList(feeds: List<Feed>) {
     LazyColumn(

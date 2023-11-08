@@ -1,0 +1,22 @@
+CREATE TABLE podcast (
+    link TEXT PRIMARY KEY NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    email TEXT,
+    image_url TEXT,
+    last_fetched TEXT NOT NULL,
+    rss_link TEXT NOT NULL
+);
+
+upsert:
+INSERT OR REPLACE INTO podcast(link, title, description, email, image_url, last_fetched, rss_link)
+VALUES (:link, :title, :description, :email, :image_url, :last_fetched, :rss_link);
+
+delete:
+DELETE FROM podcast WHERE ? = link;
+
+get_podcast_by_link:
+SELECT * FROM podcast WHERE ? = link;
+
+get_all_podcasts:
+SELECT * FROM podcast;

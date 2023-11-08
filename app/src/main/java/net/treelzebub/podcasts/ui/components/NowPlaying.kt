@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.ui.compose
+package net.treelzebub.podcasts.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

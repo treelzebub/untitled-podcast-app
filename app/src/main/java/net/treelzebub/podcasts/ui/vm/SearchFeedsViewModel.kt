@@ -33,6 +33,5 @@ class SearchFeedsViewModel @Inject constructor(
             val response = api.searchPodcasts(query)
             _state.update { _state.value.copy(feeds = response.feeds) }
         }
-
     }
 }
