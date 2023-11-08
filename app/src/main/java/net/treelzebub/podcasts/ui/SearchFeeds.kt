@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +38,17 @@ import coil.compose.AsyncImage
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.theme.TextStyles
+
+@Composable
+fun SearchScreen(onSearch: (String) -> Unit) {
+    val scaffold =
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+
+    ) {
+
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,13 +76,10 @@ fun SearchFeeds(onSearch: (String) -> Unit) {
     }
 }
 
-@Composable
 fun ResultsList(results: List<Feed>) {
     FeedsList(feeds = results)
 }
 
-
-@Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun FeedsList(feeds: List<Feed>) {
     LazyColumn(
