@@ -105,6 +105,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle")
     implementation("androidx.activity:activity-compose:1.8.0")
     implementation(platform("androidx.compose:compose-bom:$compose_bom"))
+    implementation("androidx.compose.foundation:foundation:$compose")
     implementation("androidx.compose.ui:ui:$compose")
     implementation("androidx.compose.ui:ui-graphics:$compose")
     implementation("androidx.compose.ui:ui-tooling-preview:$compose")

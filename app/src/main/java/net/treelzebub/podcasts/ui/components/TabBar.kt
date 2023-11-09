@@ -2,102 +2,76 @@ package net.treelzebub.podcasts.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.animation.core.SnapSpec
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
+import androidx.navigation.NavHostController
+import com.ramcosta.composedestinations.navigation.navigate
+import com.ramcosta.composedestinations.navigation.popBackStack
+import com.ramcosta.composedestinations.navigation.popUpTo
+import com.ramcosta.composedestinations.utils.isRouteOnBackStack
 import net.treelzebub.podcasts.R
-import net.treelzebub.podcasts.ui.screens.DiscoverScreen
-import net.treelzebub.podcasts.ui.screens.ProfileScreen
-import net.treelzebub.podcasts.ui.screens.SettingsScreen
-import net.treelzebub.podcasts.ui.screens.SubscriptionsScreen
+import net.treelzebub.podcasts.ui.screens.NavGraphs
+import net.treelzebub.podcasts.ui.screens.destinations.DirectionDestination
+import net.treelzebub.podcasts.ui.screens.destinations.DiscoverScreenDestination
+import net.treelzebub.podcasts.ui.screens.destinations.ProfileScreenDestination
+import net.treelzebub.podcasts.ui.screens.destinations.SettingsScreenDestination
+import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 
 sealed class TabItem(
     @StringRes val text: Int,
     @DrawableRes val image: Int,
-    val screen: @Composable () -> Unit
+    val direction: DirectionDestination
 ) {
-    data object Subscriptions : TabItem(R.string.tab_subscriptions, R.drawable.subscriptions, { SubscriptionsScreen() })
-    data object Discover : TabItem(R.string.tab_discover, R.drawable.search, { DiscoverScreen() })
-    data object Profile : TabItem(R.string.tab_profile, R.drawable.account_circle, { ProfileScreen() })
-    data object Settings : TabItem(R.string.tab_settings, R.drawable.settings, { SettingsScreen() })
+    data object Subscriptions : TabItem(R.string.tab_subscriptions, R.drawable.subscriptions, SubscriptionsScreenDestination)
+    data object Discover : TabItem(R.string.tab_discover, R.drawable.search, DiscoverScreenDestination)
+    data object Profile : TabItem(R.string.tab_profile, R.drawable.account_circle, ProfileScreenDestination)
+    data object Settings : TabItem(R.string.tab_settings, R.drawable.settings, SettingsScreenDestination)
 }
 
 @Composable
-@OptIn(ExperimentalFoundationApi::class)
-fun TabsBar(tabs: List<TabItem>, pagerState: PagerState) {
-    val scope = rememberCoroutineScope()
-    val tabStyle = TextStyle(
-        fontSize = 12.sp,
-        fontWeight = FontWeight(700),
-        color = Color.Black,
-        textAlign = TextAlign.Center
-    )
-
-    TabRow(
-        modifier = Modifier.fillMaxWidth(),
-        selectedTabIndex = pagerState.currentPage,
-        indicator = { tabPositions ->
-            Box(
-                Modifier
-                    .tabIndicatorOffset(tabPositions[pagerState.currentPage])
-                    .height(4.dp)
-                    .background(color = Color.Black, shape = RoundedCornerShape(4.dp)))
-        },
-        divider = {}
-    ) {
-        tabs.forEachIndexed { i, it ->
-            Tab(
-                modifier = Modifier
-                    .wrapContentWidth(align = Alignment.CenterHorizontally)
-                    .background(color = Color.White),
-                selected = pagerState.currentPage == i,
+fun BottomBar(navController: NavHostController, tabs: List<TabItem>) {
+    NavigationBar {
+        tabs.forEach { destination ->
+            val isCurrentDestOnBackStack = navController.isRouteOnBackStack(destination.direction)
+            NavigationBarItem(
+                selected = isCurrentDestOnBackStack,
                 onClick = {
-                    scope.launch { pagerState.animateScrollToPage(i, 0f, SnapSpec(24)) }
-                }
-            ) {
-                Column(Modifier.wrapContentWidth(align = Alignment.CenterHorizontally)) {
-                    Image(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(bottom = 2.dp),
-                        painter = painterResource(id = it.image),
-                        contentDescription = stringResource(it.text)
+                    if (isCurrentDestOnBackStack) {
+                        // When we click again on a bottom bar item and it was already selected
+                        // we want to pop the back stack until the initial destination of this bottom bar item
+                        navController.popBackStack(destination.direction, false)
+                        return@NavigationBarItem
+                    }
+
+                    navController.navigate(destination.direction) {
+                        // Pop up to the root of the graph to
+                        // avoid building up a large stack of destinations
+                        // on the back stack as users select items
+                        popUpTo(NavGraphs.root) {
+                            saveState = true
+                        }
+
+                        // Avoid multiple copies of the same destination when
+                        // reselecting the same item
+                        launchSingleTop = true
+                        // Restore state when reselecting a previously selected item
+                        restoreState = true
+                    }
+                },
+                icon = {
+                    Icon(
+                        painterResource(destination.image),
+                        contentDescription = stringResource(destination.text)
                     )
-                    Text(
-                        modifier = Modifier
-                            .padding(bottom = 6.dp),
-                        color = Color.Black,
-                        style = tabStyle,
-                        text = stringResource(it.text)
-                    )
-                }
-            }
+                },
+                label = { Text(stringResource(destination.text)) },
+            )
         }
     }
+
 }

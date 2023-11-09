@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
@@ -46,7 +47,7 @@ import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel
 
 @Destination
 @Composable
-fun DiscoverScreen() {
+fun DiscoverScreen(navigator: DestinationsNavigator) {
     val scope = rememberCoroutineScope()
     val searchVm: SearchFeedsViewModel = hiltViewModel()
     var state by remember { mutableStateOf(SearchFeedsViewModel.SearchFeedsState.Initial) }
