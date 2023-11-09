@@ -3,6 +3,7 @@ package net.treelzebub.podcasts.data
 import android.content.Context
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import net.treelzebub.podcasts.Database
@@ -51,12 +52,34 @@ class EpisodesRepo @Inject constructor(
     }
 
     fun getEpisodesByChannelId(channelId: String): Flow<List<EpisodeUi>> {
-        return db.episodesQueries.get_episodes_by_channel_id(channelId) {
-                id, channel_id, title, description, date, link, streaming_link, image_url, duration ->
-            EpisodeUi(
-                id, channel_id, title, description.orEmpty(), date.orEmpty(), link,
-                streaming_link, image_url.orEmpty(), duration.orEmpty()
-            )
-        }.asFlow().mapToList(Dispatchers.IO)
+        return db.episodesQueries
+            .get_episodes_by_channel_id(channelId, mapper)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    fun getEpisodeById(id: String): Flow<EpisodeUi> {
+        return db.episodesQueries
+            .get_episode_by_id(id, mapper)
+            .asFlow()
+            .mapToOne(Dispatchers.IO)
+    }
+
+    private val mapper: (
+        id: String,
+        channel_id: String,
+        title: String,
+        description: String?,
+        date: String?,
+        link: String,
+        streaming_link: String,
+        image_url: String?,
+        duration: String?
+    ) -> EpisodeUi = { id, channel_id, title, description, date, link,
+                       streaming_link, image_url, duration ->
+        EpisodeUi(
+            id, channel_id, title, description.orEmpty(), date.orEmpty(), link,
+            streaming_link, image_url.orEmpty(), duration.orEmpty()
+        )
     }
 }

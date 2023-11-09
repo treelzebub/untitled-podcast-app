@@ -79,7 +79,6 @@ fun AppScaffold(
     val bottomSheetNavigator = rememberBottomSheetNavigator()
     navController.navigatorProvider += bottomSheetNavigator
 
-    // 👇 ModalBottomSheetLayout is only needed if some destination is bottom sheet styled
     Scaffold(
         topBar = { topBar(destination, navBackStackEntry) },
         bottomBar = { bottomBar(destination) },
