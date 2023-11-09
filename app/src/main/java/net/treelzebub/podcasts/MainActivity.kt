@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Scaffold(bottomBar = { TabsBar() }) {
-                        SubscriptionsScreen()
+
                     }
                 }
             }

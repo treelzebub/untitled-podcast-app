@@ -31,10 +31,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.treelzebub.podcasts.R
-import net.treelzebub.podcasts.ui.screens.DiscoverScreen
-import net.treelzebub.podcasts.ui.screens.ProfileScreen
-import net.treelzebub.podcasts.ui.screens.SettingsScreen
-import net.treelzebub.podcasts.ui.screens.SubscriptionsScreen
 
 private enum class Tab(
     @StringRes val text: Int,

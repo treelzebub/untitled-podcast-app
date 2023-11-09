@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.screens
 
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
@@ -19,6 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 @Composable
 fun SubscriptionsScreen() {
     val vm = hiltViewModel<PodcastsViewModel>()
-    val podcasts by remember(vm) { vm.podcasts }.collectAsState(initial = emptyList())
+    val podcasts by remember { vm.podcasts }.collectAsState(initial = emptyList())
     PodcastList(podcasts)
 }
