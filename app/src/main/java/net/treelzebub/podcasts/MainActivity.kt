@@ -1,10 +1,12 @@
 package net.treelzebub.podcasts
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,7 +20,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import net.treelzebub.podcasts.net.models.Feed
-import net.treelzebub.podcasts.ui.SearchScreen
+import net.treelzebub.podcasts.ui.screens.DiscoverScreen
+import net.treelzebub.podcasts.ui.components.TabsBar
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
 import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel
 import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel.SearchFeedsState
@@ -26,6 +29,7 @@ import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel.SearchFeedsState
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -44,11 +48,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SearchScreen(
-                        onSearch = onSearch,
-                        feeds = state.feeds,
-                        onSelect = onSelect
-                    )
+
                 }
             }
         }

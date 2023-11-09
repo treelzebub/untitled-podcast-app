@@ -38,17 +38,16 @@ import net.treelzebub.podcasts.ui.screens.SubscriptionsScreen
 
 private data class TabData(
     @StringRes val text: Int,
-    @DrawableRes val image: Int,
-    val onClick: () -> Unit
+    @DrawableRes val image: Int
 )
 
 @Composable
 fun TabsBar() {
     val tabs = listOf(
-        TabData(R.string.tab_subscriptions, R.drawable.subscriptions, {}),
-        TabData(R.string.tab_discover, R.drawable.search, {}),
-        TabData(R.string.tab_profile, R.drawable.account_circle, {}),
-        TabData(R.string.tab_settings, R.drawable.settings, {})
+        TabData(R.string.tab_subscriptions, R.drawable.subscriptions),
+        TabData(R.string.tab_discover, R.drawable.search),
+        TabData(R.string.tab_profile, R.drawable.account_circle),
+        TabData(R.string.tab_settings, R.drawable.settings)
     )
     val tabStyle = TextStyle(
         fontSize = 12.sp,
@@ -66,8 +65,7 @@ fun TabsBar() {
                 Modifier
                     .tabIndicatorOffset(tabPositions[tabPosition])
                     .height(4.dp)
-                    .padding(horizontal = 48.dp)
-                    .background(color = Color.Black, shape = RoundedCornerShape(8.dp)))
+                    .background(color = Color.Black, shape = RoundedCornerShape(4.dp)))
         },
         divider = {}
     ) {
@@ -100,7 +98,7 @@ fun TabsBar() {
     }
     when (tabPosition) {
         0 -> SubscriptionsScreen()
-        1 -> DiscoverScreen()
+        1 -> DiscoverScreen({}, listOf(), {})
         2 -> ProfileScreen()
         3 -> SettingsScreen()
     }
