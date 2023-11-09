@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.components
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import net.treelzebub.podcasts.ui.theme.TextStyles
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun PodcastList(podcasts: List<PodcastUi>) {
+    Log.d("TEST", "Composing ${podcasts.size} podcasts.")
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(6.dp)

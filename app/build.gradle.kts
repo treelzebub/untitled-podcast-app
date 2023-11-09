@@ -1,4 +1,5 @@
 plugins {
+    kotlin("kapt")
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
@@ -12,6 +13,10 @@ sqldelight {
             packageName.set("net.treelzebub.podcasts")
         }
     }
+}
+
+kapt {
+    correctErrorTypes = true
 }
 
 kotlin {
@@ -64,7 +69,9 @@ android {
 dependencies {
     // todo move to version catalog
     val retrofit = "2.9.0"
+    val sqldelight = "2.0.0"
     val hilt = "2.48.1"
+    val hiltAndroidX = "1.1.0"
     val lifecycle = "2.6.2"
     val compose_bom = "2023.10.01"
     val compose = "1.5.4"
@@ -75,7 +82,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     implementation("com.google.dagger:hilt-android:$hilt")
-    ksp("com.google.dagger:hilt-android-compiler:$hilt")
+    kapt("com.google.dagger:hilt-android-compiler:$hilt")
+    implementation("androidx.hilt:hilt-navigation-compose:$hiltAndroidX")
+//    implementation("androidx.hilt:hilt-compiler:$hiltAndroidX")
 
     // define a BOM and its version
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
@@ -87,7 +96,8 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-moshi:$retrofit")
 
     implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
-    implementation("app.cash.sqldelight:android-driver:2.0.0")
+    implementation("app.cash.sqldelight:android-driver:$sqldelight")
+    implementation("app.cash.sqldelight:coroutines-extensions:$sqldelight")
     implementation("com.prof18.rssparser:rssparser:6.0.3")
 
     implementation("androidx.core:core-ktx:1.12.0")

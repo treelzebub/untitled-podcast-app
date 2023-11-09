@@ -3,6 +3,7 @@ package net.treelzebub.podcasts.data
 import android.content.Context
 import android.text.Html
 import app.cash.sqldelight.Query
+import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.prof18.rssparser.model.RssChannel
@@ -20,7 +21,7 @@ class DatabaseManager @Inject constructor(
     @ApplicationContext context: Context,
     driver: SqlDriver = AndroidSqliteDriver(Database.Schema, context, "podcasts.db")
 ) {
-    private val db: Database
+    val db: Database
 
     init {
         db = Database(driver)
@@ -31,14 +32,15 @@ class DatabaseManager @Inject constructor(
         db.transaction {
             with(channel) {
                 db.podcastsQueries.upsert(
-                    link!!.sanitizeUrl(), title!!, description, itunesChannelData?.owner?.email,
+                    link!!.sanitizeUrl(), title!!, description?.sanitizeHtml(), itunesChannelData?.owner?.email.orEmpty(),
                     image?.url, lastBuildDate.orNow(), rssLink.sanitizeUrl()
                 )
             }
             channel.items.forEach {
                 with(it) {
                     db.episodesQueries.upsert(
-                        guid!!, channel.link!!, title!!, description, pubDate, link!!.sanitizeUrl(), sourceUrl!!.sanitizeUrl(), image?.sanitizeUrl(), itunesItemData?.duration
+                        guid!!, channel.link!!, title!!.sanitizeHtml(), description?.sanitizeHtml().orEmpty(), pubDate, link!!.sanitizeUrl(),
+                        sourceUrl?.sanitizeUrl().orEmpty(), image?.sanitizeUrl(), itunesItemData?.duration
                     )
                 }
             }
@@ -69,8 +71,8 @@ class DatabaseManager @Inject constructor(
     }
 
     private fun String.sanitizeUrl(): String = replace("&amp;", "&")
-    private fun String.sanitizeHtml(): String = Html.fromHtml(this).toString()
-    private fun String?.orNow(): String = TODO()
+    private fun String?.sanitizeHtml(): String = this?.let { Html.fromHtml(this).toString() }.orEmpty()
+    private fun String?.orNow(): String = this ?: "TODO()"
 
     private fun String.formatDate(): String {
         val localDateTime = LocalDateTime.parse(this, DateTimeFormatter.RFC_1123_DATE_TIME)

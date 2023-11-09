@@ -35,10 +35,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.ramcosta.composedestinations.annotation.Destination
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
+@Destination
 @Composable
 fun DiscoverScreen(
     onSearch: (String) -> Unit,

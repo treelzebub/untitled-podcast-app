@@ -36,19 +36,18 @@ import net.treelzebub.podcasts.ui.screens.ProfileScreen
 import net.treelzebub.podcasts.ui.screens.SettingsScreen
 import net.treelzebub.podcasts.ui.screens.SubscriptionsScreen
 
-private data class TabData(
+private enum class Tab(
     @StringRes val text: Int,
     @DrawableRes val image: Int
-)
+) {
+    Subscriptions(R.string.tab_subscriptions, R.drawable.subscriptions),
+    Discover(R.string.tab_discover, R.drawable.search),
+    Profile(R.string.tab_profile, R.drawable.account_circle),
+    Settings(R.string.tab_settings, R.drawable.settings)
+}
 
 @Composable
 fun TabsBar() {
-    val tabs = listOf(
-        TabData(R.string.tab_subscriptions, R.drawable.subscriptions),
-        TabData(R.string.tab_discover, R.drawable.search),
-        TabData(R.string.tab_profile, R.drawable.account_circle),
-        TabData(R.string.tab_settings, R.drawable.settings)
-    )
     val tabStyle = TextStyle(
         fontSize = 12.sp,
         fontWeight = FontWeight(700),
@@ -69,7 +68,7 @@ fun TabsBar() {
         },
         divider = {}
     ) {
-        tabs.forEachIndexed { i, it ->
+        Tab.values().forEachIndexed { i, it ->
             Tab(
                 modifier = Modifier
                     .wrapContentWidth(align = Alignment.CenterHorizontally)
@@ -96,10 +95,10 @@ fun TabsBar() {
             }
         }
     }
-    when (tabPosition) {
-        0 -> SubscriptionsScreen()
-        1 -> DiscoverScreen({}, listOf(), {})
-        2 -> ProfileScreen()
-        3 -> SettingsScreen()
-    }
+//    when (tabPosition) {
+//        0 -> SubscriptionsScreen()
+//        1 -> DiscoverScreen({}, listOf(), {})
+//        2 -> ProfileScreen()
+//        3 -> SettingsScreen()
+//    }
 }
