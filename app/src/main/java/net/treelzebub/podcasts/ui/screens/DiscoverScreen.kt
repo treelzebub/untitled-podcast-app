@@ -42,14 +42,11 @@ import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Destination
 @Composable
-fun DiscoverScreen(
-    onSearch: (String) -> Unit,
-    feeds: List<Feed>,
-    onSelect: (Feed) -> Unit
-) {
+fun DiscoverScreen() {
     Column(Modifier.fillMaxSize()) {
-        SearchFeeds(onSearch)
-        ResultsList(feeds, onSelect)
+//        SearchFeeds(onSearch)
+//        ResultsList(feeds, onSelect)
+        Text("Discover")
     }
 }
 

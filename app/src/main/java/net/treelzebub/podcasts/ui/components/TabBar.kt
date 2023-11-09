@@ -2,6 +2,7 @@ package net.treelzebub.podcasts.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,16 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,47 +29,56 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.R
+import net.treelzebub.podcasts.ui.screens.DiscoverScreen
+import net.treelzebub.podcasts.ui.screens.ProfileScreen
+import net.treelzebub.podcasts.ui.screens.SettingsScreen
+import net.treelzebub.podcasts.ui.screens.SubscriptionsScreen
 
-private enum class Tab(
+sealed class TabItem(
     @StringRes val text: Int,
-    @DrawableRes val image: Int
+    @DrawableRes val image: Int,
+    val screen: @Composable () -> Unit
 ) {
-    Subscriptions(R.string.tab_subscriptions, R.drawable.subscriptions),
-    Discover(R.string.tab_discover, R.drawable.search),
-    Profile(R.string.tab_profile, R.drawable.account_circle),
-    Settings(R.string.tab_settings, R.drawable.settings)
+    data object Subscriptions : TabItem(R.string.tab_subscriptions, R.drawable.subscriptions, { SubscriptionsScreen() })
+    data object Discover : TabItem(R.string.tab_discover, R.drawable.search, { DiscoverScreen() })
+    data object Profile : TabItem(R.string.tab_profile, R.drawable.account_circle, { ProfileScreen() })
+    data object Settings : TabItem(R.string.tab_settings, R.drawable.settings, { SettingsScreen() })
 }
 
 @Composable
-fun TabsBar() {
+@OptIn(ExperimentalFoundationApi::class)
+fun TabsBar(tabs: List<TabItem>, pagerState: PagerState) {
+    val scope = rememberCoroutineScope()
     val tabStyle = TextStyle(
         fontSize = 12.sp,
         fontWeight = FontWeight(700),
         color = Color.Black,
         textAlign = TextAlign.Center
     )
-    var tabPosition by remember { mutableIntStateOf(0) }
 
     TabRow(
         modifier = Modifier.fillMaxWidth(),
-        selectedTabIndex = tabPosition,
+        selectedTabIndex = pagerState.currentPage,
         indicator = { tabPositions ->
             Box(
                 Modifier
-                    .tabIndicatorOffset(tabPositions[tabPosition])
+                    .tabIndicatorOffset(tabPositions[pagerState.currentPage])
                     .height(4.dp)
                     .background(color = Color.Black, shape = RoundedCornerShape(4.dp)))
         },
         divider = {}
     ) {
-        Tab.values().forEachIndexed { i, it ->
+        tabs.forEachIndexed { i, it ->
             Tab(
                 modifier = Modifier
                     .wrapContentWidth(align = Alignment.CenterHorizontally)
                     .background(color = Color.White),
-                selected = i == tabPosition,
-                onClick = { tabPosition = i }
+                selected = pagerState.currentPage == i,
+                onClick = {
+                    scope.launch { pagerState.animateScrollToPage(i) }
+                }
             ) {
                 Column(Modifier.wrapContentWidth(align = Alignment.CenterHorizontally)) {
                     Image(
@@ -91,10 +99,4 @@ fun TabsBar() {
             }
         }
     }
-//    when (tabPosition) {
-//        0 -> SubscriptionsScreen()
-//        1 -> DiscoverScreen({}, listOf(), {})
-//        2 -> ProfileScreen()
-//        3 -> SettingsScreen()
-//    }
 }
