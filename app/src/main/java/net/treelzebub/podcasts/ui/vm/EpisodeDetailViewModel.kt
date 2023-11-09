@@ -5,12 +5,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.treelzebub.podcasts.data.EpisodesRepo
+import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import javax.inject.Inject
 
 @HiltViewModel
-class EpisodeDetailViewModel(
-    private val repo: EpisodesRepo
+class EpisodeDetailViewModel @Inject constructor(
+    private val repo: PodcastsRepo
 ) : StatefulViewModel<EpisodeDetailViewModel.EpisodeState>(EpisodeState()) {
 
     data class EpisodeState(
