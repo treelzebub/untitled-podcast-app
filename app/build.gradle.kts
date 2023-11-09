@@ -1,9 +1,10 @@
 plugins {
+    kotlin("kapt")
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    kotlin("kapt")
     id("com.google.dagger.hilt.android")
     id("app.cash.sqldelight") version "2.0.0"
+    id("com.google.devtools.ksp")
 }
 
 sqldelight {
@@ -14,13 +15,12 @@ sqldelight {
     }
 }
 
-kotlin {
-    jvmToolchain(17)
-}
-
-// Allow references to generated code
 kapt {
     correctErrorTypes = true
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 android {
@@ -57,7 +57,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources {
@@ -69,10 +69,13 @@ android {
 dependencies {
     // todo move to version catalog
     val retrofit = "2.9.0"
+    val sqldelight = "2.0.0"
     val hilt = "2.48.1"
+    val hiltAndroidX = "1.1.0"
     val lifecycle = "2.6.2"
     val compose_bom = "2023.10.01"
     val compose = "1.5.4"
+    val destinations = "1.9.54"
     val exoplayer = "1.1.1"
     val coil = "2.4.0"
 
@@ -80,6 +83,8 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:$hilt")
     kapt("com.google.dagger:hilt-android-compiler:$hilt")
+    implementation("androidx.hilt:hilt-navigation-compose:$hiltAndroidX")
+//    implementation("androidx.hilt:hilt-compiler:$hiltAndroidX")
 
     // define a BOM and its version
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
@@ -89,6 +94,11 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor")
     implementation("com.squareup.retrofit2:retrofit:$retrofit")
     implementation("com.squareup.retrofit2:converter-moshi:$retrofit")
+
+    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
+    implementation("app.cash.sqldelight:android-driver:$sqldelight")
+    implementation("app.cash.sqldelight:coroutines-extensions:$sqldelight")
+    implementation("com.prof18.rssparser:rssparser:6.0.3")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle")
@@ -100,9 +110,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:$compose")
     implementation("androidx.compose.material3:material3:1.1.2")
 
-    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
-    implementation("app.cash.sqldelight:android-driver:2.0.0")
-    implementation("com.prof18.rssparser:rssparser:6.0.3")
+    implementation("io.github.raamcosta.compose-destinations:animations-core:$destinations")
+    ksp("io.github.raamcosta.compose-destinations:ksp:$destinations")
 
     implementation("androidx.media3:media3-exoplayer:$exoplayer")
     implementation("androidx.media3:media3-exoplayer-dash:$exoplayer")

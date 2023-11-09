@@ -1,21 +1,24 @@
 package net.treelzebub.podcasts.di
 
-import android.content.Context
+import android.app.Application
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import net.treelzebub.podcasts.data.DatabaseManager
+import net.treelzebub.podcasts.Database
 import javax.inject.Singleton
 
-@InstallIn(SingletonComponent::class)
 @Module
-class DatabaseModule {
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
 
-    @Singleton
     @Provides
-    fun provideDatabase(@ApplicationContext context: Context): DatabaseManager {
-        return DatabaseManager(context)
-    }
+    @Singleton
+    fun provideDriver(app: Application): SqlDriver = AndroidSqliteDriver(Database.Schema, app, "podcasts.db")
+
+    @Provides
+    @Singleton
+    fun provideDatabase(driver: SqlDriver): Database = Database(driver)
 }

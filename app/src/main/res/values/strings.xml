@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Podcasts</string>
+    <string name="tab_subscriptions">Subscriptions</string>
+    <string name="tab_discover">Discover</string>
+    <string name="tab_profile">Profile</string>
+    <string name="tab_settings">Settings</string>
 </resources>
