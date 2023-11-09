@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,18 +35,28 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.theme.TextStyles
+import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel
 
 @Destination
 @Composable
 fun DiscoverScreen() {
+    val scope = rememberCoroutineScope()
+    val searchVm: SearchFeedsViewModel = hiltViewModel()
+    var state by remember { mutableStateOf(SearchFeedsViewModel.SearchFeedsState.Initial) }
+    val onSearch = { query: String -> searchVm.search(query) }
+    val onSelect = { feed: Feed -> searchVm.select(feed) }
+
+//        searchVm.state.collectLatest { state = it }
     Column(Modifier.fillMaxSize()) {
-//        SearchFeeds(onSearch)
-//        ResultsList(feeds, onSelect)
+        SearchFeeds(onSearch)
+        ResultsList(state.feeds, onSelect)
         Text("Discover")
     }
 }

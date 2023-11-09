@@ -2,6 +2,7 @@ package net.treelzebub.podcasts.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.SnapSpec
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -77,7 +78,7 @@ fun TabsBar(tabs: List<TabItem>, pagerState: PagerState) {
                     .background(color = Color.White),
                 selected = pagerState.currentPage == i,
                 onClick = {
-                    scope.launch { pagerState.animateScrollToPage(i) }
+                    scope.launch { pagerState.animateScrollToPage(i, 0f, SnapSpec(24)) }
                 }
             ) {
                 Column(Modifier.wrapContentWidth(align = Alignment.CenterHorizontally)) {
