@@ -43,7 +43,6 @@ fun PodcastsApp() {
         TabItem.Profile,
         TabItem.Settings
     )
-//    val pagerState = rememberPagerState(pageCount = { tabs.size })
 
     AppScaffold(
         startRoute = startRoute,

@@ -28,11 +28,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import net.treelzebub.podcasts.ui.screens.PodcastDetailsScreen
+import net.treelzebub.podcasts.ui.screens.destinations.PodcastDetailsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun PodcastList(
+    navigator: DestinationsNavigator,
     podcasts: List<PodcastUi>
 ) {
     Log.d("TEST", "Composing ${podcasts.size} podcasts.")
@@ -40,7 +43,7 @@ fun PodcastList(
         modifier = Modifier.fillMaxSize()
     ) {
         items(podcasts, key = { it.link }) {
-            PodcastItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), it)
+            PodcastItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), navigator, it)
         }
     }
 }
@@ -48,6 +51,7 @@ fun PodcastList(
 @Composable
 fun PodcastItem(
     modifier: Modifier,
+    navigator: DestinationsNavigator,
     podcast: PodcastUi
 ) {
     Row(
@@ -55,7 +59,7 @@ fun PodcastItem(
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(vertical = 2.dp)
-            .clickable { }
+            .clickable { navigator.navigate(PodcastDetailsScreenDestination(podcast.link)) }
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -89,6 +93,10 @@ fun PodcastItem(
             )
         }
     }
-    Divider(Modifier.fillMaxWidth().height(1.dp).background(Color.DarkGray))
+    Divider(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(Color.DarkGray))
 }
 
