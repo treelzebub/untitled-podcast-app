@@ -2,9 +2,11 @@ package net.treelzebub.podcasts.ui.vm
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.RssParser
@@ -17,7 +19,7 @@ class PodcastsViewModel @Inject constructor(
 ) : ViewModel() {
 
     init {
-//        viewModelScope.launch { test() }
+        viewModelScope.launch { test() }
     }
 
     data class PodcastsState(
