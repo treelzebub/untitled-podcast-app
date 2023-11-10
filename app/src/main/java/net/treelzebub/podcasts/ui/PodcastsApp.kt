@@ -43,7 +43,6 @@ fun PodcastsApp() {
         TabItem.Profile,
         TabItem.Settings
     )
-//    val pagerState = rememberPagerState(pageCount = { tabs.size })
 
     AppScaffold(
         startRoute = startRoute,
@@ -79,7 +78,6 @@ fun AppScaffold(
     val bottomSheetNavigator = rememberBottomSheetNavigator()
     navController.navigatorProvider += bottomSheetNavigator
 
-    // 👇 ModalBottomSheetLayout is only needed if some destination is bottom sheet styled
     Scaffold(
         topBar = { topBar(destination, navBackStackEntry) },
         bottomBar = { bottomBar(destination) },

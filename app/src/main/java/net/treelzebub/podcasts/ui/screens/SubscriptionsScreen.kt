@@ -17,5 +17,5 @@ import net.treelzebub.podcasts.ui.vm.PodcastsViewModel
 fun SubscriptionsScreen(navigator: DestinationsNavigator) {
     val vm = hiltViewModel<PodcastsViewModel>()
     val podcasts by remember { vm.podcasts }.collectAsState(initial = emptyList())
-    PodcastList(podcasts)
+    PodcastList(navigator, podcasts)
 }

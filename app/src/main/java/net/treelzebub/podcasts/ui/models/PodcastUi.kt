@@ -2,7 +2,6 @@ package net.treelzebub.podcasts.ui.models
 
 import androidx.compose.runtime.Immutable
 
-@Immutable
 data class PodcastUi(
     val link: String,
     val title: String,

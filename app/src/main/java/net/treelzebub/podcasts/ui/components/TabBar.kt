@@ -73,5 +73,4 @@ fun BottomBar(navController: NavHostController, tabs: List<TabItem>) {
             )
         }
     }
-
 }

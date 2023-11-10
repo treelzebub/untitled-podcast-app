@@ -31,7 +31,7 @@ class PodcastsViewModel @Inject constructor(
     private val _state = MutableStateFlow(PodcastsState.Initial)
     val state = _state.asStateFlow()
 
-    val podcasts = repo.getPodcasts()
+    val podcasts = repo.getAllPodcasts()
 
     private suspend fun test() {
         val context = App.Instance
@@ -40,8 +40,8 @@ class PodcastsViewModel @Inject constructor(
         val channel1 = RssParser().parseRss(rss1)
         val channel2 = RssParser().parseRss(rss2)
 
-        repo.insert(channel1.link!!, channel1)
-        repo.insert(channel2.link!!, channel2)
+        repo.upsert(channel1.link!!, channel1)
+        repo.upsert(channel2.link!!, channel2)
         Log.d("TEST", "VM upserted pods")
     }
 }
