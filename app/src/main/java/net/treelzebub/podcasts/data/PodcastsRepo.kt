@@ -1,6 +1,5 @@
 package net.treelzebub.podcasts.data
 
-import android.content.Context
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -10,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.orNow
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
@@ -21,15 +21,16 @@ class PodcastsRepo @Inject constructor(
 
     fun upsert(rssLink: String, channel: RssChannel) {
         db.transaction {
+            val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
                 db.podcastsQueries.upsert(
-                    link!!.sanitizeUrl(),
+                    link!!.sanitizeUrl()!!,
                     title!!,
-                    description?.sanitizeHtml(),
+                    description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     itunesChannelData?.owner?.email.orEmpty(),
-                    image?.url,
+                    safeImage,
                     lastBuildDate.orNow(),
-                    rssLink.sanitizeUrl()
+                    itunesChannelData?.newsFeedUrl ?: rssLink
                 )
             }
             channel.items.forEach {
@@ -37,12 +38,12 @@ class PodcastsRepo @Inject constructor(
                     db.episodesQueries.upsert(
                         guid!!,
                         channel.link!!,
-                        title!!.sanitizeHtml(),
+                        title.sanitizeHtml()!!,
                         description?.sanitizeHtml().orEmpty(),
                         pubDate,
-                        link!!.sanitizeUrl(),
-                        sourceUrl?.sanitizeUrl().orEmpty(),
-                        image?.sanitizeUrl(),
+                        link!!.sanitizeUrl()!!,
+                        audio!!,
+                        image?.sanitizeUrl() ?: safeImage,
                         itunesItemData?.duration
                     )
                 }
@@ -90,7 +91,7 @@ class PodcastsRepo @Inject constructor(
                        email, image_url, last_fetched, rss_link ->
         PodcastUi(
             link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
-            last_fetched, rss_link
+            Time.displayFormat(last_fetched), rss_link
         )
     }
 
@@ -107,42 +108,8 @@ class PodcastsRepo @Inject constructor(
     ) -> EpisodeUi = { id, channel_id, title, description, date, link,
                        streaming_link, image_url, duration ->
         EpisodeUi(
-            id, channel_id, title, description.orEmpty(), date.orEmpty(), link,
+            id, channel_id, title, description.orEmpty(), Time.displayFormat(date), link,
             streaming_link, image_url.orEmpty(), duration.orEmpty()
         )
-    }
-
-    // TODO rm
-    suspend fun test(context: Context) {
-        val rss = context.assets.open("test.rss").bufferedReader().use { it.readText() }
-        val channel = RssParser().parseRss(rss)
-        db.transaction {
-            with(channel) {
-                db.podcastsQueries.upsert(
-                    link!!.sanitizeUrl(),
-                    title!!,
-                    description?.sanitizeHtml(),
-                    itunesChannelData?.owner?.email.orEmpty(),
-                    image?.url,
-                    lastBuildDate.orNow(),
-                    link!!.sanitizeUrl()
-                )
-            }
-            channel.items.forEach {
-                with(it) {
-                    db.episodesQueries.upsert(
-                        guid!!,
-                        channel.link!!,
-                        title!!.sanitizeHtml(),
-                        description?.sanitizeHtml().orEmpty(),
-                        pubDate,
-                        link!!.sanitizeUrl(),
-                        sourceUrl?.sanitizeUrl().orEmpty(),
-                        image?.sanitizeUrl(),
-                        itunesItemData?.duration
-                    )
-                }
-            }
-        }
     }
 }
