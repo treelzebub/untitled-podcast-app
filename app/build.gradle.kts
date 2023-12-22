@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     kotlin("kapt")
     id("com.android.application")
@@ -24,6 +26,8 @@ kotlin {
 }
 
 android {
+    buildFeatures.buildConfig = true
+
     namespace = "net.treelzebub.podcasts"
     compileSdk = 34
 
@@ -32,12 +36,18 @@ android {
         minSdk = 28
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val apiKeyPodcastIndex: String = gradleLocalProperties(rootDir).getProperty("API_KEY_PODCAST_INDEX")
+        val apiSecretPodcastIndex: String = gradleLocalProperties(rootDir).getProperty("API_SECRET_PODCAST_INDEX")
+        buildConfigField("String", "API_KEY_PODCAST_INDEX", apiKeyPodcastIndex)
+        buildConfigField("String", "API_SECRET_PODCAST_INDEX", apiSecretPodcastIndex)
+        buildConfigField("String", "USER_AGENT_PODCAST_INDEX", "\"UntitledPodcastApp/$versionName\"")
     }
 
     buildTypes {
