@@ -47,7 +47,7 @@ fun PodcastsApp() {
     AppScaffold(
         startRoute = startRoute,
         navController = navController,
-        topBar = { i, j -> PodcastsAppBar() },
+        topBar = { _, _ -> PodcastsAppBar() },
         bottomBar = { BottomBar(navController, tabs) }
     ) {
         DestinationsNavHost(
