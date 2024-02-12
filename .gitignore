@@ -1,6 +1,7 @@
 ### Project-specific ###
 examples/
 app/src/main/assets/*.rss
+app/src/main/assets/*.mp3
 
 ### Android ###
 # Gradle files

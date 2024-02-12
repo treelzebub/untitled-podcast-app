@@ -3,7 +3,6 @@ package net.treelzebub.podcasts.ui.vm
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
