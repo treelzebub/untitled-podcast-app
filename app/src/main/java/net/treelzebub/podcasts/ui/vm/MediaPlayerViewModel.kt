@@ -33,8 +33,6 @@ class MediaPlayerViewModel @Inject constructor(
         }
     }
 
-
-
     override fun onCleared() {
         super.onCleared()
         player.release()
