@@ -16,11 +16,13 @@ import com.ramcosta.composedestinations.navigation.popUpTo
 import com.ramcosta.composedestinations.utils.isRouteOnBackStack
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.screens.NavGraphs
+import net.treelzebub.podcasts.ui.screens.appCurrentDestinationAsState
 import net.treelzebub.podcasts.ui.screens.destinations.DirectionDestination
 import net.treelzebub.podcasts.ui.screens.destinations.DiscoverScreenDestination
 import net.treelzebub.podcasts.ui.screens.destinations.ProfileScreenDestination
 import net.treelzebub.podcasts.ui.screens.destinations.SettingsScreenDestination
 import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
+import net.treelzebub.podcasts.ui.screens.startAppDestination
 
 sealed class TabItem(
     @StringRes val text: Int,
@@ -35,32 +37,22 @@ sealed class TabItem(
 
 @Composable
 fun BottomBar(navController: NavHostController, tabs: List<TabItem>) {
+    val currentDestination = navController.appCurrentDestinationAsState().value
+        ?: NavGraphs.root.startAppDestination
+
     NavigationBar {
         tabs.forEach { destination ->
-            val isCurrentDestOnBackStack = navController.isRouteOnBackStack(destination.direction)
             NavigationBarItem(
-                selected = isCurrentDestOnBackStack,
+                selected = currentDestination == destination.direction,
                 onClick = {
-                    if (isCurrentDestOnBackStack) {
-                        // When we click again on a bottom bar item and it was already selected
-                        // we want to pop the back stack until the initial destination of this bottom bar item
+                    if (navController.isRouteOnBackStack(destination.direction)) {
                         navController.popBackStack(destination.direction, false)
                         return@NavigationBarItem
                     }
-
                     navController.navigate(destination.direction) {
-                        // Pop up to the root of the graph to
-                        // avoid building up a large stack of destinations
-                        // on the back stack as users select items
-                        popUpTo(NavGraphs.root) {
-                            saveState = true
-                        }
-
-                        // Avoid multiple copies of the same destination when
-                        // reselecting the same item
                         launchSingleTop = true
-                        // Restore state when reselecting a previously selected item
                         restoreState = true
+                        popUpTo(NavGraphs.root) { saveState = true }
                     }
                 },
                 icon = {

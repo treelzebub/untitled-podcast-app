@@ -82,19 +82,18 @@ dependencies {
     val sqldelight = "2.0.0"
     val hilt = "2.48.1"
     val hiltAndroidX = "1.1.0"
-    val lifecycle = "2.6.2"
-    val compose_bom = "2023.10.01"
-    val compose = "1.5.4"
-    val destinations = "1.9.54"
-    val exoplayer = "1.1.1"
+    val lifecycle = "2.7.0"
+    val compose_bom = "2024.02.00"
+    val destinations = "1.10.0"
+    val exoplayer = "1.2.1"
     val coil = "2.4.0"
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation(platform("androidx.compose:compose-bom:$compose_bom"))
 
     implementation("com.google.dagger:hilt-android:$hilt")
     kapt("com.google.dagger:hilt-android-compiler:$hilt")
     implementation("androidx.hilt:hilt-navigation-compose:$hiltAndroidX")
-//    implementation("androidx.hilt:hilt-compiler:$hiltAndroidX")
 
     // define a BOM and its version
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
@@ -113,13 +112,12 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle")
-    implementation("androidx.activity:activity-compose:1.8.0")
-    implementation(platform("androidx.compose:compose-bom:$compose_bom"))
-    implementation("androidx.compose.foundation:foundation:$compose")
-    implementation("androidx.compose.ui:ui:$compose")
-    implementation("androidx.compose.ui:ui-graphics:$compose")
-    implementation("androidx.compose.ui:ui-tooling-preview:$compose")
-    implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3:1.2.0")
 
     implementation("io.github.raamcosta.compose-destinations:animations-core:$destinations")
     ksp("io.github.raamcosta.compose-destinations:ksp:$destinations")
@@ -130,8 +128,8 @@ dependencies {
     implementation("io.coil-kt:coil:$coil")
     implementation("io.coil-kt:coil-compose:$coil")
 
-    debugImplementation("androidx.compose.ui:ui-tooling:$compose")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:$compose")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
