@@ -14,7 +14,7 @@ import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
 
 @HiltViewModel
-class PodcastsViewModel @Inject constructor(
+class SubscriptionsViewModel @Inject constructor(
     private val repo: PodcastsRepo
 ) : ViewModel() {
 
