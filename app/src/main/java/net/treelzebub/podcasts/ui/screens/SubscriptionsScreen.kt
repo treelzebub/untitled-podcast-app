@@ -9,13 +9,13 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.components.PodcastList
-import net.treelzebub.podcasts.ui.vm.PodcastsViewModel
+import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
 
 @RootNavGraph(start = true)
 @Destination
 @Composable
 fun SubscriptionsScreen(navigator: DestinationsNavigator) {
-    val vm = hiltViewModel<PodcastsViewModel>()
+    val vm = hiltViewModel<SubscriptionsViewModel>()
     val podcasts by remember { vm.podcasts }.collectAsState(initial = emptyList())
     PodcastList(navigator, podcasts)
 }

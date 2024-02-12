@@ -1,39 +1,31 @@
 package net.treelzebub.podcasts.ui.vm
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.RssParser
-import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
 
 @HiltViewModel
-class PodcastsViewModel @Inject constructor(
+class SubscriptionsViewModel @Inject constructor(
     private val repo: PodcastsRepo
 ) : ViewModel() {
+
+    companion object {
+        private const val TIMEOUT = 5000L
+    }
 
     init {
         viewModelScope.launch { test() }
     }
 
-    data class PodcastsState(
-        val podcasts: List<PodcastUi>
-    ) {
-        companion object {
-            val Initial = PodcastsState(listOf())
-        }
-    }
-
-    private val _state = MutableStateFlow(PodcastsState.Initial)
-    val state = _state.asStateFlow()
-
     val podcasts = repo.getAllPodcasts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TIMEOUT), emptyList())
 
     private suspend fun test() {
         val context = App.Instance
@@ -44,6 +36,5 @@ class PodcastsViewModel @Inject constructor(
 
         repo.upsert(channel1.link!!, channel1)
         repo.upsert(channel2.link!!, channel2)
-        Log.d("TEST", "VM upserted pods")
     }
 }

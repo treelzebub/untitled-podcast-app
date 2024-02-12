@@ -1,6 +1,5 @@
 package net.treelzebub.podcasts.ui.components
 
-import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -36,7 +35,6 @@ fun PodcastList(
     navigator: DestinationsNavigator,
     podcasts: List<PodcastUi>
 ) {
-    Log.d("TEST", "Composing ${podcasts.size} podcasts.")
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
