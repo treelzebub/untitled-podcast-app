@@ -1,15 +1,12 @@
 package net.treelzebub.podcasts.ui.components
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -18,28 +15,36 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.EpisodeUi
-import net.treelzebub.podcasts.ui.models.PodcastUi
+import net.treelzebub.podcasts.ui.screens.destinations.NowPlayingScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Composable
 fun EpisodesList(
+    navigator: DestinationsNavigator,
     modifier: Modifier,
     episodes: List<EpisodeUi>
 ) {
-    Column(Modifier.fillMaxSize().then(modifier)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .then(modifier)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             episodes.forEach {
-                item { EpisodeItem(it) }
+                item { EpisodeItem(navigator, it) }
             }
         }
     }
 }
 
 @Composable
-fun EpisodeItem(item: EpisodeUi) {
-    ItemCard {
+fun EpisodeItem(navigator: DestinationsNavigator, item: EpisodeUi) {
+    ItemCard(
+        modifier = Modifier.clickable {
+            navigator.navigate(NowPlayingScreenDestination(item.id))
+        }
+    ) {
         Column(
             Modifier
                 .weight(3.0f)

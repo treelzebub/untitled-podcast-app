@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.components.EpisodesList
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -30,7 +31,7 @@ import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel
 
 @Destination
 @Composable
-fun PodcastDetailsScreen(link: String) {
+fun PodcastDetailsScreen(navigator: DestinationsNavigator, link: String) {
     val vm: PodcastDetailsViewModel = hiltViewModel()
     val state by remember { vm.state }.collectAsState()
     vm.getPodcastAndEpisodes(link)
@@ -38,15 +39,16 @@ fun PodcastDetailsScreen(link: String) {
     if (state.loading) {
         LoadingBox()
     } else {
-        PodcastDetails(state.podcast!!, state.episodes)
+        PodcastDetails(navigator, state.podcast!!, state.episodes)
     }
 }
 
 @Composable
-private fun PodcastDetails(podcast: PodcastUi, episodes: List<EpisodeUi>) {
+private fun PodcastDetails(navigator: DestinationsNavigator, podcast: PodcastUi, episodes: List<EpisodeUi>) {
     Column(Modifier.fillMaxSize()) {
         PodcastHeader(podcast)
         EpisodesList(
+            navigator = navigator,
             modifier = Modifier.weight(4f),
             episodes = episodes
         )
