@@ -30,6 +30,7 @@ import net.treelzebub.podcasts.ui.screens.appCurrentDestinationAsState
 import net.treelzebub.podcasts.ui.screens.destinations.Destination
 import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.screens.startAppDestination
+import net.treelzebub.podcasts.ui.theme.Purple40
 
 @Composable
 @OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
@@ -90,7 +91,7 @@ fun AppScaffold(
 fun PodcastsAppBar() {
     Surface(shadowElevation = 4.dp) {
         TopAppBar(
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFbe3de8), titleContentColor = Color.White),
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40, titleContentColor = Color.White),
             title = { Text("Podcasts App") }
         )
     }
