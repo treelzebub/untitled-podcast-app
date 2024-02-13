@@ -44,7 +44,9 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator, ) {
     val onDismiss = { showDialog.value = false }
     val onPaste = { clipboard.getText()?.text.orEmpty() }
     val onConfirm = { input: String ->
-        if (validateUrl(input)) {
+        if (input.isEmpty()) {
+            onDismiss()
+        } else if (validateUrl(input)) {
             vm.addRssFeed(input) { toast(context, errorFetchParse) }
             onDismiss()
         } else {
