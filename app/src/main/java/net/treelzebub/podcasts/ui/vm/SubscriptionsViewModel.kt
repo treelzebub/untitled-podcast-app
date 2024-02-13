@@ -37,4 +37,8 @@ class SubscriptionsViewModel @Inject constructor(
         repo.upsert(channel1.link!!, channel1)
         repo.upsert(channel2.link!!, channel2)
     }
+
+    fun addRssFeed(input: String) {
+
+    }
 }
