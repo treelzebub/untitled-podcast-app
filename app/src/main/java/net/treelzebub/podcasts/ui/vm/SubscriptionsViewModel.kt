@@ -8,9 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.data.PodcastRssHandler
 import javax.inject.Inject
 
 @HiltViewModel
