@@ -14,10 +14,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.components.AddFeedDialog
 import net.treelzebub.podcasts.ui.components.PodcastList
 import net.treelzebub.podcasts.ui.components.toast
@@ -29,12 +31,13 @@ private fun validateUrl(url: String): Boolean = Patterns.WEB_URL.matcher(url).ma
 @Destination
 @Composable
 fun SubscriptionsScreen(navigator: DestinationsNavigator, ) {
-    val context = LocalContext.current
     val vm = hiltViewModel<SubscriptionsViewModel>()
     val podcasts by remember { vm.podcasts }.collectAsState(initial = emptyList())
     val showDialog = remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
+    val invalidUrl = stringResource(R.string.invalid_rss_url)
 
     val onDismiss = { showDialog.value = false }
     val onPaste = { clipboard.getText()?.text.orEmpty() }
@@ -43,7 +46,7 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator, ) {
             vm.addRssFeed(input)
             onDismiss()
         } else {
-            toast(context, "Invalid URL.")
+            toast(context, invalidUrl)
         }
     }
 
@@ -65,5 +68,4 @@ fun Fab(onClick: () -> Unit) {
     ) {
         Icon(Icons.Filled.Add, "Small floating action button.")
     }
-
 }

@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.data
 
+import android.util.Log
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -15,11 +16,22 @@ import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
 import javax.inject.Inject
 
+
 class PodcastsRepo @Inject constructor(
-    private val db: Database
+        private val rssParser: RssFeedHandler,
+        private val db: Database
 ) {
 
-    fun upsert(rssLink: String, channel: RssChannel) {
+    suspend fun fetchRssFeed(url: String) {
+        try {
+            val feed = rssParser.fetch(url)
+            upsert(url, feed)
+        } catch (e: Exception) {
+            Log.e("PodcastRepo", "Error parsing RSS Feed", e)
+        }
+    }
+
+    fun upsert(url: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
@@ -30,7 +42,7 @@ class PodcastsRepo @Inject constructor(
                     itunesChannelData?.owner?.email.orEmpty(),
                     safeImage,
                     lastBuildDate.orNow(),
-                    itunesChannelData?.newsFeedUrl ?: rssLink
+                    itunesChannelData?.newsFeedUrl ?: url
                 )
             }
             channel.items.forEach {

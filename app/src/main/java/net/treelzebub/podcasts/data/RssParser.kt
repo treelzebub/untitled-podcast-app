@@ -3,15 +3,9 @@ package net.treelzebub.podcasts.data
 import com.prof18.rssparser.RssParser
 import com.prof18.rssparser.model.RssChannel
 
-class RssParser {
 
+class RssParser : RssFeedHandler {
     private val parser = RssParser()
-
-    suspend fun parseRss(string: String): RssChannel {
-        return parser.parse(string)
-    }
-
-    suspend fun getRssChannel(url: String): RssChannel {
-        return parser.getRssChannel(url)
-    }
+    override suspend fun parse(feed: String): RssChannel = parser.parse(feed)
+    override suspend fun fetch(url: String): RssChannel = parser.getRssChannel(url)
 }
