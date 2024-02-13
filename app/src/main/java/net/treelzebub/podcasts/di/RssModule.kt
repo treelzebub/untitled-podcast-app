@@ -1,12 +1,11 @@
 package net.treelzebub.podcasts.di
 
-import dagger.Component
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import net.treelzebub.podcasts.data.RssFeedHandler
-import net.treelzebub.podcasts.data.RssParser
+import net.treelzebub.podcasts.data.RssHandler
+import net.treelzebub.podcasts.data.PodcastRssHandler
 
 
 @InstallIn(SingletonComponent::class)
@@ -14,5 +13,5 @@ import net.treelzebub.podcasts.data.RssParser
 class RssModule {
 
     @Provides
-    fun rssHandler(): RssFeedHandler = RssParser()
+    fun rssHandler(): RssHandler = PodcastRssHandler()
 }

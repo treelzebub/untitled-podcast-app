@@ -18,16 +18,17 @@ import javax.inject.Inject
 
 
 class PodcastsRepo @Inject constructor(
-        private val rssParser: RssFeedHandler,
+        private val rssHandler: RssHandler,
         private val db: Database
 ) {
 
-    suspend fun fetchRssFeed(url: String) {
+    suspend fun fetchRssFeed(url: String, onError: (Exception) -> Unit) {
         try {
-            val feed = rssParser.fetch(url)
+            val feed = rssHandler.fetch(url)
             upsert(url, feed)
         } catch (e: Exception) {
             Log.e("PodcastRepo", "Error parsing RSS Feed", e)
+            onError(e)
         }
     }
 

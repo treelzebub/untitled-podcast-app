@@ -25,6 +25,7 @@ import net.treelzebub.podcasts.ui.components.PodcastList
 import net.treelzebub.podcasts.ui.components.toast
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
 
+
 private fun validateUrl(url: String): Boolean = Patterns.WEB_URL.matcher(url).matches()
 
 @RootNavGraph(start = true)
@@ -38,12 +39,13 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator, ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val invalidUrl = stringResource(R.string.invalid_rss_url)
+    val errorFetchParse = stringResource(R.string.error_fetch_parse)
 
     val onDismiss = { showDialog.value = false }
     val onPaste = { clipboard.getText()?.text.orEmpty() }
     val onConfirm = { input: String ->
         if (validateUrl(input)) {
-            vm.addRssFeed(input)
+            vm.addRssFeed(input) { toast(context, errorFetchParse) }
             onDismiss()
         } else {
             toast(context, invalidUrl)
