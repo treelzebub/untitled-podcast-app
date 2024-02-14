@@ -12,16 +12,18 @@ import net.treelzebub.podcasts.net.PodcastIndexService
 import net.treelzebub.podcasts.net.models.Feed
 import javax.inject.Inject
 
+
 @HiltViewModel
-class SearchFeedsViewModel @Inject constructor(
+class DiscoverViewModel @Inject constructor(
     private val api: PodcastIndexService
 ) : ViewModel() {
 
     data class SearchFeedsState(
-        val feeds: List<Feed>
+        val feeds: List<Feed>,
+        val error: String? = null
     ) {
         companion object {
-            val Initial = SearchFeedsState(listOf())
+            val Initial = SearchFeedsState(emptyList())
         }
     }
 
@@ -30,8 +32,14 @@ class SearchFeedsViewModel @Inject constructor(
 
     fun search(query: String) {
         viewModelScope.launch {
-            val response = api.searchPodcasts(query)
-            _state.update { _state.value.copy(feeds = response.feeds) }
+            Log.d("DiscoverViewModel", "Searching for: $query")
+            try {
+                val response = api.searchPodcasts(query)
+                _state.update { _state.value.copy(feeds = response.feeds) }
+            } catch(e: Exception) {
+                Log.e("DiscoverViewModel", "API Error", e)
+                _state.update { _state.value.copy(feeds = emptyList(), error = "Api Error.") }
+            }
         }
     }
 
