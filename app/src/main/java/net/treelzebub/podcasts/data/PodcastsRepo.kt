@@ -18,8 +18,8 @@ import javax.inject.Inject
 
 
 class PodcastsRepo @Inject constructor(
-        private val rssHandler: RssHandler,
-        private val db: Database
+    private val rssHandler: RssHandler,
+    private val db: Database
 ) {
 
     suspend fun fetchRssFeed(url: String, onError: (Exception) -> Unit) {

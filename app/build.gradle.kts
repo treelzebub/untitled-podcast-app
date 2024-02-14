@@ -5,7 +5,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
-    id("app.cash.sqldelight") version "2.0.0"
+    id("app.cash.sqldelight") version "2.0.1"
     id("com.google.devtools.ksp")
 }
 
@@ -79,7 +79,7 @@ android {
 dependencies {
     // todo move to version catalog
     val retrofit = "2.9.0"
-    val sqldelight = "2.0.0"
+    val sqldelight = "2.0.1"
     val hilt = "2.48.1"
     val hiltAndroidX = "1.1.0"
     val lifecycle = "2.7.0"
@@ -95,10 +95,7 @@ dependencies {
     kapt("com.google.dagger:hilt-android-compiler:$hilt")
     implementation("androidx.hilt:hilt-navigation-compose:$hiltAndroidX")
 
-    // define a BOM and its version
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
-
-    // define any required OkHttp artifacts without version
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.squareup.okhttp3:logging-interceptor")
     implementation("com.squareup.retrofit2:retrofit:$retrofit")

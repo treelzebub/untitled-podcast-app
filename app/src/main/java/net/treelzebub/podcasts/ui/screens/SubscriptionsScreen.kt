@@ -70,6 +70,6 @@ fun Fab(onClick: () -> Unit) {
         containerColor = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.secondary
     ) {
-        Icon(Icons.Filled.Add, "Small floating action button.")
+        Icon(Icons.Filled.Add, "Tap to add an RSS feed.")
     }
 }

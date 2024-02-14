@@ -22,6 +22,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.R
+import net.treelzebub.podcasts.Search
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.theme.TextStyles
@@ -48,141 +50,163 @@ import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
 @Destination
 @Composable
 fun DiscoverScreen(navigator: DestinationsNavigator) {
-  val searchVm: DiscoverViewModel = hiltViewModel()
-  var state by remember { mutableStateOf(DiscoverViewModel.SearchFeedsState.Initial) }
-  val onSearch = { query: String? ->
-    val trimmed = query?.trim()
-    if (!trimmed.isNullOrBlank()) searchVm.search(trimmed)
-  }
-  val onSelect = { feed: Feed -> searchVm.select(feed) }
-
-  LaunchedEffect(Unit) {
-    searchVm.state.collect { state = it }
-  }
-
-  var text by remember { mutableStateOf("") }
-  var active by remember { mutableStateOf(false) }
-
-  val tempPreviousSearches = listOf("test", "lazy", "gaming", "okay", "testing", "search")
-
-  Column(modifier = Modifier.fillMaxSize()) {
-    SearchBar(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(12.dp, 0.dp, 12.dp, 12.dp),
-      query = text,
-      onQueryChange = {
-        val changed = it.ifBlank { "" }
-        text = changed
-      },
-      onSearch = {
-        active = false
-        onSearch(it)
-      },
-      active = active,
-      onActiveChange = { active = it },
-      placeholder = { Text("Search Podcasts") },
-      leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-      trailingIcon = {
-        Icon(
-          modifier = Modifier.clickable { text = "" },
-          imageVector = Icons.Default.Clear, contentDescription = null
-        )
-      }
-    ) {
-      LazyColumn(modifier = Modifier) {
-        items(tempPreviousSearches) { item ->
-          PreviousSearch(
-            text = item,
-            onClick = {
-              active = false
-              text = item
-              onSearch(item)
-            }
-          )
-        }
-      }
+    val vm: DiscoverViewModel = hiltViewModel()
+    var currentSearchState by remember { mutableStateOf(DiscoverViewModel.SearchFeedsState.Initial) }
+    val onSearch = { query: String? ->
+        val trimmed = query?.trim()
+        if (!trimmed.isNullOrBlank()) vm.search(trimmed)
     }
-    ResultsList(state.feeds, onSelect)
-  }
+    val onSelect = { feed: Feed -> vm.select(feed) }
+
+    LaunchedEffect(Unit) {
+        vm.currentSearchState.collect { currentSearchState = it }
+    }
+
+    var text by remember { mutableStateOf("") }
+    var active by remember { mutableStateOf(false) }
+    val previousSearches by remember { vm.previousSearches }.collectAsState(initial = listOf())
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        SearchBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp, 0.dp, 12.dp, 12.dp),
+            query = text,
+            onQueryChange = {
+                val changed = it.ifBlank { "" }
+                text = changed
+            },
+            onSearch = {
+                active = false
+                onSearch(it)
+            },
+            active = active,
+            onActiveChange = { active = it },
+            placeholder = { Text("Search Podcasts") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = {
+                Icon(
+                    modifier = Modifier.clickable { text = "" },
+                    imageVector = Icons.Default.Clear, contentDescription = null
+                )
+            }
+        ) {
+            LazyColumn(modifier = Modifier) {
+                items(previousSearches) { item ->
+                    PreviousSearch(
+                        search = item,
+                        onClick = {
+                            active = false
+                            text = item.query
+                            onSearch(item.query)
+                        },
+                        onDelete = {
+                            vm.deletePreviousSearch(it)
+                        }
+                    )
+                }
+            }
+        }
+        ResultsList(currentSearchState.feeds, onSelect)
+    }
 }
 
 @Composable
-fun PreviousSearch(text: String, onClick: (String) -> Unit) {
-  Row(modifier = Modifier.padding(4.dp)) {
-    Icon(painterResource(id = R.drawable.previous_search), contentDescription = "")
-    Text(
-      modifier = Modifier.clickable { onClick(text) },
-      text = text
-    )
-  }
+fun PreviousSearch(
+    search: Search,
+    onClick: (String) -> Unit,
+    onDelete: (Long) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+    ) {
+        Icon(
+            modifier = Modifier
+                .padding(end = 4.dp),
+            painter = painterResource(id = R.drawable.previous_search),
+            contentDescription = ""
+        )
+        Text(
+            modifier = Modifier.weight(2f).clickable { onClick(search.query) },
+            text = search.query
+        )
+        Icon(
+            modifier = Modifier
+                .padding(4.dp)
+                .clickable { onDelete(search._id) },
+            imageVector = Icons.Default.Clear,
+            contentDescription = ""
+        )
+    }
 }
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun ResultsList(
-  feeds: List<Feed>,
-  onSelect: (Feed) -> Unit
+    feeds: List<Feed>,
+    onSelect: (Feed) -> Unit
 ) {
-  LazyColumn(
-    modifier = Modifier,
-    verticalArrangement = Arrangement.spacedBy(6.dp)
-  ) {
-    items(feeds, key = { it.id }) {
-      FeedItem(
-        Modifier.animateItemPlacement(tween(durationMillis = 250)),
-        it,
-        onSelect
-      )
+    LazyColumn(
+        modifier = Modifier,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        items(feeds, key = { it.id }) {
+            FeedItem(
+                Modifier.animateItemPlacement(tween(durationMillis = 250)),
+                it,
+                onSelect
+            )
+        }
     }
-  }
 }
 
 @Composable
 fun FeedItem(
-  modifier: Modifier,
-  feed: Feed,
-  onSelect: (Feed) -> Unit
+    modifier: Modifier,
+    feed: Feed,
+    onSelect: (Feed) -> Unit
 ) {
-  ItemCard(
-    modifier = Modifier.clickable { onSelect(feed) }
-  ) {
-    Row(
-      modifier = Modifier
-        .wrapContentHeight()
-        .fillMaxWidth()
-        .then(modifier),
-      verticalAlignment = Alignment.CenterVertically
+    ItemCard(
+        modifier = Modifier.clickable { onSelect(feed) }
     ) {
-      AsyncImage(
-        modifier = Modifier
-          .fillMaxSize()
-          .weight(1.0f),
-        model = feed.image,
-        contentDescription = "Podcast Logo"
-      )
-      Column(
-        Modifier
-          .weight(3f)
-          .wrapContentHeight()
-          .padding(12.dp)
-      ) {
-        BasicText(
-          modifier = Modifier.padding(bottom = 2.dp),
-          style = TextStyles.CardSubtitle,
-          text = feed.title
-        )
-        BasicText(
-          modifier = Modifier.padding(bottom = 2.dp),
-          style = TextStyles.CardDate,
-          text = feed.description
-        )
-        BasicText(
-          style = TextStyle(textAlign = TextAlign.Start),
-          overflow = TextOverflow.Ellipsis,
-          text = "${feed.episodeCount} episodes"
-        )
-      }
+        Row(
+            modifier = Modifier
+                .wrapContentHeight()
+                .fillMaxWidth()
+                .then(modifier),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1.0f),
+                model = feed.image,
+                contentDescription = "Podcast Logo"
+            )
+            Column(
+                Modifier
+                    .weight(3f)
+                    .wrapContentHeight()
+                    .padding(12.dp)
+            ) {
+                BasicText(
+                    modifier = Modifier.padding(bottom = 2.dp),
+                    style = TextStyles.CardSubtitle,
+                    text = feed.title
+                )
+                BasicText(
+                    modifier = Modifier.padding(bottom = 2.dp),
+                    style = TextStyles.CardDate,
+                    text = feed.description
+                )
+                BasicText(
+                    style = TextStyle(textAlign = TextAlign.Start),
+                    overflow = TextOverflow.Ellipsis,
+                    text = "${feed.episodeCount} episodes"
+                )
+            }
+        }
     }
-  }
 }
