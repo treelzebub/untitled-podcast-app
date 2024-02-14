@@ -88,7 +88,10 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             trailingIcon = {
                 Icon(
-                    modifier = Modifier.clickable { text = "" },
+                    modifier = Modifier.clickable {
+                        text = ""
+                        active = false
+                    },
                     imageVector = Icons.Default.Clear, contentDescription = null
                 )
             }
