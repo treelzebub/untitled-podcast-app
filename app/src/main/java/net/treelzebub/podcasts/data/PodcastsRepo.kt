@@ -4,6 +4,7 @@ import android.util.Log
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -64,11 +65,11 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    fun getPodcastByLink(link: String): Flow<PodcastUi> {
+    fun getPodcastByLink(link: String): Flow<PodcastUi?> {
         return db.podcastsQueries
             .get_podcast_by_link(link, podcastMapper)
             .asFlow()
-            .mapToOne(Dispatchers.IO)
+            .mapToOneOrNull(Dispatchers.IO)
     }
 
     fun getAllPodcasts(): Flow<List<PodcastUi>> {
@@ -77,6 +78,8 @@ class PodcastsRepo @Inject constructor(
             .asFlow()
             .mapToList(Dispatchers.IO)
     }
+
+    fun deletePodcastById(link: String) = db.podcastsQueries.delete(link)
 
     fun getEpisodesByChannelLink(link: String): Flow<List<EpisodeUi>> {
         return db.episodesQueries
@@ -91,6 +94,7 @@ class PodcastsRepo @Inject constructor(
             .asFlow()
             .mapToOne(Dispatchers.IO)
     }
+
 
     private val podcastMapper: (
         link: String,

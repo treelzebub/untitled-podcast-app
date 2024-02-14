@@ -39,4 +39,8 @@ class PodcastDetailsViewModel @Inject constructor(
             }
         }
     }
+
+    fun deletePodcast(link: String) {
+        repo.deletePodcastById(link)
+    }
 }
