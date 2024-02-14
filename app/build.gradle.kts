@@ -122,6 +122,8 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$exoplayer")
     implementation("androidx.media3:media3-exoplayer-dash:$exoplayer")
     implementation("androidx.media3:media3-ui:$exoplayer")
+    implementation("androidx.media3:media3-session:$exoplayer")
+
     implementation("io.coil-kt:coil:$coil")
     implementation("io.coil-kt:coil-compose:$coil")
 
