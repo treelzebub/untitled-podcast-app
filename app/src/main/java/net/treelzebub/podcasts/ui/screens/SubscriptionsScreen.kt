@@ -31,7 +31,7 @@ private fun validateUrl(url: String): Boolean = Patterns.WEB_URL.matcher(url).ma
 @RootNavGraph(start = true)
 @Destination
 @Composable
-fun SubscriptionsScreen(navigator: DestinationsNavigator, ) {
+fun SubscriptionsScreen(navigator: DestinationsNavigator) {
     val vm = hiltViewModel<SubscriptionsViewModel>()
     val podcasts by remember { vm.podcasts }.collectAsState(initial = emptyList())
     val showDialog = remember { mutableStateOf(false) }

@@ -76,8 +76,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
                 .padding(12.dp, 0.dp, 12.dp, 12.dp),
             query = text,
             onQueryChange = {
-                val changed = it.ifBlank { "" }
-                text = changed
+                text = it.ifBlank { "" }
             },
             onSearch = {
                 active = false

@@ -37,67 +37,68 @@ import net.treelzebub.podcasts.R
 
 @Composable
 fun AddFeedDialog(
-        onConfirm: (String) -> Unit,
-        onPaste: () -> String,
-        onDismissRequest: () -> Unit
+    onConfirm: (String) -> Unit,
+    onPaste: () -> String,
+    onDismissRequest: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
     val focusRequester = FocusRequester()
 
     Dialog(
-            onDismissRequest = onDismissRequest
+        onDismissRequest = onDismissRequest
     ) {
         Box(
-                modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(unbounded = true)
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(unbounded = true)
         ) {
             Column(
-                    modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White, RoundedCornerShape(6.dp))
-                            .wrapContentHeight()
-                            .padding(8.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White, RoundedCornerShape(6.dp))
+                    .wrapContentHeight()
+                    .padding(8.dp)
             ) {
                 OutlinedTextField(
-                        modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.White, RectangleShape)
-                                .padding(8.dp)
-                                .focusRequester(focusRequester),
-                        textStyle = TextStyle(fontSize = 14.sp),
-                        singleLine = true,
-                        label = { Text("RSS Link") },
-                        placeholder = {
-                            Text(
-                                    fontSize = 14.sp,
-                                    color = Color.LightGray,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
-                                    text = "https://www.example.org/podcast.rss"
-                            )
-                        },
-                        maxLines = 1,
-                        trailingIcon = {
-                            Icon(
-                                    modifier = Modifier.clickable { inputText = onPaste() },
-                                    painter = painterResource(id = R.drawable.content_paste),
-                                    contentDescription = "Paste icon. Tap to paste URL you have copied."
-                            )
-                        },
-                        value = inputText,
-                        onValueChange = { inputText = it }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RectangleShape)
+                        .padding(8.dp)
+                        .focusRequester(focusRequester),
+                    textStyle = TextStyle(fontSize = 14.sp),
+                    singleLine = true,
+                    label = { Text("RSS Link") },
+                    placeholder = {
+                        Text(
+                            fontSize = 14.sp,
+                            color = Color.LightGray,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis,
+                            text = "https://www.example.org/podcast.rss"
+                        )
+                    },
+                    maxLines = 1,
+                    trailingIcon = {
+                        Icon(
+                            modifier = Modifier.clickable { inputText = onPaste() },
+                            painter = painterResource(id = R.drawable.content_paste),
+                            contentDescription = "Paste icon. Tap to paste URL you have copied."
+                        )
+                    },
+                    value = inputText,
+                    onValueChange = { inputText = it }
                 )
 
                 LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-                Row(modifier = Modifier
+                Row(
+                    modifier = Modifier
                         .wrapContentSize()
                         .align(Alignment.End)
                 ) {
                     Button(
-                            modifier = Modifier.padding(end = 6.dp),
-                            onClick = { onDismissRequest() }
+                        modifier = Modifier.padding(end = 6.dp),
+                        onClick = { onDismissRequest() }
                     ) {
                         Text("Cancel")
                     }
