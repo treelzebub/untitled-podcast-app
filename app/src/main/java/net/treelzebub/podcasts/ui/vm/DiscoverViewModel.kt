@@ -54,7 +54,7 @@ class DiscoverViewModel @Inject constructor(
     }
 
     fun select(feed: Feed, onError: (Exception) -> Unit) {
-        Log.d("TEST", "Clicked on: ${feed.title}")
+        Log.d("TEST", "Clicked on: ${feed.title}, with link: ${feed.link}")
         CoroutineScope(Dispatchers.IO).launch {
             podcastsRepo.fetchRssFeed(feed.url) {
                 onError(it)
