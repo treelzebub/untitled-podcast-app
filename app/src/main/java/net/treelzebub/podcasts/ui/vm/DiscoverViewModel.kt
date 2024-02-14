@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.treelzebub.podcasts.Search
+import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.PreviousSearchRepo
 import net.treelzebub.podcasts.net.PodcastIndexService
 import net.treelzebub.podcasts.net.models.Feed
@@ -20,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class DiscoverViewModel @Inject constructor(
     private val api: PodcastIndexService,
-    private val repo: PreviousSearchRepo
+    private val previousSearchRepo: PreviousSearchRepo,
+    private val podcastsRepo: PodcastsRepo
 ) : ViewModel() {
 
     data class SearchFeedsState(
@@ -35,12 +36,12 @@ class DiscoverViewModel @Inject constructor(
     private val _currentSearchState: MutableStateFlow<SearchFeedsState> = MutableStateFlow(SearchFeedsState(listOf()))
     val currentSearchState = _currentSearchState.asStateFlow()
 
-    val previousSearches: Flow<List<Search>> = repo.all()
+    val previousSearches: Flow<List<String>> = previousSearchRepo.all()
 
     fun search(query: String) {
         CoroutineScope(Dispatchers.IO).launch {
             Log.d("DiscoverViewModel", "Searching for: $query")
-            repo.insert(query)
+            previousSearchRepo.insert(query)
 
             try {
                 val response = api.searchPodcasts(query)
@@ -52,9 +53,15 @@ class DiscoverViewModel @Inject constructor(
         }
     }
 
-    fun select(feed: Feed) {
+    fun select(feed: Feed, onError: (Exception) -> Unit) {
         Log.d("TEST", "Clicked on: ${feed.title}")
+        CoroutineScope(Dispatchers.IO).launch {
+            podcastsRepo.fetchRssFeed(feed.url) {
+                onError(it)
+                // TODO actually handle errors
+            }
+        }
     }
 
-    fun deletePreviousSearch(id: Long) = repo.delete(id)
+    fun deletePreviousSearch(query: String) = previousSearchRepo.delete(query)
 }

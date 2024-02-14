@@ -10,6 +10,6 @@ import javax.inject.Inject
 class PreviousSearchRepo @Inject constructor(private val db: Database) {
 
     fun all() = db.searchesQueries.select_all().asFlow().mapToList(Dispatchers.IO)
-    fun insert(query: String) = db.searchesQueries.insert(null, query)
-    fun delete(id: Long) = db.searchesQueries.delete(id)
+    fun insert(query: String) = db.searchesQueries.insert(query)
+    fun delete(query: String) = db.searchesQueries.delete(query)
 }

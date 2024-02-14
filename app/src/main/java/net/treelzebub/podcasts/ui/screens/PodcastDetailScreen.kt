@@ -32,7 +32,7 @@ import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel
 @Destination
 @Composable
 fun PodcastDetailsScreen(navigator: DestinationsNavigator, link: String) {
-    val vm: PodcastDetailsViewModel = hiltViewModel()
+    val vm = hiltViewModel<PodcastDetailsViewModel>()
     val state by remember { vm.state }.collectAsState()
     vm.getPodcastAndEpisodes(link)
 

@@ -54,8 +54,8 @@ class PodcastsRepo @Inject constructor(
                         title.sanitizeHtml()!!,
                         description?.sanitizeHtml().orEmpty(),
                         pubDate,
-                        link!!.sanitizeUrl()!!,
-                        audio!!,
+                        link?.sanitizeUrl().orEmpty(),
+                        audio.orEmpty(),
                         image?.sanitizeUrl() ?: safeImage,
                         itunesItemData?.duration
                     )

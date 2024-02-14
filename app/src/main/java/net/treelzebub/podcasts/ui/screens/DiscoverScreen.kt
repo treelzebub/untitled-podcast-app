@@ -39,9 +39,9 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.R
-import net.treelzebub.podcasts.Search
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
+import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
 
@@ -50,21 +50,24 @@ import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
 @Destination
 @Composable
 fun DiscoverScreen(navigator: DestinationsNavigator) {
-    val vm: DiscoverViewModel = hiltViewModel()
+    val vm = hiltViewModel<DiscoverViewModel>()
     var currentSearchState by remember { mutableStateOf(DiscoverViewModel.SearchFeedsState.Initial) }
-    val onSearch = { query: String? ->
-        val trimmed = query?.trim()
-        if (!trimmed.isNullOrBlank()) vm.search(trimmed)
-    }
-    val onSelect = { feed: Feed -> vm.select(feed) }
-
+    val previousSearches by remember { vm.previousSearches }.collectAsState(initial = listOf())
     LaunchedEffect(Unit) {
         vm.currentSearchState.collect { currentSearchState = it }
     }
 
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
-    val previousSearches by remember { vm.previousSearches }.collectAsState(initial = listOf())
+
+    val onSearch = { query: String? ->
+        val trimmed = query?.trim()
+        if (!trimmed.isNullOrBlank()) vm.search(trimmed)
+    }
+    val onSelect: (Feed) -> Unit = {
+        vm.select(it) { } //TODO error handling
+        navigator.navigate(SubscriptionsScreenDestination)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(
@@ -92,17 +95,15 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
             }
         ) {
             LazyColumn(modifier = Modifier) {
-                items(previousSearches) { item ->
+                items(previousSearches) { query ->
                     PreviousSearch(
-                        search = item,
+                        query = query,
                         onClick = {
                             active = false
-                            text = item.query
-                            onSearch(item.query)
+                            text = query
+                            onSearch(query)
                         },
-                        onDelete = {
-                            vm.deletePreviousSearch(it)
-                        }
+                        onDelete = { vm.deletePreviousSearch(it) }
                     )
                 }
             }
@@ -113,9 +114,9 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
 
 @Composable
 fun PreviousSearch(
-    search: Search,
+    query: String,
     onClick: (String) -> Unit,
-    onDelete: (Long) -> Unit
+    onDelete: (String) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -129,13 +130,13 @@ fun PreviousSearch(
             contentDescription = ""
         )
         Text(
-            modifier = Modifier.weight(2f).clickable { onClick(search.query) },
-            text = search.query
+            modifier = Modifier.weight(2f).clickable { onClick(query) },
+            text = query
         )
         Icon(
             modifier = Modifier
                 .padding(4.dp)
-                .clickable { onDelete(search._id) },
+                .clickable { onDelete(query) },
             imageVector = Icons.Default.Clear,
             contentDescription = ""
         )
@@ -176,7 +177,7 @@ fun FeedItem(
                 .wrapContentHeight()
                 .fillMaxWidth()
                 .then(modifier),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             AsyncImage(
                 modifier = Modifier
