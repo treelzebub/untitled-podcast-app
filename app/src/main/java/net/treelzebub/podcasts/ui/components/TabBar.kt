@@ -29,7 +29,9 @@ sealed class TabItem(
     @DrawableRes val image: Int,
     val direction: DirectionDestination
 ) {
-    data object Subscriptions : TabItem(R.string.tab_subscriptions, R.drawable.subscriptions, SubscriptionsScreenDestination)
+    data object Subscriptions :
+        TabItem(R.string.tab_subscriptions, R.drawable.subscriptions, SubscriptionsScreenDestination)
+
     data object Discover : TabItem(R.string.tab_discover, R.drawable.search, DiscoverScreenDestination)
     data object Profile : TabItem(R.string.tab_profile, R.drawable.account_circle, ProfileScreenDestination)
     data object Settings : TabItem(R.string.tab_settings, R.drawable.settings, SettingsScreenDestination)

@@ -29,7 +29,8 @@ fun EpisodesList(
     Column(
         Modifier
             .fillMaxSize()
-            .then(modifier)) {
+            .then(modifier)
+    ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             episodes.forEach {
                 item { EpisodeItem(navigator, it) }

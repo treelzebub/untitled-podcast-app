@@ -33,14 +33,14 @@ import net.treelzebub.podcasts.ui.theme.TextStyles
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun PodcastList(
-        navigator: DestinationsNavigator,
-        podcasts: List<PodcastUi>,
-        contentPadding: PaddingValues
+    navigator: DestinationsNavigator,
+    podcasts: List<PodcastUi>,
+    contentPadding: PaddingValues
 ) {
     LazyColumn(
         modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
+            .fillMaxSize()
+            .padding(contentPadding)
     ) {
         items(podcasts, key = { it.link }) {
             PodcastItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), navigator, it, contentPadding)
@@ -50,10 +50,10 @@ fun PodcastList(
 
 @Composable
 fun PodcastItem(
-        modifier: Modifier,
-        navigator: DestinationsNavigator,
-        podcast: PodcastUi,
-        contentPadding: PaddingValues
+    modifier: Modifier,
+    navigator: DestinationsNavigator,
+    podcast: PodcastUi,
+    contentPadding: PaddingValues
 ) {
     Row(
         modifier = Modifier
