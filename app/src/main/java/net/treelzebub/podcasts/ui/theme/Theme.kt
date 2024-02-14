@@ -39,8 +39,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun PodcastsTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+    darkTheme: Boolean = false, //isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
