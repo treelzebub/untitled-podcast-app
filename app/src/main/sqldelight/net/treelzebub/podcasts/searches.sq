@@ -1,0 +1,12 @@
+CREATE TABLE search (
+    query TEXT NOT NULL PRIMARY KEY
+);
+
+select_all:
+SELECT * FROM search;
+
+insert:
+INSERT OR REPLACE INTO search VALUES (?);
+
+delete:
+DELETE FROM search WHERE ? = query;

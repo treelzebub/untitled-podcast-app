@@ -4,7 +4,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,22 +14,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,43 +38,47 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
+import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
-import net.treelzebub.podcasts.ui.vm.SearchFeedsViewModel
+import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
 fun DiscoverScreen(navigator: DestinationsNavigator) {
-    val scope = rememberCoroutineScope()
-    val searchVm: SearchFeedsViewModel = hiltViewModel()
-    var state by remember { mutableStateOf(SearchFeedsViewModel.SearchFeedsState.Initial) }
-    val onSearch = { query: String -> searchVm.search(query) }
-    val onSelect = { feed: Feed -> searchVm.select(feed) }
-
-//        searchVm.state.collectLatest { state = it }
-    Column(Modifier.fillMaxSize()) {
-        SearchFeeds(onSearch)
-        ResultsList(state.feeds, onSelect)
-        Text("Discover")
+    val vm = hiltViewModel<DiscoverViewModel>()
+    var currentSearchState by remember { mutableStateOf(DiscoverViewModel.SearchFeedsState.Initial) }
+    val previousSearches by remember { vm.previousSearches }.collectAsState(initial = listOf())
+    LaunchedEffect(Unit) {
+        vm.currentSearchState.collect { currentSearchState = it }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchFeeds(
-    onSearch: (String) -> Unit
-) {
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
-    Box(
-        Modifier
-            .wrapContentHeight()
-            .semantics { isTraversalGroup = true }) {
+
+    val onSearch = { query: String? ->
+        val trimmed = query?.trim()
+        if (!trimmed.isNullOrBlank()) vm.search(trimmed)
+    }
+    val onSelect: (Feed) -> Unit = {
+        vm.select(it) { } //TODO error handling
+        navigator.navigate(SubscriptionsScreenDestination)
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp, 0.dp, 12.dp, 12.dp),
             query = text,
-            onQueryChange = { text = it },
+            onQueryChange = {
+                val changed = it.ifBlank { "" }
+                text = changed
+            },
             onSearch = {
                 active = false
                 onSearch(it)
@@ -84,8 +87,59 @@ fun SearchFeeds(
             onActiveChange = { active = it },
             placeholder = { Text("Search Podcasts") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            trailingIcon = { Icon(Icons.Default.MoreVert, contentDescription = null) }
-        ) {}
+            trailingIcon = {
+                Icon(
+                    modifier = Modifier.clickable { text = "" },
+                    imageVector = Icons.Default.Clear, contentDescription = null
+                )
+            }
+        ) {
+            LazyColumn(modifier = Modifier) {
+                items(previousSearches) { query ->
+                    PreviousSearch(
+                        query = query,
+                        onClick = {
+                            active = false
+                            text = query
+                            onSearch(query)
+                        },
+                        onDelete = { vm.deletePreviousSearch(it) }
+                    )
+                }
+            }
+        }
+        ResultsList(currentSearchState.feeds, onSelect)
+    }
+}
+
+@Composable
+fun PreviousSearch(
+    query: String,
+    onClick: (String) -> Unit,
+    onDelete: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+    ) {
+        Icon(
+            modifier = Modifier
+                .padding(end = 4.dp),
+            painter = painterResource(id = R.drawable.previous_search),
+            contentDescription = ""
+        )
+        Text(
+            modifier = Modifier.weight(2f).clickable { onClick(query) },
+            text = query
+        )
+        Icon(
+            modifier = Modifier
+                .padding(4.dp)
+                .clickable { onDelete(query) },
+            imageVector = Icons.Default.Clear,
+            contentDescription = ""
+        )
     }
 }
 
@@ -96,7 +150,7 @@ fun ResultsList(
     onSelect: (Feed) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         items(feeds, key = { it.id }) {
@@ -123,7 +177,7 @@ fun FeedItem(
                 .wrapContentHeight()
                 .fillMaxWidth()
                 .then(modifier),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             AsyncImage(
                 modifier = Modifier
