@@ -21,6 +21,7 @@ import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.components.AddFeedDialog
+import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.components.PodcastList
 import net.treelzebub.podcasts.ui.components.toast
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
@@ -33,7 +34,7 @@ private fun validateUrl(url: String): Boolean = Patterns.WEB_URL.matcher(url).ma
 @Composable
 fun SubscriptionsScreen(navigator: DestinationsNavigator) {
     val vm = hiltViewModel<SubscriptionsViewModel>()
-    val podcasts by remember { vm.podcasts }.collectAsState(initial = emptyList())
+    val state by remember { vm.state }.collectAsState()
     val showDialog = remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -56,10 +57,14 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
 
     if (showDialog.value) AddFeedDialog(onConfirm, onPaste, onDismiss)
 
-    Scaffold(
-        floatingActionButton = { Fab { showDialog.value = true } }
-    ) { contentPadding ->
-        PodcastList(navigator, podcasts, contentPadding)
+    if (state.loading) {
+        LoadingBox()
+    } else {
+        Scaffold(
+            floatingActionButton = { Fab { showDialog.value = true } }
+        ) { contentPadding ->
+            PodcastList(navigator, state.podcasts, contentPadding)
+        }
     }
 }
 
