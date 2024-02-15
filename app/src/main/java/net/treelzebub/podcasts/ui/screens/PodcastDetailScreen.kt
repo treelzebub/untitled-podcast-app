@@ -41,7 +41,10 @@ import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel
 
 @Destination
 @Composable
-fun PodcastDetailsScreen(navigator: DestinationsNavigator, link: String) {
+fun PodcastDetailsScreen(
+    navigator: DestinationsNavigator,
+    link: String
+) {
     val vm = hiltViewModel<PodcastDetailsViewModel>()
     val state by remember { vm.state }.collectAsState()
     val onDelete = { vm.deletePodcast(link) }
@@ -57,7 +60,12 @@ fun PodcastDetailsScreen(navigator: DestinationsNavigator, link: String) {
 }
 
 @Composable
-private fun PodcastDetails(navigator: DestinationsNavigator, podcast: PodcastUi, episodes: List<EpisodeUi>, onDelete: () -> Unit) {
+private fun PodcastDetails(
+    navigator: DestinationsNavigator,
+    podcast: PodcastUi,
+    episodes: List<EpisodeUi>,
+    onDelete: () -> Unit
+) {
     Column(Modifier.fillMaxSize()) {
         PodcastHeader(podcast, onDelete)
         EpisodesList(
@@ -69,7 +77,10 @@ private fun PodcastDetails(navigator: DestinationsNavigator, podcast: PodcastUi,
 }
 
 @Composable
-private fun PodcastHeader(podcast: PodcastUi, onDelete: () -> Unit) {
+private fun PodcastHeader(
+    podcast: PodcastUi,
+    onDelete: () -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
 
     Row(

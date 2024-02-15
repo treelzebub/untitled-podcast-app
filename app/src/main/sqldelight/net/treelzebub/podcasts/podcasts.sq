@@ -20,3 +20,6 @@ SELECT * FROM podcast WHERE ? = link;
 
 get_all_podcasts:
 SELECT * FROM podcast;
+
+delete_all:
+DELETE FROM podcast;

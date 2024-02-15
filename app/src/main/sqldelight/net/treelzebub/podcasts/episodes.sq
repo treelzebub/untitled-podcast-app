@@ -38,3 +38,6 @@ search_titles:
 SELECT *
 FROM episode
 WHERE title LIKE (:term || '%');
+
+delete_all:
+DELETE FROM episode;

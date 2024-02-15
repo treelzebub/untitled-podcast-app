@@ -23,6 +23,8 @@ import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
 import com.ramcosta.composedestinations.spec.Route
+import net.treelzebub.podcasts.BuildConfig
+import net.treelzebub.podcasts.data.DebugMenu
 import net.treelzebub.podcasts.ui.components.BottomBar
 import net.treelzebub.podcasts.ui.components.TabItem
 import net.treelzebub.podcasts.ui.screens.NavGraphs
@@ -91,6 +93,7 @@ fun AppScaffold(
 fun PodcastsAppBar() {
     Surface(shadowElevation = 4.dp) {
         TopAppBar(
+            actions = { if (BuildConfig.DEBUG) DebugMenu() },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40, titleContentColor = Color.White),
             title = { Text("Podcasts App") }
         )
