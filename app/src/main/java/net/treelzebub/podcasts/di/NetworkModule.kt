@@ -6,6 +6,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.net.PodcastIndexHeadersInterceptor
 import net.treelzebub.podcasts.net.PodcastIndexService
 import okhttp3.OkHttpClient
@@ -14,8 +15,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 
-@InstallIn(SingletonComponent::class)
 @Module
+@InstallIn(SingletonComponent::class)
 class NetworkModule {
 
     @Provides

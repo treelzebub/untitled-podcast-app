@@ -10,3 +10,6 @@ INSERT OR REPLACE INTO search VALUES (?);
 
 delete:
 DELETE FROM search WHERE ? = query;
+
+delete_all:
+DELETE FROM search;

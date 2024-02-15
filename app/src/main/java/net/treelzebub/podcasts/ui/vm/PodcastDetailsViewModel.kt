@@ -2,10 +2,11 @@ package net.treelzebub.podcasts.ui.vm
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
@@ -24,14 +25,18 @@ class PodcastDetailsViewModel @Inject constructor(
 
     fun getPodcastAndEpisodes(link: String) {
         viewModelScope.launch {
-            val podcastFlow = repo.getPodcastByLink(link)
-            val episodesFlow = repo.getEpisodesByChannelLink(link)
-            podcastFlow.combine(episodesFlow) { podcast, episodes ->
-                PodcastDetailsState(false, podcast, episodes)
-            }.collectLatest { currentState ->
+            val currentStateFlow = withContext(Dispatchers.IO) {
+                val podcastFlow = repo.getPodcastByLink(link)
+                val episodesFlow = repo.getEpisodesByChannelLink(link)
+                podcastFlow.combine(episodesFlow) { podcast, episodes ->
+                    PodcastDetailsState(false, podcast, episodes)
+                }
+            }
+
+            currentStateFlow.collect { currentState ->
                 _state.update {
                     it.copy(
-                        loading = currentState.loading,
+                        loading = false,
                         podcast = currentState.podcast,
                         episodes = currentState.episodes
                     )
@@ -40,7 +45,5 @@ class PodcastDetailsViewModel @Inject constructor(
         }
     }
 
-    fun deletePodcast(link: String) {
-        repo.deletePodcastById(link)
-    }
+    fun deletePodcast(link: String)  = repo.deletePodcastById(link)
 }
