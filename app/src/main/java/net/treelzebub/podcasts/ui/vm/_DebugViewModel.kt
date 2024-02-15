@@ -12,9 +12,11 @@ import javax.inject.Inject
 @HiltViewModel
 class _DebugViewModel @Inject constructor(
     app: Application,
-    private val db: Database,
-    private val repo: PodcastsRepo
+    db: Database,
+    repo: PodcastsRepo
 ) : AndroidViewModel(app) {
 
-    fun debug() = _DebugMode(getApplication<App>(), db, repo)
+    private val debug = _DebugMode(getApplication<App>(), db, repo)
+    fun populateSubs() = debug.populateSubs()
+    fun nukeSubs() = debug.nukeSubs()
 }

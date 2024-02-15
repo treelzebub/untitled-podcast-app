@@ -32,8 +32,6 @@ class _DebugMode constructor(
     }
 
     fun populateSubs() {
-
-
         CoroutineScope(Dispatchers.IO).launch {
             app.assets.open("test-feed-urls.txt").bufferedReader().use {
                 it.forEachLine {
@@ -55,15 +53,14 @@ class _DebugMode constructor(
 @Composable
 fun DebugMenu() {
     val vm = hiltViewModel<_DebugViewModel>()
-    val debug = vm.debug()
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = !expanded }) {
             Icon(imageVector = Icons.Outlined.MoreVert, contentDescription = "")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(text = { Text(text = "Populate Subs") }, onClick = { debug.populateSubs() })
-            DropdownMenuItem(text = { Text(text = "Nuke Subs") }, onClick = { debug.nukeSubs() })
+            DropdownMenuItem(text = { Text(text = "Populate Subs") }, onClick = { vm.populateSubs() })
+            DropdownMenuItem(text = { Text(text = "Nuke Subs") }, onClick = { vm.nukeSubs() })
         }
     }
 }
