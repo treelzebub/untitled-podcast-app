@@ -15,14 +15,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.AndroidViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.BuildConfig
 import net.treelzebub.podcasts.Database
-import net.treelzebub.podcasts.ui.vm._DebugViewModel
+import javax.inject.Inject
 
-class _DebugMode constructor(
+private class _DebugMode constructor(
     private val app: Application,
     private val db: Database,
     private val repo: PodcastsRepo
@@ -48,6 +51,18 @@ class _DebugMode constructor(
         db.podcastsQueries.delete_all()
         db.episodesQueries.delete_all()
     }
+}
+
+@HiltViewModel
+private class _DebugViewModel @Inject constructor(
+    app: Application,
+    db: Database,
+    repo: PodcastsRepo
+) : AndroidViewModel(app) {
+
+    private val debug = _DebugMode(getApplication<App>(), db, repo)
+    fun populateSubs() = debug.populateSubs()
+    fun nukeSubs() = debug.nukeSubs()
 }
 
 @Composable
