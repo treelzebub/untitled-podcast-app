@@ -29,12 +29,12 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.service.PlaybackService
-import net.treelzebub.podcasts.ui.vm.MediaPlayerViewModel
+import net.treelzebub.podcasts.ui.vm.NowPlayingViewModel
 
 @Destination
 @Composable
 fun NowPlayingScreen(navigator: DestinationsNavigator, episodeId: String) {
-    val vm = hiltViewModel<MediaPlayerViewModel>()
+    val vm = hiltViewModel<NowPlayingViewModel>()
     var lifecycle by remember { mutableStateOf(Lifecycle.Event.ON_CREATE) }
     val lifecycleOwner = LocalLifecycleOwner.current
 

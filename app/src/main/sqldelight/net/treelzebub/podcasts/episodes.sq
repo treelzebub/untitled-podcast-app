@@ -1,6 +1,7 @@
 CREATE TABLE episode (
     id TEXT PRIMARY KEY NOT NULL,
     channel_id TEXT NOT NULL,
+    channel_title TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
     date TEXT,
@@ -16,9 +17,9 @@ CREATE TABLE episode (
 
 upsert:
 INSERT OR REPLACE INTO episode(
-    id, channel_id, title, description, date, link, streaming_link, image_url, duration)
+    id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
 VALUES (
-    :id, :channel_id, :title, :description, :date, :link, :streaming_link, :image_url, :duration
+    :id, :channel_id, :channel_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration
 );
 
 get_all_episodes:

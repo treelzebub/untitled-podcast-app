@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 data class EpisodeUi(
     val id: String,
     val channelId: String,
+    val channelTitle: String,
     val title: String,
     val description: String,
     val date: String,
