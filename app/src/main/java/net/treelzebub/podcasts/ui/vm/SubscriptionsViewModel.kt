@@ -14,13 +14,13 @@ import javax.inject.Inject
 @HiltViewModel
 class SubscriptionsViewModel @Inject constructor(
     private val repo: PodcastsRepo
-) : StatefulViewModel<SubscriptionsViewModel.SubscriptionsState>(SubscriptionsState()) {
+) : StatefulViewModel<SubscriptionsViewModel.State>(State()) {
 
     init {
         getAllPodcasts()
     }
 
-    data class SubscriptionsState(
+    data class State(
         val loading: Boolean = true,
         val podcasts: List<PodcastUi> = emptyList()
     )

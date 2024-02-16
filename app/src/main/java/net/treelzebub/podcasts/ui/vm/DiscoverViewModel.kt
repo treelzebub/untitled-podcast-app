@@ -1,17 +1,14 @@
 package net.treelzebub.podcasts.ui.vm
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.data.PreviousSearchRepo
+import net.treelzebub.podcasts.data.SearchQueriesRepo
 import net.treelzebub.podcasts.net.PodcastIndexService
 import net.treelzebub.podcasts.net.models.Feed
 import javax.inject.Inject
@@ -20,48 +17,66 @@ import javax.inject.Inject
 @HiltViewModel
 class DiscoverViewModel @Inject constructor(
     private val api: PodcastIndexService,
-    private val previousSearchRepo: PreviousSearchRepo,
+    private val queriesRepo: SearchQueriesRepo,
     private val podcastsRepo: PodcastsRepo
-) : ViewModel() {
+) : StatefulViewModel<DiscoverViewModel.State>(State()) {
 
-    data class SearchFeedsState(
-        val feeds: List<Feed>,
+    data class State(
+        val loading: Boolean = true,
+        val previousQueries: List<String> = emptyList(),
+        val feeds: List<Feed> = emptyList(),
         val error: String? = null
-    ) {
-        companion object {
-            val Initial = SearchFeedsState(emptyList())
-        }
+    )
+
+    init {
+        getPreviousQueries()
     }
 
-    private val _currentSearchState: MutableStateFlow<SearchFeedsState> = MutableStateFlow(SearchFeedsState(listOf()))
-    val currentSearchState = _currentSearchState.asStateFlow()
-
-    val previousSearches: Flow<List<String>> = previousSearchRepo.all()
-
     fun search(query: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            Log.d("DiscoverViewModel", "Searching for: $query")
-            previousSearchRepo.insert(query)
-
-            try {
-                val response = api.searchPodcasts(query)
-                _currentSearchState.update { _currentSearchState.value.copy(feeds = response.feeds) }
-            } catch (e: Exception) {
-                Log.e("DiscoverViewModel", "API Error", e)
-                _currentSearchState.update { _currentSearchState.value.copy(feeds = emptyList(), error = "Api Error.") }
+        loading()
+        viewModelScope.launch {
+            loading()
+            val results = withContext(Dispatchers.IO) {
+                queriesRepo.insert(query)
+                api.searchPodcasts(query)
+            }
+            _state.update {
+                it.copy(
+                    loading = false,
+                    feeds = results.feeds
+                )
             }
         }
     }
 
     fun select(feed: Feed, onError: (Exception) -> Unit) {
-        Log.d("TEST", "Clicked on: ${feed.title}, with url: ${feed.url}")
+        loading()
         CoroutineScope(Dispatchers.IO).launch {
-            podcastsRepo.fetchRssFeed(feed.url) {
-                onError(it)
-                // TODO actually handle errors
+            podcastsRepo.fetchRssFeed(feed.url) { onError(it) }
+        }
+    }
+
+    fun deletePreviousSearch(query: String) = queriesRepo.delete(query)
+
+    private fun getPreviousQueries() {
+        viewModelScope.launch {
+            val queriesFlow = withContext(Dispatchers.IO) {
+                queriesRepo.all()
+            }
+            queriesFlow.collect { queries ->
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        previousQueries = queries,
+                    )
+                }
             }
         }
     }
 
-    fun deletePreviousSearch(query: String) = previousSearchRepo.delete(query)
+    private fun loading() = _state.update { it.copy(loading = true) }
+
+    private fun error() {
+        TODO()
+    }
 }
