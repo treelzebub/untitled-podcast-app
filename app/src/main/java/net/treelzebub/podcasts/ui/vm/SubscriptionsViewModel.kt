@@ -30,7 +30,6 @@ class SubscriptionsViewModel @Inject constructor(
             val podcastsFlow = withContext(Dispatchers.IO) {
                 repo.getAllPodcasts()
             }
-
             podcastsFlow.collect { currentState ->
                 _state.update {
                     it.copy(
