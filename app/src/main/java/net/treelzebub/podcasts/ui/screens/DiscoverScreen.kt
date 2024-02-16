@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,12 +50,7 @@ import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
 @Composable
 fun DiscoverScreen(navigator: DestinationsNavigator) {
     val vm = hiltViewModel<DiscoverViewModel>()
-    var currentSearchState by remember { mutableStateOf(DiscoverViewModel.SearchFeedsState.Initial) }
-    val previousSearches by remember { vm.previousSearches }.collectAsState(initial = listOf())
-    LaunchedEffect(Unit) {
-        vm.currentSearchState.collect { currentSearchState = it }
-    }
-
+    val state by remember { vm.state }.collectAsState()
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
 
@@ -65,7 +59,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
         if (!trimmed.isNullOrBlank()) vm.search(trimmed)
     }
     val onSelect: (Feed) -> Unit = {
-        vm.select(it) { } //TODO error handling
+        vm.select(it) { TODO() }
         navigator.navigate(SubscriptionsScreenDestination)
     }
 
@@ -97,7 +91,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
             }
         ) {
             LazyColumn(modifier = Modifier) {
-                items(previousSearches) { query ->
+                items(state.previousQueries) { query ->
                     PreviousSearch(
                         query = query,
                         onClick = {
@@ -110,7 +104,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
                 }
             }
         }
-        ResultsList(currentSearchState.feeds, onSelect)
+        ResultsList(state.feeds, onSelect)
     }
 }
 

@@ -1,27 +1,45 @@
 package net.treelzebub.podcasts.ui.vm
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
 
 @HiltViewModel
 class SubscriptionsViewModel @Inject constructor(
     private val repo: PodcastsRepo
-) : ViewModel() {
+) : StatefulViewModel<SubscriptionsViewModel.State>(State()) {
 
-    companion object {
-        private const val TIMEOUT = 5000L
+    init {
+        getAllPodcasts()
     }
 
-    val podcasts = repo.getAllPodcasts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TIMEOUT), emptyList())
+    data class State(
+        val loading: Boolean = true,
+        val podcasts: List<PodcastUi> = emptyList()
+    )
+
+    private fun getAllPodcasts() {
+        viewModelScope.launch {
+            val podcastsFlow = withContext(Dispatchers.IO) {
+                repo.getAllPodcasts()
+            }
+            podcastsFlow.collect { currentState ->
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        podcasts = currentState
+                    )
+                }
+            }
+        }
+    }
 
     fun addRssFeed(url: String, onError: (Exception) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {

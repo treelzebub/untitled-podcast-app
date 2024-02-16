@@ -15,9 +15,9 @@ import javax.inject.Inject
 @HiltViewModel
 class PodcastDetailsViewModel @Inject constructor(
     private val repo: PodcastsRepo
-) : StatefulViewModel<PodcastDetailsViewModel.PodcastDetailsState>(PodcastDetailsState()) {
+) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 
-    data class PodcastDetailsState(
+    data class State(
         val loading: Boolean = true,
         val podcast: PodcastUi? = null,
         val episodes: List<EpisodeUi> = listOf()
@@ -29,7 +29,7 @@ class PodcastDetailsViewModel @Inject constructor(
                 val podcastFlow = repo.getPodcastByLink(link)
                 val episodesFlow = repo.getEpisodesByChannelLink(link)
                 podcastFlow.combine(episodesFlow) { podcast, episodes ->
-                    PodcastDetailsState(false, podcast, episodes)
+                    State(false, podcast, episodes)
                 }
             }
 
