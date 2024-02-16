@@ -12,9 +12,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MediaPlayerViewModel @Inject constructor(
     private val repo: PodcastsRepo,
-) : StatefulViewModel<MediaPlayerViewModel.MediaState>(MediaState()) {
+) : StatefulViewModel<MediaPlayerViewModel.State>(State()) {
 
-    data class MediaState(
+    data class State(
         val loading: Boolean = true,
         val mediaItem: MediaItem? = null
     )
