@@ -43,8 +43,8 @@ android {
             useSupportLibrary = true
         }
 
-        val apiKeyPodcastIndex: String = gradleLocalProperties(rootDir).getProperty("API_KEY_PODCAST_INDEX")
-        val apiSecretPodcastIndex: String = gradleLocalProperties(rootDir).getProperty("API_SECRET_PODCAST_INDEX")
+        val apiKeyPodcastIndex: String = gradleLocalProperties(rootDir, providers).getProperty("API_KEY_PODCAST_INDEX")
+        val apiSecretPodcastIndex: String = gradleLocalProperties(rootDir, providers).getProperty("API_SECRET_PODCAST_INDEX")
         buildConfigField("String", "API_KEY_PODCAST_INDEX", apiKeyPodcastIndex)
         buildConfigField("String", "API_SECRET_PODCAST_INDEX", apiSecretPodcastIndex)
         buildConfigField("String", "USER_AGENT_PODCAST_INDEX", "\"UntitledPodcastApp/$versionName\"")
@@ -131,6 +131,15 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation(kotlin("test"))
+    // For Robolectric tests.
+    testImplementation("com.google.dagger:hilt-android-testing:2.44")
+    // ...with Kotlin.
+    kaptTest("com.google.dagger:hilt-android-compiler:2.44")
+    // ...with Java.
+    testAnnotationProcessor("com.google.dagger:hilt-android-compiler:2.44")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:$compose_bom"))
