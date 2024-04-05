@@ -26,7 +26,6 @@ class MediaBottomSheetState(
 ) {
 
     companion object {
-
         // Default impl
         fun Saver(
             confirmValueChange: (MediaBottomSheetAnchor) -> Boolean = { true },
@@ -176,9 +175,9 @@ class BottomSheetNestedScrollConnection(
         return available
     }
 
-    private fun Offset.offsetToFloat(): Float = if (orientation == Orientation.Horizontal) x else y
+    private fun Offset.offsetToFloat() = if (orientation == Orientation.Horizontal) x else y
 
-    private fun Float.toOffset(): Offset = Offset(
+    private fun Float.toOffset() = Offset(
         x = if (orientation == Orientation.Horizontal) this else 0f,
         y = if (orientation == Orientation.Vertical) this else 0f
     )
