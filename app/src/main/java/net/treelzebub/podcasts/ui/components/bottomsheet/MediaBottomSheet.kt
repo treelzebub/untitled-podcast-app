@@ -250,9 +250,7 @@ fun MediaBottomSheetStatelessContent(
 //                    color = MaterialTheme.colors.onBackground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.graphicsLayer {
-                        alpha = 0.60f
-                    }
+                    modifier = Modifier.graphicsLayer { alpha = 0.60f }
                 )
             }
 
@@ -284,6 +282,7 @@ fun PodcastBottomBarPreview() {
     )
 }
 
+// TODO remove
 private val TEMP_DebugEpisode = EpisodeUi(
     "id", "podcast id",
     "Podcast Name, but it might be long so let's test ellipsizing...",

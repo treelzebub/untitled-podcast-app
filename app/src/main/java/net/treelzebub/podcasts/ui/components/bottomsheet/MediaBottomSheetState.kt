@@ -26,9 +26,8 @@ class MediaBottomSheetState(
 ) {
 
     companion object {
-        /**
-         * The default [Saver] implementation for [MediaBottomSheetState].
-         */
+
+        // Default impl
         fun Saver(
             confirmValueChange: (MediaBottomSheetAnchor) -> Boolean = { true },
             animationSpec: AnimationSpec<Float> = MediaBottomSheetDefaults.AnimationSpec
@@ -74,11 +73,6 @@ class MediaBottomSheetState(
     val hasHalfExpandedState: Boolean
         get() = draggableState.anchors.hasAnchorFor(MediaBottomSheetAnchor.Half)
 
-    /**
-     * Show the bottom sheet with animation and suspend until it's shown.
-     * If the sheet is taller than 50% of the parent's height, the bottom sheet will be half expanded.
-     * Otherwise, it will be fully expanded.
-     */
     suspend fun show() {
         val targetValue = when {
             hasHalfExpandedState -> MediaBottomSheetAnchor.Half
@@ -153,9 +147,7 @@ class BottomSheetNestedScrollConnection(
         val delta = available.offsetToFloat()
         return if (delta < 0 && source == NestedScrollSource.Drag) {
             state.dispatchRawDelta(delta).toOffset()
-        } else {
-            Offset.Zero
-        }
+        } else Offset.Zero
     }
 
     override fun onPostScroll(
@@ -166,9 +158,7 @@ class BottomSheetNestedScrollConnection(
         val delta = available.offsetToFloat()
         return if (source == NestedScrollSource.Drag) {
             state.dispatchRawDelta(delta).toOffset()
-        } else {
-            Offset.Zero
-        }
+        } else Offset.Zero
     }
 
     override suspend fun onPreFling(available: Velocity): Velocity {
@@ -177,9 +167,7 @@ class BottomSheetNestedScrollConnection(
         return if (toFling < 0 && currentOffset > state.anchors.minAnchor()) {
             state.settle(toFling)
             available
-        } else {
-            Velocity.Zero
-        }
+        } else Velocity.Zero
     }
 
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
