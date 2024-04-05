@@ -68,7 +68,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -79,12 +79,12 @@ android {
 
 dependencies {
     // todo move to version catalog
-    val retrofit = "2.9.0"
+    val retrofit = "2.11.0"
     val sqldelight = "2.0.1"
     val hilt = "2.51"
     val hiltAndroidX = "1.2.0"
     val lifecycle = "2.7.0"
-    val compose_bom = "2024.03.00"
+    val compose_bom = "2024.04.00"
     val destinations = "1.10.0"
     val exoplayer = "1.3.0"
     val coil = "2.4.0"
