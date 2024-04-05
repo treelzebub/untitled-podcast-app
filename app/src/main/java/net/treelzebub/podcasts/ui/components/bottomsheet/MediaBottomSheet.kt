@@ -206,14 +206,12 @@ fun MediaBottomSheetScaffold(
 fun MediaBottomSheetStatelessContent(
     episode: EpisodeUi,
     xOffset: Int,
-    darkTheme: Boolean,
     @DrawableRes icon: Int,
     onTogglePlaybackState: () -> Unit,
     onTap: (Offset) -> Unit
 ) {
     Box(modifier = Modifier
         .offset { IntOffset(xOffset, 0) }
-        .background(if (darkTheme) Color(0xFF343434) else Color(0xFFF1F1F1))
         .navigationBarsPadding()
         .height(64.dp)
         .fillMaxWidth()
@@ -275,7 +273,6 @@ fun PodcastBottomBarPreview() {
     MediaBottomSheetStatelessContent(
         episode = TEMP_DebugEpisode,
         xOffset = 0,
-        darkTheme = false,
         icon = R.drawable.account_circle,
         onTogglePlaybackState = { },
         onTap = { }
