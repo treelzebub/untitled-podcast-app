@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.ui.components
+package net.treelzebub.podcasts.util
 
 import android.content.Context
 import android.widget.Toast
