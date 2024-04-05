@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -73,7 +72,6 @@ object MediaBottomSheetDefaults {
     val VelocityThreshold = { 125f }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MediaBottomSheet(onDismiss: () -> Unit) {
     val bottomSheetState = rememberMediaBottomSheetState(initialValue = MediaBottomSheetAnchor.Start)
@@ -93,9 +91,9 @@ fun MediaBottomSheet(onDismiss: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Welcome to bottom sheet playground!",
+                text = "~ Bottom Sheet Playground ~",
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(32.dp))
@@ -107,7 +105,7 @@ fun MediaBottomSheet(onDismiss: () -> Unit) {
                     }
                 }
             ) {
-                Text(text = "Click to show bottom sheet")
+                Text(text = "Show")
             }
         }
     }
@@ -148,7 +146,7 @@ fun MediaBottomSheetScaffold(
     var layoutHeight by remember { mutableIntStateOf(0) }
     var sheetHeight by remember { mutableIntStateOf(0) }
     val bottomSheetNestedScrollConnection = remember(bottomSheetState.draggableState) {
-        bottomSheetNestedScrollConnection(
+        BottomSheetNestedScrollConnection(
             state = bottomSheetState.draggableState,
             orientation = Orientation.Vertical
         )

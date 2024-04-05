@@ -145,11 +145,10 @@ fun rememberMediaBottomSheetState(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-fun bottomSheetNestedScrollConnection(
-    state: AnchoredDraggableState<MediaBottomSheetAnchor>,
-    orientation: Orientation
-): NestedScrollConnection = object : NestedScrollConnection {
-
+class BottomSheetNestedScrollConnection(
+    private val state: AnchoredDraggableState<MediaBottomSheetAnchor>,
+    private val orientation: Orientation
+) : NestedScrollConnection {
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
         val delta = available.offsetToFloat()
         return if (delta < 0 && source == NestedScrollSource.Drag) {
