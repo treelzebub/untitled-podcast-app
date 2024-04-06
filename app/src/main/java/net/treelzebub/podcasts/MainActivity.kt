@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
 import net.treelzebub.podcasts.ui.PodcastsApp
+import net.treelzebub.podcasts.ui.screens.DebugScreen
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
 
 @AndroidEntryPoint
@@ -22,7 +23,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    PodcastsApp()
+                    if (BuildConfig.DEBUG) {
+                        DebugScreen()
+                    } else {
+                        PodcastsApp()
+                    }
                 }
             }
         }

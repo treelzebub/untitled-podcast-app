@@ -43,8 +43,9 @@ android {
             useSupportLibrary = true
         }
 
-        val apiKeyPodcastIndex: String = gradleLocalProperties(rootDir).getProperty("API_KEY_PODCAST_INDEX")
-        val apiSecretPodcastIndex: String = gradleLocalProperties(rootDir).getProperty("API_SECRET_PODCAST_INDEX")
+        val localProps = gradleLocalProperties(rootDir, providers)
+        val apiKeyPodcastIndex: String = localProps.getProperty("API_KEY_PODCAST_INDEX")
+        val apiSecretPodcastIndex: String = localProps.getProperty("API_SECRET_PODCAST_INDEX")
         buildConfigField("String", "API_KEY_PODCAST_INDEX", apiKeyPodcastIndex)
         buildConfigField("String", "API_SECRET_PODCAST_INDEX", apiSecretPodcastIndex)
         buildConfigField("String", "USER_AGENT_PODCAST_INDEX", "\"UntitledPodcastApp/$versionName\"")
@@ -67,7 +68,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -78,14 +79,14 @@ android {
 
 dependencies {
     // todo move to version catalog
-    val retrofit = "2.9.0"
+    val retrofit = "2.11.0"
     val sqldelight = "2.0.1"
-    val hilt = "2.48.1"
-    val hiltAndroidX = "1.1.0"
+    val hilt = "2.51"
+    val hiltAndroidX = "1.2.0"
     val lifecycle = "2.7.0"
-    val compose_bom = "2024.02.00"
+    val compose_bom = "2024.04.00"
     val destinations = "1.10.0"
-    val exoplayer = "1.2.1"
+    val exoplayer = "1.3.0"
     val coil = "2.4.0"
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
@@ -101,7 +102,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:$retrofit")
     implementation("com.squareup.retrofit2:converter-moshi:$retrofit")
 
-    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.0")
     implementation("app.cash.sqldelight:android-driver:$sqldelight")
     implementation("app.cash.sqldelight:coroutines-extensions:$sqldelight")
     implementation("com.prof18.rssparser:rssparser:6.0.3")
@@ -114,7 +115,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation("androidx.compose.material3:material3:1.2.1")
 
     implementation("io.github.raamcosta.compose-destinations:animations-core:$destinations")
     ksp("io.github.raamcosta.compose-destinations:ksp:$destinations")
@@ -131,6 +132,15 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation(kotlin("test"))
+    // For Robolectric tests.
+    testImplementation("com.google.dagger:hilt-android-testing:$hilt")
+    // ...with Kotlin.
+    kaptTest("com.google.dagger:hilt-android-compiler:2.51")
+    // ...with Java.
+    testAnnotationProcessor("com.google.dagger:hilt-android-compiler:$hilt")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:$compose_bom"))

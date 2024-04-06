@@ -23,8 +23,8 @@ import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.components.AddFeedDialog
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.components.PodcastList
-import net.treelzebub.podcasts.ui.components.toast
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
+import net.treelzebub.podcasts.util.toast
 
 
 private fun validateUrl(url: String): Boolean = Patterns.WEB_URL.matcher(url).matches()

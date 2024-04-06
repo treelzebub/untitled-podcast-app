@@ -52,6 +52,7 @@ class PodcastsRepo @Inject constructor(
                     db.episodesQueries.upsert(
                         guid!!,
                         channel.link!!,
+                        channel.title!!,
                         title.sanitizeHtml()!!,
                         description?.sanitizeHtml().orEmpty(),
                         pubDate,
@@ -115,6 +116,7 @@ class PodcastsRepo @Inject constructor(
     private val episodeMapper: (
         id: String,
         channel_id: String,
+        channel_title: String,
         title: String,
         description: String?,
         date: String?,
@@ -122,10 +124,10 @@ class PodcastsRepo @Inject constructor(
         streaming_link: String,
         image_url: String?,
         duration: String?
-    ) -> EpisodeUi = { id, channel_id, title, description, date, link,
+    ) -> EpisodeUi = { id, channel_id, channel_title, title, description, date, link,
                        streaming_link, image_url, duration ->
         EpisodeUi(
-            id, channel_id, title, description.orEmpty(), Time.displayFormat(date), link,
+            id, channel_id, channel_title, title, description.orEmpty(), Time.displayFormat(date), link,
             streaming_link, image_url.orEmpty(), duration.orEmpty()
         )
     }
