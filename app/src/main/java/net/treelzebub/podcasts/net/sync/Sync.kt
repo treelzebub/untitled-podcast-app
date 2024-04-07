@@ -12,7 +12,7 @@ object Sync {
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             WORK_NAME_PODCASTS,
             ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-            SyncPodcastsWorker.worker()
+            SyncPodcastsWorker.request()
         )
     }
 }

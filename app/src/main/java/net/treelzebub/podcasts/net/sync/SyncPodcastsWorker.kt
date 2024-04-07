@@ -31,7 +31,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
     companion object {
         private val TAG = SyncPodcastsWorker::class.java.simpleName
 
-        fun worker() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(12L)).build()
+        fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(12L)).build()
     }
 
     override suspend fun doWork(): Result {
@@ -42,6 +42,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
         subs.forEach { sub ->
             Log.d(TAG, "Fetching Feed for ${sub.rssLink}")
             val onFailure: (Call, IOException) -> Unit = { _, e ->
+                // TODO error propagation
                 Log.e(TAG, "Error Updating Feed with url: ${sub.rssLink}. Error:", e)
             }
             val onResponse: (Call, Response) -> Unit = { call, response ->
