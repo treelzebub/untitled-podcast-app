@@ -5,6 +5,7 @@ import android.os.StrictMode
 import android.os.strictmode.Violation
 import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
+import net.treelzebub.podcasts.net.sync.Sync
 
 
 @HiltAndroidApp
@@ -28,6 +29,7 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Sync.initialize(this)
     }
 }
 

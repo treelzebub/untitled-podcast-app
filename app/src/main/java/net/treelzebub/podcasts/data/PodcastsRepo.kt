@@ -33,12 +33,16 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
+    suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
+
     fun upsert(url: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
+                val link = link!!.sanitizeUrl()!!
                 db.podcastsQueries.upsert(
-                    link!!.sanitizeUrl()!!,
+                    link, // Public link to Podcast will be unique, so it's our ID.
+                    link,
                     title!!,
                     description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     itunesChannelData?.owner?.email.orEmpty(),
@@ -73,11 +77,17 @@ class PodcastsRepo @Inject constructor(
             .mapToOneOrNull(Dispatchers.IO)
     }
 
-    fun getAllPodcasts(): Flow<List<PodcastUi>> {
+    fun getAllAsFlow(): Flow<List<PodcastUi>> {
         return db.podcastsQueries
             .get_all_podcasts(podcastMapper)
             .asFlow()
             .mapToList(Dispatchers.IO)
+    }
+
+    suspend fun getAllAsList(): List<PodcastUi> {
+        return db.podcastsQueries
+            .get_all_podcasts(podcastMapper)
+            .executeAsList()
     }
 
     fun deletePodcastById(link: String) = db.podcastsQueries.delete(link)
@@ -98,6 +108,7 @@ class PodcastsRepo @Inject constructor(
 
 
     private val podcastMapper: (
+        id: String,
         link: String,
         title: String,
         description: String?,
@@ -105,10 +116,10 @@ class PodcastsRepo @Inject constructor(
         image_url: String?,
         last_fetched: String,
         rss_link: String
-    ) -> PodcastUi = { link, title, description,
+    ) -> PodcastUi = { id, link, title, description,
                        email, image_url, last_fetched, rss_link ->
         PodcastUi(
-            link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
+            id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
             Time.displayFormat(last_fetched), rss_link
         )
     }

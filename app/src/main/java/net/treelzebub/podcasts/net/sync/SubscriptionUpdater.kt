@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.net
+package net.treelzebub.podcasts.net.sync
 
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.util.request
@@ -19,7 +19,7 @@ class SubscriptionUpdater(
     ) {
         val request = request {
             get()
-            url(sub.link)
+            url(sub.rssLink)
         }
         val callback = object : Callback {
             override fun onResponse(call: Call, response: Response) = onResponse(call, response)

@@ -2,7 +2,7 @@ package net.treelzebub.podcasts.net.models
 
 data class SubscriptionDto(
     val id: String,
-    val link: String
+    val rssLink: String
 )
 
 data class SubscriptionUpdateRequest(

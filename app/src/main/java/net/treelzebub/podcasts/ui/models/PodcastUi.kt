@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class PodcastUi(
+    val id: String,
     val link: String,
     val title: String,
     val description: String,
