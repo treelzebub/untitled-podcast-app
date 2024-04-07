@@ -28,7 +28,7 @@ class SubscriptionsViewModel @Inject constructor(
     private fun getAllPodcasts() {
         viewModelScope.launch {
             val podcastsFlow = withContext(Dispatchers.IO) {
-                repo.getAllPodcasts()
+                repo.getAllAsFlow()
             }
             podcastsFlow.collect { currentState ->
                 _state.update {

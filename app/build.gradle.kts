@@ -83,6 +83,7 @@ dependencies {
     val sqldelight = "2.0.1"
     val hilt = "2.51"
     val hiltAndroidX = "1.2.0"
+    val work = "2.9.0"
     val lifecycle = "2.7.0"
     val compose_bom = "2024.04.00"
     val destinations = "1.10.0"
@@ -91,10 +92,14 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation(platform("androidx.compose:compose-bom:$compose_bom"))
+    implementation("androidx.work:work-runtime-ktx:$work")
 
     implementation("com.google.dagger:hilt-android:$hilt")
     kapt("com.google.dagger:hilt-android-compiler:$hilt")
+    kapt("androidx.hilt:hilt-compiler:$hiltAndroidX")
     implementation("androidx.hilt:hilt-navigation-compose:$hiltAndroidX")
+    implementation("androidx.hilt:hilt-work:$hiltAndroidX")
+    // Kotlin + coroutines
 
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
     implementation("com.squareup.okhttp3:okhttp")
@@ -133,16 +138,14 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation(kotlin("test"))
-    // For Robolectric tests.
-    testImplementation("com.google.dagger:hilt-android-testing:$hilt")
-    // ...with Kotlin.
+
+    testImplementation("com.google.dagger:hilt-android-testing:$hilt") // For Robolectric
     kaptTest("com.google.dagger:hilt-android-compiler:2.51")
-    // ...with Java.
-    testAnnotationProcessor("com.google.dagger:hilt-android-compiler:$hilt")
     testImplementation("org.robolectric:robolectric:4.11.1")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:$compose_bom"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.work:work-testing:$work")
 }
