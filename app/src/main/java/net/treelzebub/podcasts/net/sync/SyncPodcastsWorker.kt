@@ -46,7 +46,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
                 Log.e(TAG, "Error Updating Feed with url: ${sub.rssLink}. Error:", e)
             }
             val onResponse: (Call, Response) -> Unit = { call, response ->
-                if (response.isSuccessful) {
+                if (response.isSuccessful && response.body != null) {
                     Log.d(TAG, "Updated Feed with url: ${sub.rssLink}. Parsing...")
                     CoroutineScope(Dispatchers.IO).launch {
                         val parsed = podcastsRepo.parseRssFeed(response.body!!.string())
