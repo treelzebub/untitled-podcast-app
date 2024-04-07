@@ -96,6 +96,7 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:$hilt")
     kapt("com.google.dagger:hilt-android-compiler:$hilt")
+    kapt("androidx.hilt:hilt-compiler:$hiltAndroidX")
     implementation("androidx.hilt:hilt-navigation-compose:$hiltAndroidX")
     implementation("androidx.hilt:hilt-work:$hiltAndroidX")
     // Kotlin + coroutines

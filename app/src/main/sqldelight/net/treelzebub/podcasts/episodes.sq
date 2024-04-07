@@ -11,7 +11,7 @@ CREATE TABLE episode (
     duration TEXT,
 
   FOREIGN KEY (channel_id)
-    REFERENCES podcast(link)
+    REFERENCES podcast(id)
     ON DELETE CASCADE
 );
 
