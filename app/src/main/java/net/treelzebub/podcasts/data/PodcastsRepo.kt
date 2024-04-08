@@ -11,6 +11,7 @@ import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.Log
+import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.orNow
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
@@ -46,7 +47,7 @@ class PodcastsRepo @Inject constructor(
                     description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     itunesChannelData?.owner?.email.orEmpty(),
                     safeImage,
-                    lastBuildDate.orNow(),
+                    Time.displayFormat(lastBuildDate),
                     url
                 )
             }
@@ -58,7 +59,7 @@ class PodcastsRepo @Inject constructor(
                         channel.title!!,
                         title.sanitizeHtml()!!,
                         description?.sanitizeHtml().orEmpty(),
-                        pubDate.orNow(),
+                        Time.displayFormat(pubDate),
                         link?.sanitizeUrl().orEmpty(),
                         audio.orEmpty(),
                         image?.sanitizeUrl() ?: safeImage,
