@@ -61,7 +61,11 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
         LoadingBox()
     } else {
         Scaffold(
-            floatingActionButton = { Fab { showDialog.value = true } }
+            floatingActionButton = {
+                Fab {
+                    showDialog.value = true
+                }
+            }
         ) { contentPadding ->
             PodcastList(navigator, state.podcasts, contentPadding)
         }

@@ -81,6 +81,7 @@ dependencies {
     // todo move to version catalog
     val retrofit = "2.11.0"
     val sqldelight = "2.0.1"
+    val dataStore = "1.0.0"
     val hilt = "2.51"
     val hiltAndroidX = "1.2.0"
     val work = "2.9.0"
@@ -111,6 +112,7 @@ dependencies {
     implementation("app.cash.sqldelight:android-driver:$sqldelight")
     implementation("app.cash.sqldelight:coroutines-extensions:$sqldelight")
     implementation("com.prof18.rssparser:rssparser:6.0.3")
+    implementation("androidx.datastore:datastore-preferences:$dataStore")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle")

@@ -47,7 +47,7 @@ class PodcastsRepo @Inject constructor(
                     description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     itunesChannelData?.owner?.email.orEmpty(),
                     safeImage,
-                    lastBuildDate.orNow(),
+                    Time.rssFormat(lastBuildDate.orNow()),
                     itunesChannelData?.newsFeedUrl ?: url
                 )
             }
