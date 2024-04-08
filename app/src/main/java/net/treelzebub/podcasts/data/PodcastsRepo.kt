@@ -57,8 +57,8 @@ class PodcastsRepo @Inject constructor(
                         guid!!,
                         url,
                         channel.title!!,
-                        title.sanitizeHtml()!!,
-                        description?.sanitizeHtml().orEmpty(),
+                        title.sanitizeHtml() ?: "[No Title]",
+                        description?.sanitizeHtml() ?: "[No Description]",
                         Time.displayFormat(pubDate),
                         link?.sanitizeUrl().orEmpty(),
                         audio.orEmpty(),
@@ -84,7 +84,7 @@ class PodcastsRepo @Inject constructor(
             .mapToList(Dispatchers.IO)
     }
 
-    suspend fun getAllAsList(): List<PodcastUi> {
+    fun getAllAsList(): List<PodcastUi> {
         return db.podcastsQueries
             .get_all_podcasts(podcastMapper)
             .executeAsList()
