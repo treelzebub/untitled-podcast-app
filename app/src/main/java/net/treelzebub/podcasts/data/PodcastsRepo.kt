@@ -8,6 +8,7 @@ import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import net.treelzebub.podcasts.Database
+import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.Log
@@ -88,6 +89,13 @@ class PodcastsRepo @Inject constructor(
         return db.podcastsQueries
             .get_all_podcasts(podcastMapper)
             .executeAsList()
+    }
+
+    fun getAllRssLinks(): List<SubscriptionDto> {
+        return db.podcastsQueries
+            .get_all_rss_links()
+            .executeAsList()
+            .map { SubscriptionDto(it.id, it.rss_link) }
     }
 
     fun deletePodcastById(link: String) = db.podcastsQueries.delete(link)

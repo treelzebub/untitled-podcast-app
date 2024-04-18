@@ -23,5 +23,8 @@ SELECT * FROM podcast WHERE ? = rss_link;
 get_all_podcasts:
 SELECT * FROM podcast ORDER BY lastLocalUpdate DESC;
 
+get_all_rss_links:
+SELECT id, rss_link FROM podcast ORDER BY lastLocalUpdate DESC;
+
 delete_all:
 DELETE FROM podcast;
