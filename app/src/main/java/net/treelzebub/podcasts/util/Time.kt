@@ -11,31 +11,26 @@ object Time {
         get() = Locale.getDefault()
 
     // Parsing formats
-    private val singleDay = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss zzz", locale)
-    private val doubleDay = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz", locale)
+    private val rfc2822Lenient = DateTimeFormatter.ofPattern("E, d MMM yyyy H:m:s[ z]", locale)
     private val rfc1123 = DateTimeFormatter.RFC_1123_DATE_TIME
 
     private val displayFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy")
 
     fun nowTimestamp(): String = ZonedDateTime.now().format(rfc1123)
+    fun nowEpochMillis(): Long = ZonedDateTime.now().toEpochSecond()
     fun displayFormat(string: String?): String =
         string?.let { parse(string).format(displayFormat) }.orEmpty()
 
     private fun parse(string: String?): LocalDateTime {
         return try {
-            LocalDateTime.parse(string, singleDay)
+            LocalDateTime.parse(string, rfc2822Lenient)
         } catch (e: Exception) {
             try {
-                LocalDateTime.parse(string, doubleDay)
+                LocalDateTime.parse(string, rfc1123)
             } catch (e: Exception) {
-                try {
-                    LocalDateTime.parse(string, rfc1123)
-                } catch (e: Exception) {
-                    Log.e("Time", "parse() fell through all tries.", e)
-                    LocalDateTime.of(1970, 1, 1, 12, 1)
-                }
+                Log.e("Time", "parse() fell through all tries.", e)
+                LocalDateTime.of(1970, 1, 1, 12, 1)
             }
         }
     }
-
 }

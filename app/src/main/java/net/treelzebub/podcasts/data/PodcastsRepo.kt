@@ -12,7 +12,6 @@ import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.Log
 import net.treelzebub.podcasts.util.Time
-import net.treelzebub.podcasts.util.orNow
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
 import javax.inject.Inject
@@ -48,7 +47,8 @@ class PodcastsRepo @Inject constructor(
                     itunesChannelData?.owner?.email.orEmpty(),
                     safeImage,
                     Time.displayFormat(lastBuildDate),
-                    url
+                    url,
+                    Time.nowEpochMillis()
                 )
             }
             channel.items.forEach {
@@ -115,12 +115,13 @@ class PodcastsRepo @Inject constructor(
         email: String?,
         image_url: String?,
         last_fetched: String,
-        rss_link: String
+        rss_link: String,
+        lastLocalUpdate: Long
     ) -> PodcastUi = { id, link, title, description,
-                       email, image_url, last_fetched, rss_link ->
+                       email, image_url, last_fetched, rss_link, lastLocalUpdate ->
         PodcastUi(
             id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
-            last_fetched, rss_link
+            last_fetched, rss_link, lastLocalUpdate
         )
     }
 
@@ -134,12 +135,13 @@ class PodcastsRepo @Inject constructor(
         link: String,
         streaming_link: String,
         image_url: String?,
-        duration: String?
+        duration: String?,
+        hasPlayed: Boolean
     ) -> EpisodeUi = { id, channel_id, channel_title, title, description, date, link,
-                       streaming_link, image_url, duration ->
+                       streaming_link, image_url, duration, hasPlayed ->
         EpisodeUi(
             id, channel_id, channel_title, title, description.orEmpty(), date, link,
-            streaming_link, image_url.orEmpty(), duration.orEmpty()
+            streaming_link, image_url.orEmpty(), duration.orEmpty(), hasPlayed
         )
     }
 }
