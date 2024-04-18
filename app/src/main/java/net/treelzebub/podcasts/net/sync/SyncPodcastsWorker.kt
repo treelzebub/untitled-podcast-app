@@ -31,7 +31,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
     companion object {
         private val TAG = SyncPodcastsWorker::class.java.simpleName
 
-        fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(12L)).build()
+        fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(1L)).build()
     }
 
     override suspend fun doWork(): Result {
