@@ -1,6 +1,5 @@
 package net.treelzebub.podcasts.data
 
-import android.util.Log
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -11,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import net.treelzebub.podcasts.util.Log
 import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.orNow
 import net.treelzebub.podcasts.util.sanitizeHtml
@@ -25,6 +25,7 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun fetchRssFeed(url: String, onError: (Exception) -> Unit) {
         try {
+            Log.d("PodcastRepo", "Fetching RSS Feed: $url")
             val feed = rssHandler.fetch(url)
             upsert(url, feed)
         } catch (e: Exception) {
@@ -39,27 +40,26 @@ class PodcastsRepo @Inject constructor(
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
-                val link = link!!.sanitizeUrl()!!
                 db.podcastsQueries.upsert(
-                    link, // Public link to Podcast will be unique, so it's our ID.
-                    link,
+                    url, // Public link to Podcast will be unique, so it's our ID.
+                    link!!,
                     title!!,
                     description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     itunesChannelData?.owner?.email.orEmpty(),
                     safeImage,
-                    lastBuildDate.orNow(),
-                    itunesChannelData?.newsFeedUrl ?: url
+                    Time.displayFormat(lastBuildDate),
+                    url
                 )
             }
             channel.items.forEach {
                 with(it) {
                     db.episodesQueries.upsert(
                         guid!!,
-                        channel.link!!,
+                        url,
                         channel.title!!,
-                        title.sanitizeHtml()!!,
-                        description?.sanitizeHtml().orEmpty(),
-                        pubDate,
+                        title.sanitizeHtml() ?: "[No Title]",
+                        description?.sanitizeHtml() ?: "[No Description]",
+                        Time.displayFormat(pubDate),
                         link?.sanitizeUrl().orEmpty(),
                         audio.orEmpty(),
                         image?.sanitizeUrl() ?: safeImage,
@@ -70,9 +70,9 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    fun getPodcastByLink(link: String): Flow<PodcastUi?> {
+    fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
         return db.podcastsQueries
-            .get_podcast_by_link(link, podcastMapper)
+            .get_podcast_by_link(rssLink, podcastMapper)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
     }
@@ -84,7 +84,7 @@ class PodcastsRepo @Inject constructor(
             .mapToList(Dispatchers.IO)
     }
 
-    suspend fun getAllAsList(): List<PodcastUi> {
+    fun getAllAsList(): List<PodcastUi> {
         return db.podcastsQueries
             .get_all_podcasts(podcastMapper)
             .executeAsList()
@@ -120,7 +120,7 @@ class PodcastsRepo @Inject constructor(
                        email, image_url, last_fetched, rss_link ->
         PodcastUi(
             id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
-            Time.displayFormat(last_fetched), rss_link
+            last_fetched, rss_link
         )
     }
 
@@ -130,7 +130,7 @@ class PodcastsRepo @Inject constructor(
         channel_title: String,
         title: String,
         description: String?,
-        date: String?,
+        date: String,
         link: String,
         streaming_link: String,
         image_url: String?,
@@ -138,7 +138,7 @@ class PodcastsRepo @Inject constructor(
     ) -> EpisodeUi = { id, channel_id, channel_title, title, description, date, link,
                        streaming_link, image_url, duration ->
         EpisodeUi(
-            id, channel_id, channel_title, title, description.orEmpty(), Time.displayFormat(date), link,
+            id, channel_id, channel_title, title, description.orEmpty(), date, link,
             streaming_link, image_url.orEmpty(), duration.orEmpty()
         )
     }

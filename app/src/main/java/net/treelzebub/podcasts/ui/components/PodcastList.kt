@@ -42,7 +42,7 @@ fun PodcastList(
             .fillMaxSize()
             .padding(contentPadding)
     ) {
-        items(podcasts, key = { it.link }) {
+        items(podcasts, key = { it.id }) {
             PodcastItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), navigator, it, contentPadding)
         }
     }
@@ -60,7 +60,7 @@ fun PodcastItem(
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(contentPadding)
-            .clickable { navigator.navigate(PodcastDetailsScreenDestination(podcast.link)) }
+            .clickable { navigator.navigate(PodcastDetailsScreenDestination(podcast.rssLink)) }
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -17,7 +17,7 @@ delete:
 DELETE FROM podcast WHERE ? = link;
 
 get_podcast_by_link:
-SELECT * FROM podcast WHERE ? = link;
+SELECT * FROM podcast WHERE ? = rss_link;
 
 get_all_podcasts:
 SELECT * FROM podcast;
