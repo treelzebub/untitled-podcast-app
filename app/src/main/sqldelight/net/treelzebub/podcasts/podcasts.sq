@@ -5,9 +5,9 @@ CREATE TABLE podcast (
     description TEXT,
     email TEXT,
     image_url TEXT,
-    last_fetched TEXT NOT NULL,
+    last_build_date INTEGER NOT NULL,
     rss_link TEXT NOT NULL,
-    lastLocalUpdate INTEGER NOT NULL
+    last_local_update INTEGER NOT NULL
 );
 
 upsert:
@@ -21,10 +21,10 @@ get_podcast_by_link:
 SELECT * FROM podcast WHERE ? = rss_link;
 
 get_all_podcasts:
-SELECT * FROM podcast ORDER BY lastLocalUpdate DESC;
+SELECT * FROM podcast ORDER BY last_build_date DESC;
 
 get_all_rss_links:
-SELECT id, rss_link FROM podcast ORDER BY lastLocalUpdate DESC;
+SELECT id, rss_link FROM podcast ORDER BY last_build_date DESC;
 
 delete_all:
 DELETE FROM podcast;

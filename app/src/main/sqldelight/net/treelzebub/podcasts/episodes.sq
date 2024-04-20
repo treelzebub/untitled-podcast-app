@@ -6,12 +6,11 @@ CREATE TABLE episode (
     channel_title TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
-    date TEXT NOT NULL,
+    date INTEGER NOT NULL,
     link TEXT NOT NULL,
     streaming_link TEXT NOT NULL,
     image_url TEXT,
     duration TEXT,
-    hasPlayed INTEGER AS Boolean DEFAULT 0 NOT NULL,
 
   FOREIGN KEY (channel_id)
     REFERENCES podcast(id)
@@ -19,11 +18,8 @@ CREATE TABLE episode (
 );
 
 upsert:
-INSERT OR REPLACE INTO episode(
-    id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
-VALUES (
-    :id, :channel_id, :channel_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration
-);
+INSERT OR REPLACE INTO episode
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get_all_episodes:
 SELECT * FROM episode;

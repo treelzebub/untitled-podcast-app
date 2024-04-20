@@ -10,6 +10,18 @@ import kotlin.test.assertFails
 
 class TimeTests {
 
+    @Test fun rssParsing() {
+        val testStr = "Thu, 5 Mar 2020 12:30:00 PST"
+        val testMillis = Time.zonedEpochMillis(testStr)
+
+        val strFormat = Time.displayFormat(testStr)
+        val millisFormat = Time.displayFormat(testMillis)
+
+        assertEquals("Mar 5, 2020", strFormat)
+        assertEquals("Mar 5, 2020", millisFormat)
+    }
+
+    // Just getting the lay of the land...
     @Test fun timestampParsing() {
         val withGmt = "Fri, 27 Oct 2023 21:17:18 GMT"
         val withUsZone = "Fri, 27 Oct 2023 21:17:18 PDT"

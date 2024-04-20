@@ -13,6 +13,5 @@ data class EpisodeUi(
     val link: String,
     val streamingLink: String,
     val imageUrl: String,
-    val duration: String,
-    val hasPlayed: Boolean
+    val duration: String
 )
