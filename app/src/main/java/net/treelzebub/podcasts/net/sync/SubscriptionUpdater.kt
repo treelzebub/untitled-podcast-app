@@ -8,7 +8,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 import java.io.IOException
 import javax.inject.Inject
+import javax.inject.Singleton
 
+
+@Singleton
 class SubscriptionUpdater @Inject constructor(
     private val client: OkHttpClient,
 ) {
@@ -31,5 +34,4 @@ class SubscriptionUpdater @Inject constructor(
     }
 
     fun cancelAll() = client.dispatcher.cancelAll()
-
 }

@@ -33,6 +33,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
         fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(1L)).build()
     }
 
+    // TODO: Improve by defining freshness. Pull all pods, only update when stale.
     override suspend fun doWork(): Result {
         Log.d(TAG, "Starting sync...")
         val subs = podcastsRepo.getAllRssLinks()
