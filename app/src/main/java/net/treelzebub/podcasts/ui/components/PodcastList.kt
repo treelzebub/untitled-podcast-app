@@ -84,13 +84,13 @@ fun PodcastItem(
             )
             BasicText(
                 modifier = Modifier.padding(bottom = 2.dp),
-                style = TextStyles.CardDate,
+                style = TextStyles.CardDescription,
                 text = podcast.description
             )
             BasicText(
-                style = TextStyle(textAlign = TextAlign.Start),
+                style = TextStyles.CardDate,
                 overflow = TextOverflow.Ellipsis,
-                text = ""
+                text = "Updated: " + podcast.lastBuildDate
             )
         }
     }

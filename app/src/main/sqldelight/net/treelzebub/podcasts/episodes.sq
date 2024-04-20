@@ -1,10 +1,12 @@
+import kotlin.Boolean;
+
 CREATE TABLE episode (
     id TEXT PRIMARY KEY NOT NULL,
     channel_id TEXT NOT NULL,
     channel_title TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
-    date TEXT NOT NULL,
+    date INTEGER NOT NULL,
     link TEXT NOT NULL,
     streaming_link TEXT NOT NULL,
     image_url TEXT,
@@ -16,11 +18,8 @@ CREATE TABLE episode (
 );
 
 upsert:
-INSERT OR REPLACE INTO episode(
-    id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
-VALUES (
-    :id, :channel_id, :channel_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration
-);
+INSERT OR REPLACE INTO episode
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get_all_episodes:
 SELECT * FROM episode;

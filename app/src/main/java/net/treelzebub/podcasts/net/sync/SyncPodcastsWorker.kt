@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.util.Log
 import okhttp3.Call
 import okhttp3.Response
@@ -31,13 +30,12 @@ class SyncPodcastsWorker @AssistedInject constructor(
     companion object {
         private val TAG = SyncPodcastsWorker::class.java.simpleName
 
-        fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(12L)).build()
+        fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(1L)).build()
     }
 
     override suspend fun doWork(): Result {
         Log.d(TAG, "Starting sync...")
-        val subs = podcastsRepo.getAllAsList()
-            .map { SubscriptionDto(it.id, it.rssLink) }
+        val subs = podcastsRepo.getAllRssLinks()
         Log.d(TAG, "Processing updates for ${subs.size} podcasts...")
         subs.forEach { sub ->
             Log.d(TAG, "Fetching Feed for ${sub.rssLink}")

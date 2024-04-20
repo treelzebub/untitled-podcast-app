@@ -10,6 +10,7 @@ data class PodcastUi(
     val description: String,
     val email: String,
     val imageUrl: String,
-    val lastFetched: String,
-    val rssLink: String
+    val lastBuildDate: String,
+    val rssLink: String,
+    val lastLocalUpdate: Long
 )

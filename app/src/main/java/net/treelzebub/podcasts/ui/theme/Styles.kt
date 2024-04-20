@@ -9,5 +9,6 @@ object TextStyles {
 
     val CardTitle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
     val CardSubtitle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-    val CardDate = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
+    val CardDescription = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
+    val CardDate = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
 }

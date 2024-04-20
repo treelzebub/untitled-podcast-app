@@ -8,11 +8,11 @@ import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import net.treelzebub.podcasts.Database
+import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.Log
 import net.treelzebub.podcasts.util.Time
-import net.treelzebub.podcasts.util.orNow
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
 import javax.inject.Inject
@@ -41,29 +41,30 @@ class PodcastsRepo @Inject constructor(
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
                 db.podcastsQueries.upsert(
-                    url, // Public link to Podcast will be unique, so it's our ID.
-                    link!!,
-                    title!!,
-                    description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
-                    itunesChannelData?.owner?.email.orEmpty(),
-                    safeImage,
-                    Time.displayFormat(lastBuildDate),
-                    url
+                    id = url, // Public link to Podcast will be unique, so it's our ID.
+                    link = link!!,
+                    title = title!!,
+                    description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
+                    email = itunesChannelData?.owner?.email.orEmpty(),
+                    image_url = safeImage,
+                    last_build_date = Time.zonedEpochMillis(lastBuildDate),
+                    rss_link = url,
+                    last_local_update = Time.nowEpochMillis()
                 )
             }
             channel.items.forEach {
                 with(it) {
                     db.episodesQueries.upsert(
-                        guid!!,
-                        url,
-                        channel.title!!,
-                        title.sanitizeHtml() ?: "[No Title]",
-                        description?.sanitizeHtml() ?: "[No Description]",
-                        Time.displayFormat(pubDate),
-                        link?.sanitizeUrl().orEmpty(),
-                        audio.orEmpty(),
-                        image?.sanitizeUrl() ?: safeImage,
-                        itunesItemData?.duration
+                        id = guid!!,
+                        channel_id = url,
+                        channel_title = channel.title!!,
+                        title = title.sanitizeHtml() ?: "[No Title]",
+                        description = description?.sanitizeHtml() ?: "[No Description]",
+                        date = Time.zonedEpochMillis(pubDate),
+                        link = link?.sanitizeUrl().orEmpty(),
+                        streaming_link = audio.orEmpty(),
+                        image_url = image?.sanitizeUrl() ?: safeImage,
+                        duration = itunesItemData?.duration
                     )
                 }
             }
@@ -90,6 +91,13 @@ class PodcastsRepo @Inject constructor(
             .executeAsList()
     }
 
+    fun getAllRssLinks(): List<SubscriptionDto> {
+        return db.podcastsQueries
+            .get_all_rss_links()
+            .executeAsList()
+            .map { SubscriptionDto(it.id, it.rss_link) }
+    }
+
     fun deletePodcastById(link: String) = db.podcastsQueries.delete(link)
 
     fun getEpisodesByChannelLink(link: String): Flow<List<EpisodeUi>> {
@@ -114,13 +122,15 @@ class PodcastsRepo @Inject constructor(
         description: String?,
         email: String?,
         image_url: String?,
-        last_fetched: String,
-        rss_link: String
+        last_build_date: Long,
+        rss_link: String,
+        lastLocalUpdate: Long
     ) -> PodcastUi = { id, link, title, description,
-                       email, image_url, last_fetched, rss_link ->
+                       email, image_url, last_build_date,
+                       rss_link, lastLocalUpdate ->
         PodcastUi(
             id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
-            last_fetched, rss_link
+            Time.displayFormat(last_build_date), rss_link, lastLocalUpdate
         )
     }
 
@@ -130,16 +140,25 @@ class PodcastsRepo @Inject constructor(
         channel_title: String,
         title: String,
         description: String?,
-        date: String,
+        date: Long,
         link: String,
         streaming_link: String,
         image_url: String?,
-        duration: String?
-    ) -> EpisodeUi = { id, channel_id, channel_title, title, description, date, link,
-                       streaming_link, image_url, duration ->
+        duration: String?,
+    ) -> EpisodeUi = { id, channel_id, channel_title, title,
+                       description, date, link, streaming_link,
+                       image_url, duration ->
         EpisodeUi(
-            id, channel_id, channel_title, title, description.orEmpty(), date, link,
-            streaming_link, image_url.orEmpty(), duration.orEmpty()
+            id = id,
+            channelId = channel_id,
+            channelTitle = channel_title,
+            title = title,
+            description = description.orEmpty(),
+            date = Time.displayFormat(date),
+            link = link,
+            streamingLink = streaming_link,
+            imageUrl = image_url.orEmpty(),
+            duration = duration.orEmpty()
         )
     }
 }
