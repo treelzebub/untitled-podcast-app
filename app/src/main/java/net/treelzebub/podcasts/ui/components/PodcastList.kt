@@ -42,7 +42,7 @@ fun PodcastList(
             .fillMaxSize()
             .padding(contentPadding)
     ) {
-        items(podcasts, key = { it.link }) {
+        items(podcasts, key = { it.id }) {
             PodcastItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), navigator, it, contentPadding)
         }
     }
@@ -60,7 +60,7 @@ fun PodcastItem(
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(contentPadding)
-            .clickable { navigator.navigate(PodcastDetailsScreenDestination(podcast.link)) }
+            .clickable { navigator.navigate(PodcastDetailsScreenDestination(podcast.rssLink)) }
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -84,13 +84,13 @@ fun PodcastItem(
             )
             BasicText(
                 modifier = Modifier.padding(bottom = 2.dp),
-                style = TextStyles.CardDate,
+                style = TextStyles.CardDescription,
                 text = podcast.description
             )
             BasicText(
-                style = TextStyle(textAlign = TextAlign.Start),
+                style = TextStyles.CardDate,
                 overflow = TextOverflow.Ellipsis,
-                text = ""
+                text = "Updated: " + podcast.lastBuildDate
             )
         }
     }

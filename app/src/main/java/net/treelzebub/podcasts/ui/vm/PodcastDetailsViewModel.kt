@@ -23,11 +23,11 @@ class PodcastDetailsViewModel @Inject constructor(
         val episodes: List<EpisodeUi> = listOf()
     )
 
-    fun getPodcastAndEpisodes(link: String) {
+    fun getPodcastAndEpisodes(rssLink: String) {
         viewModelScope.launch {
             val currentStateFlow = withContext(Dispatchers.IO) {
-                val podcastFlow = repo.getPodcastByLink(link)
-                val episodesFlow = repo.getEpisodesByChannelLink(link)
+                val podcastFlow = repo.getPodcastByLink(rssLink)
+                val episodesFlow = repo.getEpisodesByChannelLink(rssLink)
                 podcastFlow.combine(episodesFlow) { podcast, episodes ->
                     State(false, podcast, episodes)
                 }

@@ -43,12 +43,12 @@ import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel
 @Composable
 fun PodcastDetailsScreen(
     navigator: DestinationsNavigator,
-    link: String
+    rssLink: String
 ) {
     val vm = hiltViewModel<PodcastDetailsViewModel>()
     val state by remember { vm.state }.collectAsState()
-    val onDelete = { vm.deletePodcast(link) }
-    vm.getPodcastAndEpisodes(link)
+    val onDelete = { vm.deletePodcast(rssLink) }
+    vm.getPodcastAndEpisodes(rssLink)
 
     if (!state.loading && state.podcast == null) {
         navigator.navigateUp()
