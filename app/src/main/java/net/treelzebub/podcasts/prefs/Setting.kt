@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.prefs
 
+import net.treelzebub.podcasts.prefs.UserSetting.UserDataSyncPlatform.Platform
 
 interface Setting<T> {
     val name: String
@@ -35,4 +36,14 @@ sealed class PlaybackSetting<T>(
     class SkipBackwardSeconds(value: Int) : AppSetting<Int>("skip-backward-seconds", value, 10)
     class RewindOnResumeSeconds(value: Int) : AppSetting<Int>("rewind-on-resume-seconds", value, 10)
     class KeepScreenAwake(value: Boolean) : AppSetting<Boolean>("keep-screen-awake", value, false)
+}
+
+sealed class UserSetting<T>(
+    override val name: String,
+    override val value: T,
+    override val default: T
+) : Setting<T> {
+    class UserDataSyncPlatform(value: Platform) : UserSetting<Platform>("user-data-sync-platform", value, Platform.None) {
+        enum class Platform { None, GDrive, Dropbox, Box }
+    }
 }

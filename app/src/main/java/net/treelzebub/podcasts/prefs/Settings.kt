@@ -45,7 +45,7 @@ class Settings @Inject constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> get(setting: Setting<T>): Flow<T> {
+    operator fun <T> get(setting: Setting<T>): Flow<T> {
         val key = when (setting.value) {
             is Boolean -> booleanPreferencesKey(setting.name)
             is Int -> intPreferencesKey(setting.name)
