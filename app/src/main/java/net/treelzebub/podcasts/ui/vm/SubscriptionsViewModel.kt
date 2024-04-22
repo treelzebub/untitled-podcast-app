@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.prefs.Settings
+import net.treelzebub.podcasts.settings.Settings
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
 

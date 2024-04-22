@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.prefs
+package net.treelzebub.podcasts.settings
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -37,7 +37,7 @@ class Settings @Inject constructor(
                         val key = intPreferencesKey(setting.key)
                         settings[key] = value
                     }
-                    else -> throw IllegalArgumentException("Preference ${setting.key} is of unsupported type.")
+                    else -> throw IllegalArgumentException("Setting ${setting.key} is of unsupported type.")
                 }
             }
         }
@@ -49,7 +49,7 @@ class Settings @Inject constructor(
         val key = when (setting.value) {
             is Boolean -> booleanPreferencesKey(setting.key)
             is Int -> intPreferencesKey(setting.key)
-            else -> throw IllegalArgumentException("Preference ${setting.key} is of unsupported type.")
+            else -> throw IllegalArgumentException("Setting ${setting.key} is of unsupported type.")
         }
         return context.dataStore.data.map { it[key] as T }
     }

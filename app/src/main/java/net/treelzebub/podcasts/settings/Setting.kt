@@ -1,6 +1,6 @@
-package net.treelzebub.podcasts.prefs
+package net.treelzebub.podcasts.settings
 
-import net.treelzebub.podcasts.prefs.UserSetting.UserDataSyncPlatform.Platform
+import net.treelzebub.podcasts.settings.UserSetting.UserDataSyncPlatform.Platform
 
 interface Setting<T> {
     val key: String
