@@ -30,26 +30,26 @@ class Settings @Inject constructor(
             context.dataStore.edit { settings ->
                 when (val value = setting.value) {
                     is Boolean -> {
-                        val key = booleanPreferencesKey(setting.name)
+                        val key = booleanPreferencesKey(setting.key)
                         settings[key] = value
                     }
                     is Int -> {
-                        val key = intPreferencesKey(setting.name)
+                        val key = intPreferencesKey(setting.key)
                         settings[key] = value
                     }
-                    else -> throw IllegalArgumentException("Preference ${setting.name} is of unsupported type.")
+                    else -> throw IllegalArgumentException("Preference ${setting.key} is of unsupported type.")
                 }
             }
         }
-        Log.d("Settings", "${setting.name} changed to ${setting.value}")
+        Log.d("Settings", "${setting.key} changed to ${setting.value}")
     }
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(setting: Setting<T>): Flow<T> {
         val key = when (setting.value) {
-            is Boolean -> booleanPreferencesKey(setting.name)
-            is Int -> intPreferencesKey(setting.name)
-            else -> throw IllegalArgumentException("Preference ${setting.name} is of unsupported type.")
+            is Boolean -> booleanPreferencesKey(setting.key)
+            is Int -> intPreferencesKey(setting.key)
+            else -> throw IllegalArgumentException("Preference ${setting.key} is of unsupported type.")
         }
         return context.dataStore.data.map { it[key] as T }
     }

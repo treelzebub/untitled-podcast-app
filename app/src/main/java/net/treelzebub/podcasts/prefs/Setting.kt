@@ -3,13 +3,13 @@ package net.treelzebub.podcasts.prefs
 import net.treelzebub.podcasts.prefs.UserSetting.UserDataSyncPlatform.Platform
 
 interface Setting<T> {
-    val name: String
+    val key: String
     val value: T
     val default: T
 }
 
 sealed class AppSetting<T>(
-    override val name: String,
+    override val key: String,
     override val value: T,
     override val default: T
 ) : Setting<T> {
@@ -24,7 +24,7 @@ sealed class AppSetting<T>(
 }
 
 sealed class PlaybackSetting<T>(
-    override val name: String,
+    override val key: String,
     override val value: T,
     override val default: T
 ) : Setting<T> {
@@ -39,7 +39,7 @@ sealed class PlaybackSetting<T>(
 }
 
 sealed class UserSetting<T>(
-    override val name: String,
+    override val key: String,
     override val value: T,
     override val default: T
 ) : Setting<T> {
