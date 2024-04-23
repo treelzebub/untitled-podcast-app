@@ -78,74 +78,62 @@ android {
 }
 
 dependencies {
-    // todo move to version catalog
-    val retrofit = "2.11.0"
-    val sqldelight = "2.0.1"
-    val hilt = "2.51"
-    val hiltAndroidX = "1.2.0"
-    val work = "2.9.0"
-    val lifecycle = "2.7.0"
-    val compose_bom = "2024.04.00"
-    val destinations = "1.10.0"
-    val exoplayer = "1.3.0"
-    val coil = "2.4.0"
+    implementation(libs.coroutines.android)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.work)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation(platform("androidx.compose:compose-bom:$compose_bom"))
-    implementation("androidx.work:work-runtime-ktx:$work")
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    kapt(libs.androidx.hilt.compiler)
+    implementation(libs.hilt.work)
+    implementation(libs.hilt.navigation)
 
-    implementation("com.google.dagger:hilt-android:$hilt")
-    kapt("com.google.dagger:hilt-android-compiler:$hilt")
-    kapt("androidx.hilt:hilt-compiler:$hiltAndroidX")
-    implementation("androidx.hilt:hilt-navigation-compose:$hiltAndroidX")
-    implementation("androidx.hilt:hilt-work:$hiltAndroidX")
-    // Kotlin + coroutines
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.moshi)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.moshi)
 
-    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
-    implementation("com.squareup.okhttp3:okhttp")
-    implementation("com.squareup.okhttp3:logging-interceptor")
-    implementation("com.squareup.retrofit2:retrofit:$retrofit")
-    implementation("com.squareup.retrofit2:converter-moshi:$retrofit")
+    implementation(libs.sqldelight.driver)
+    implementation(libs.sqldelight.coroutines)
 
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.0")
-    implementation("app.cash.sqldelight:android-driver:$sqldelight")
-    implementation("app.cash.sqldelight:coroutines-extensions:$sqldelight")
-    implementation("com.prof18.rssparser:rssparser:6.0.3")
+    implementation(libs.rssparser)
 
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation(libs.androidx.core)
+    implementation(libs.lifecycle.runtime)
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.activity.compose)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.graphics)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.material3)
 
-    implementation("io.github.raamcosta.compose-destinations:animations-core:$destinations")
-    ksp("io.github.raamcosta.compose-destinations:ksp:$destinations")
+    ksp(libs.compose.destinations)
+    implementation(libs.compose.destinations.animations.core)
 
-    implementation("androidx.media3:media3-exoplayer:$exoplayer")
-    implementation("androidx.media3:media3-exoplayer-dash:$exoplayer")
-    implementation("androidx.media3:media3-ui:$exoplayer")
-    implementation("androidx.media3:media3-session:$exoplayer")
+    implementation(libs.exoplayer)
+    implementation(libs.exoplayer.dash)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.session)
 
-    implementation("io.coil-kt:coil:$coil")
-    implementation("io.coil-kt:coil-compose:$coil")
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
 
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    debugImplementation(libs.debug.compose.ui.tooling)
+    debugImplementation(libs.debug.compose.ui.test.manifest)
 
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.test.junit)
     testImplementation(kotlin("test"))
 
-    testImplementation("com.google.dagger:hilt-android-testing:$hilt") // For Robolectric
-    kaptTest("com.google.dagger:hilt-android-compiler:2.51")
-    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation(libs.test.hilt) // For Robolectric
+    kaptTest(libs.test.hilt.android.compiler)
+    testImplementation(libs.test.robolectric)
 
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:$compose_bom"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    androidTestImplementation("androidx.work:work-testing:$work")
+//    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+//    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+//    androidTestImplementation(platform("androidx.compose:compose-bom:$compose_bom"))
+//    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+//    androidTestImplementation("androidx.work:work-testing:$work")
 }
