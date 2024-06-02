@@ -5,7 +5,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
-    id("app.cash.sqldelight") version "2.0.1"
+    id("app.cash.sqldelight") version "2.0.2"
     id("com.google.devtools.ksp")
 }
 
