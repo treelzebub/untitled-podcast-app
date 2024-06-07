@@ -75,9 +75,8 @@ android {
     }
 }
 
-//composeCompiler {
-//    enableStrongSkippingMode = true
-//}
+// https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-compiler.html#compose-compiler-options-dsl
+composeCompiler {}
 
 dependencies {
     implementation(libs.coroutines.android)
