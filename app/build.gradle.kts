@@ -5,7 +5,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
-    id("app.cash.sqldelight") version "2.0.2"
+    alias(libs.plugins.sqldelight)
     id("com.google.devtools.ksp")
     alias(libs.plugins.compose.compiler)
 }
@@ -24,6 +24,9 @@ kapt {
 
 kotlin {
     jvmToolchain(17)
+    sourceSets.all {
+        languageSettings.enableLanguageFeature("ExplicitBackingFields")
+    }
 }
 
 android {
