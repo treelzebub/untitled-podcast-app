@@ -7,6 +7,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("app.cash.sqldelight") version "2.0.2"
     id("com.google.devtools.ksp")
+    alias(libs.plugins.compose.compiler)
 }
 
 sqldelight {
@@ -67,15 +68,16 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
+
+//composeCompiler {
+//    enableStrongSkippingMode = true
+//}
 
 dependencies {
     implementation(libs.coroutines.android)
