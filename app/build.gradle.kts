@@ -5,8 +5,9 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
-    id("app.cash.sqldelight") version "2.0.2"
+    alias(libs.plugins.sqldelight)
     id("com.google.devtools.ksp")
+    alias(libs.plugins.compose.compiler)
 }
 
 sqldelight {
@@ -23,6 +24,9 @@ kapt {
 
 kotlin {
     jvmToolchain(17)
+    sourceSets.all {
+        languageSettings.enableLanguageFeature("ExplicitBackingFields")
+    }
 }
 
 android {
@@ -67,15 +71,15 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
+
+// https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-compiler.html#compose-compiler-options-dsl
+composeCompiler {}
 
 dependencies {
     implementation(libs.coroutines.android)
