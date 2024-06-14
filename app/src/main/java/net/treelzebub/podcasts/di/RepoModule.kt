@@ -6,9 +6,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import net.treelzebub.podcasts.BuildConfig
 import net.treelzebub.podcasts.Database
-import net.treelzebub.podcasts.net.PodcastRssHandler
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.RssHandler
+import net.treelzebub.podcasts.net.PodcastRssHandler
 import net.treelzebub.podcasts.util.okHttpClient
 import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
@@ -26,7 +26,7 @@ class RepoModule {
     }
     @Provides
     fun okHttpClient(): OkHttpClient {
-        val logLevel = if (BuildConfig.DEBUG) Level.BODY else Level.NONE
+        val logLevel = if (BuildConfig.DEBUG) Level.BASIC else Level.NONE
         return okHttpClient {
             connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, TIMEOUT, TimeUnit.SECONDS))
             addInterceptor(HttpLoggingInterceptor().also { it.setLevel(logLevel) })

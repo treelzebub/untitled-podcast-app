@@ -10,15 +10,15 @@ CREATE TABLE podcast (
     last_local_update INTEGER NOT NULL
 );
 
-upsert:
+insert_or_replace:
 INSERT OR REPLACE INTO podcast
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
-DELETE FROM podcast WHERE ? = link;
+DELETE FROM podcast WHERE id = ?;
 
 get_podcast_by_link:
-SELECT * FROM podcast WHERE ? = rss_link;
+SELECT * FROM podcast WHERE rss_link = ?;
 
 get_all_podcasts:
 SELECT * FROM podcast ORDER BY last_build_date DESC;

@@ -39,10 +39,6 @@ upsert {
   VALUES (:id, :channel_id, :channel_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration);
 }
 
--- upsert:
--- INSERT OR REPLACE INTO episode (id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
--- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-
 get_all:
 SELECT * FROM episode;
 

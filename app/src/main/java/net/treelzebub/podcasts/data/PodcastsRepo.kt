@@ -27,7 +27,7 @@ class PodcastsRepo @Inject constructor(
         try {
             Log.d("PodcastRepo", "Fetching RSS Feed: $url")
             val feed = rssHandler.fetch(url)
-            upsert(url, feed)
+            insertOrReplace(url, feed)
         } catch (e: Exception) {
             Log.e("PodcastRepo", "Error parsing RSS Feed", e)
             onError(e)
@@ -36,11 +36,11 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
-    fun upsert(url: String, channel: RssChannel) {
+    fun insertOrReplace(url: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
-                db.podcastsQueries.upsert(
+                db.podcastsQueries.insert_or_replace(
                     id = url, // Public link to Podcast will be unique, so it's our ID.
                     link = link!!,
                     title = title!!,
