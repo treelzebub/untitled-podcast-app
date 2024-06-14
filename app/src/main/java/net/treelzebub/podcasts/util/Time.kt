@@ -3,11 +3,8 @@ package net.treelzebub.podcasts.util
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.LocalDateTime.now
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
 
 object Time {
 
@@ -40,12 +37,16 @@ object Time {
         }
     }
 
-    fun displayFormat(millis: Long): String {
+    fun displayFormat(millis: Long): String = format(millis, displayFormat)
+
+    fun verboseFormat(millis: Long): String = format(millis, rfc2822Lenient)
+
+    private fun format(millis: Long, formatter: DateTimeFormatter): String {
         val zoned = Instant.ofEpochMilli(millis).atZone(zoneClock.zone)
         return try {
-            zoned.format(displayFormat)
+            zoned.format(formatter)
         } catch (e: Exception) {
-            Log.e("Time", "Error parsing in displayFormat(Long)", e)
+            Log.e("Time", "Error parsing $millis with ${formatter::class.java.simpleName})", e)
             DATE_UNKNOWN
         }
     }

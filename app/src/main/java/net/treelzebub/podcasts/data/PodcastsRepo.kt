@@ -27,7 +27,7 @@ class PodcastsRepo @Inject constructor(
         try {
             Log.d("PodcastRepo", "Fetching RSS Feed: $url")
             val feed = rssHandler.fetch(url)
-            upsert(url, feed)
+            insertOrReplace(url, feed)
         } catch (e: Exception) {
             Log.e("PodcastRepo", "Error parsing RSS Feed", e)
             onError(e)
@@ -36,11 +36,11 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
-    fun upsert(url: String, channel: RssChannel) {
+    fun insertOrReplace(url: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
-                db.podcastsQueries.upsert(
+                db.podcastsQueries.insert_or_replace(
                     id = url, // Public link to Podcast will be unique, so it's our ID.
                     link = link!!,
                     title = title!!,
@@ -64,7 +64,7 @@ class PodcastsRepo @Inject constructor(
                         link = link?.sanitizeUrl().orEmpty(),
                         streaming_link = audio.orEmpty(),
                         image_url = image?.sanitizeUrl() ?: safeImage,
-                        duration = itunesItemData?.duration
+                        duration = itunesItemData?.duration,
                     )
                 }
             }
@@ -102,14 +102,14 @@ class PodcastsRepo @Inject constructor(
 
     fun getEpisodesByChannelLink(link: String): Flow<List<EpisodeUi>> {
         return db.episodesQueries
-            .get_episodes_by_channel_id(link, episodeMapper)
+            .get_by_channel_id(link, episodeMapper)
             .asFlow()
             .mapToList(Dispatchers.IO)
     }
 
     fun getEpisodeById(id: String): Flow<EpisodeUi> {
         return db.episodesQueries
-            .get_episode_by_id(id, episodeMapper)
+            .get_by_id(id, episodeMapper)
             .asFlow()
             .mapToOne(Dispatchers.IO)
     }
@@ -145,9 +145,14 @@ class PodcastsRepo @Inject constructor(
         streaming_link: String,
         image_url: String?,
         duration: String?,
+        has_played: Boolean,
+        progress_seconds: Long,
+        is_bookmarked: Boolean,
+        is_archived: Boolean
     ) -> EpisodeUi = { id, channel_id, channel_title, title,
                        description, date, link, streaming_link,
-                       image_url, duration ->
+                       image_url, duration, has_played, progress_seconds,
+                       is_bookmarked, is_archived ->
         EpisodeUi(
             id = id,
             channelId = channel_id,
@@ -158,7 +163,11 @@ class PodcastsRepo @Inject constructor(
             link = link,
             streamingLink = streaming_link,
             imageUrl = image_url.orEmpty(),
-            duration = duration.orEmpty()
+            duration = duration.orEmpty(),
+            hasPlayed = has_played,
+            progressSeconds = progress_seconds.toInt(),
+            isBookmarked = is_bookmarked,
+            isArchived = is_archived
         )
     }
 }

@@ -1,6 +1,7 @@
 package net.treelzebub.podcasts.di
 
 import android.app.Application
+import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import dagger.Module
@@ -16,7 +17,15 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDriver(app: Application): SqlDriver = AndroidSqliteDriver(Database.Schema, app, "podcasts.db")
+    fun provideDriver(app: Application): SqlDriver =
+        AndroidSqliteDriver(
+            Database.Schema,
+            app,
+            "podcasts.db",
+            callback = object : AndroidSqliteDriver.Callback(Database.Schema) {
+                override fun onOpen(db: SupportSQLiteDatabase) = db.setForeignKeyConstraintsEnabled(true)
+            }
+        )
 
     @Provides
     @Singleton
