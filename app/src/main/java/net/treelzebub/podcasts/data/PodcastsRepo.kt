@@ -73,21 +73,21 @@ class PodcastsRepo @Inject constructor(
 
     fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
         return db.podcastsQueries
-            .get_podcast_by_link(rssLink, podcastMapper)
+            .get_by_link(rssLink, podcastMapper)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
     }
 
     fun getAllAsFlow(): Flow<List<PodcastUi>> {
         return db.podcastsQueries
-            .get_all_podcasts(podcastMapper)
+            .get_all_by_latest_episode(podcastMapper)
             .asFlow()
             .mapToList(Dispatchers.IO)
     }
 
     fun getAllAsList(): List<PodcastUi> {
         return db.podcastsQueries
-            .get_all_podcasts(podcastMapper)
+            .get_all_by_latest_episode(podcastMapper)
             .executeAsList()
     }
 
@@ -124,7 +124,7 @@ class PodcastsRepo @Inject constructor(
         image_url: String?,
         last_build_date: Long,
         rss_link: String,
-        lastLocalUpdate: Long
+        last_local_update: Long
     ) -> PodcastUi = { id, link, title, description,
                        email, image_url, last_build_date,
                        rss_link, lastLocalUpdate ->
