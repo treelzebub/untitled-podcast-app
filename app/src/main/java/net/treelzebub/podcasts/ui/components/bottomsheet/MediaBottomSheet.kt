@@ -291,5 +291,9 @@ private val TEMP_DebugEpisode = EpisodeUi(
     "https://podcast.home/link",
     "https://podcast.home/stream.mp3",
     "https://picsum.photos/200",
-    "5h 30m"
+    "5h 30m",
+    false,
+    0,
+    false,
+    false
 )

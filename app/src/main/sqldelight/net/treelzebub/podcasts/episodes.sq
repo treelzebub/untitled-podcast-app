@@ -11,6 +11,10 @@ CREATE TABLE episode (
     streaming_link TEXT NOT NULL,
     image_url TEXT,
     duration TEXT,
+    has_played INTEGER AS Boolean NOT NULL DEFAULT 0,
+    progress_seconds INTEGER NOT NULL DEFAULT 0,
+    is_bookmarked INTEGER AS Boolean NOT NULL DEFAULT 0,
+    is_archived INTEGER AS Boolean NOT NULL DEFAULT 0,
 
   FOREIGN KEY (channel_id)
     REFERENCES podcast(id)
@@ -18,26 +22,26 @@ CREATE TABLE episode (
 );
 
 upsert:
-INSERT OR REPLACE INTO episode
+INSERT OR REPLACE INTO episode (id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
-get_all_episodes:
+get_all:
 SELECT * FROM episode;
 
-get_episode_by_id:
-SELECT *
-FROM episode
-WHERE id = :id;
+get_all_not_archived:
+SELECT * FROM episode WHERE is_archived = 0;
 
-get_episodes_by_channel_id:
-SELECT *
-FROM episode
-WHERE channel_id = :channelId;
+get_by_id:
+SELECT * FROM episode WHERE id = :id;
+
+get_by_channel_id:
+SELECT * FROM episode WHERE channel_id = :channelId;
+
+get_bookmarked:
+SELECT * FROM episode WHERE is_bookmarked = 1;
 
 search_titles:
-SELECT *
-FROM episode
-WHERE title LIKE (:term || '%');
+SELECT * FROM episode WHERE title LIKE (:term || '%');
 
 delete_all:
 DELETE FROM episode;
