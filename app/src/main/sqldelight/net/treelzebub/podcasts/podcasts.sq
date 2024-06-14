@@ -15,19 +15,16 @@ INSERT OR REPLACE INTO podcast
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
-DELETE FROM podcast WHERE id = ?;
+DELETE FROM podcast
+WHERE id = ?;
 
 get_by_link:
-SELECT * FROM podcast WHERE rss_link = ?;
+SELECT * FROM podcast
+WHERE rss_link = ?;
 
 get_all:
-SELECT * FROM podcast ORDER BY last_build_date DESC;
-
-get_all_by_latest_episode:
-SELECT podcast.* FROM podcast
-JOIN (SELECT MAX(episode.date) AS latest_episode_date
-      FROM episode GROUP BY episode.channel_id)
-ORDER BY latest_episode_date DESC;
+SELECT * FROM podcast
+ORDER BY last_build_date DESC;
 
 get_all_rss_links:
 SELECT id, rss_link FROM podcast ORDER BY last_build_date DESC;

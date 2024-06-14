@@ -40,22 +40,34 @@ upsert {
 }
 
 get_all:
-SELECT * FROM episode;
+SELECT * FROM episode
+GROUP BY channel_id
+ORDER BY date DESC;
 
 get_all_not_archived:
-SELECT * FROM episode WHERE is_archived = 0;
+SELECT * FROM episode
+WHERE is_archived = 0
+GROUP BY channel_id
+ORDER BY date DESC;
 
 get_by_id:
 SELECT * FROM episode WHERE id = :id;
 
 get_by_channel_id:
-SELECT * FROM episode WHERE channel_id = :channelId;
+SELECT * FROM episode
+WHERE channel_id = :channelId
+ORDER BY date DESC;
 
+-- Should we persist bookmarked_date and order by that?
 get_bookmarked:
-SELECT * FROM episode WHERE is_bookmarked = 1;
+SELECT * FROM episode
+WHERE is_bookmarked = 1
+ORDER BY date DESC;
 
 search_titles:
-SELECT * FROM episode WHERE title LIKE (:term || '%');
+SELECT * FROM episode
+WHERE title LIKE (:term || '%')
+ORDER BY date DESC;
 
 delete_all:
 DELETE FROM episode;

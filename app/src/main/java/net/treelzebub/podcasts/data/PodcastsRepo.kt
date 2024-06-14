@@ -5,8 +5,10 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -20,7 +22,8 @@ import javax.inject.Inject
 
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
-    private val db: Database
+    private val db: Database,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     suspend fun fetchRssFeed(url: String, onError: (Exception) -> Unit) {
@@ -75,20 +78,38 @@ class PodcastsRepo @Inject constructor(
         return db.podcastsQueries
             .get_by_link(rssLink, podcastMapper)
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(dispatcher)
     }
 
     fun getAllAsFlow(): Flow<List<PodcastUi>> {
         return db.podcastsQueries
-            .get_all_by_latest_episode(podcastMapper)
+            .get_all(podcastMapper)
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(dispatcher)
     }
 
     fun getAllAsList(): List<PodcastUi> {
         return db.podcastsQueries
-            .get_all_by_latest_episode(podcastMapper)
+            .get_all(podcastMapper)
             .executeAsList()
+    }
+
+    fun getAllByLatestEpisode(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
+        val podcasts = db.podcastsQueries.get_all(podcastMapper).executeAsList()
+        return db.episodesQueries.get_all(episodeMapper)
+            .asFlow()
+            .mapToList(dispatcher)
+            .map { episodes ->
+                episodes.groupBy {
+                    it.channelId
+                }.entries.associate { (podcastId, episodes) ->
+                    podcasts.find { it.id == podcastId }!! to episodes.sortedByDescending { it.sortDate }
+                }
+            }
+    }
+
+    private fun getAllEpisodes(): List<EpisodeUi> {
+        return db.episodesQueries.get_all(episodeMapper).executeAsList()
     }
 
     fun getAllRssLinks(): List<SubscriptionDto> {
@@ -104,14 +125,14 @@ class PodcastsRepo @Inject constructor(
         return db.episodesQueries
             .get_by_channel_id(link, episodeMapper)
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(dispatcher)
     }
 
     fun getEpisodeById(id: String): Flow<EpisodeUi> {
         return db.episodesQueries
             .get_by_id(id, episodeMapper)
             .asFlow()
-            .mapToOne(Dispatchers.IO)
+            .mapToOne(dispatcher)
     }
 
 
@@ -159,7 +180,8 @@ class PodcastsRepo @Inject constructor(
             channelTitle = channel_title,
             title = title,
             description = description.orEmpty(),
-            date = Time.displayFormat(date),
+            displayDate = Time.displayFormat(date),
+            sortDate = date,
             link = link,
             streamingLink = streaming_link,
             imageUrl = image_url.orEmpty(),
