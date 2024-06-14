@@ -21,9 +21,27 @@ CREATE TABLE episode (
     ON DELETE CASCADE
 );
 
-upsert:
-INSERT OR REPLACE INTO episode (id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+upsert {
+  UPDATE episode
+  SET id = :id,
+      channel_id = :channel_id,
+      channel_title = :channel_title,
+      title = :title,
+      description = :description,
+      date = :date,
+      link = :link,
+      streaming_link = :streaming_link,
+      image_url = :image_url,
+      duration = :duration
+  WHERE id = :id;
+
+  INSERT OR IGNORE INTO episode (id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
+  VALUES (:id, :channel_id, :channel_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration);
+}
+
+-- upsert:
+-- INSERT OR REPLACE INTO episode (id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
+-- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get_all:
 SELECT * FROM episode;

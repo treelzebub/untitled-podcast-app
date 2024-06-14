@@ -49,14 +49,14 @@ private class _DebugMode constructor(
 
     fun nukeSubs() {
         db.podcastsQueries.delete_all()
-        db.episodesQueries.delete_all()
+        assert(db.episodesQueries.get_all().executeAsList().isEmpty())
     }
 }
 
 @HiltViewModel
 private class _DebugViewModel @Inject constructor(
     app: Application,
-    db: Database,
+    val db: Database,
     repo: PodcastsRepo
 ) : AndroidViewModel(app) {
 
