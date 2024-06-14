@@ -76,6 +76,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-compiler.html#compose-compiler-options-dsl
@@ -128,12 +129,12 @@ dependencies {
     debugImplementation(libs.debug.compose.ui.tooling)
     debugImplementation(libs.debug.compose.ui.test.manifest)
 
-    testImplementation(libs.test.junit)
+    testImplementation(libs.junit)
     testImplementation(kotlin("test"))
-
-    testImplementation(libs.test.hilt) // For Robolectric
-    kaptTest(libs.test.hilt.android.compiler)
-    testImplementation(libs.test.robolectric)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.hilt.test) // For Robolectric
+    testImplementation(libs.sqldelight.test)
 
 //    androidTestImplementation("androidx.test.ext:junit:1.1.5")
 //    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
