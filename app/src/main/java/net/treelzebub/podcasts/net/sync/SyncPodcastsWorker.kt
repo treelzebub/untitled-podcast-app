@@ -49,7 +49,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
                     Log.d(TAG, "Updated Feed with url: ${sub.rssLink}. Parsing...")
                     CoroutineScope(Dispatchers.IO).launch {
                         val parsed = podcastsRepo.parseRssFeed(response.body!!.string())
-                        podcastsRepo.insertOrReplace(sub.rssLink, parsed)
+                        podcastsRepo.insertOrReplacePodcast(sub.rssLink, parsed)
                     }
                     Log.d(TAG, "Parsed and persisted Feed with url: ${sub.rssLink}")
                 } else onFailure(call, IOException("Unknown Error"))

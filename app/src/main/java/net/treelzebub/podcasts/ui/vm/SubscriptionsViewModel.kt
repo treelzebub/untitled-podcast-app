@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
@@ -27,15 +26,9 @@ class SubscriptionsViewModel @Inject constructor(
 
     private fun getAllPodcasts() {
         viewModelScope.launch {
-            val podcastsFlow = withContext(Dispatchers.IO) {
-                repo.getAllAsFlow()
-            }
-            podcastsFlow.collect { currentState ->
+            repo.getAllPodcastsFlow().collect { currentState ->
                 _state.update {
-                    it.copy(
-                        loading = false,
-                        podcasts = currentState
-                    )
+                    it.copy(loading = false, podcasts = currentState)
                 }
             }
         }

@@ -1,13 +1,19 @@
 package net.treelzebub.podcasts.db
 
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import net.treelzebub.podcasts.Episode
 import net.treelzebub.podcasts.Podcast
+import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.net.PodcastRssHandler
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.util.StubRssHandler
 import net.treelzebub.podcasts.util.Time
 import org.junit.Test
 import kotlin.test.assertEquals
 
 class PodcastDbTests {
+    private val testScheduler = TestCoroutineScheduler()
 
     @Test fun sanity() = withDatabase { db ->
         db.podcastsQueries.insert_or_replace("id",
@@ -27,7 +33,8 @@ class PodcastDbTests {
     }
 
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
-
+        val repo = PodcastsRepo(StubRssHandler(), db, StandardTestDispatcher(testScheduler))
+        repo.
     }
 
     private val TestEpisode = Episode(

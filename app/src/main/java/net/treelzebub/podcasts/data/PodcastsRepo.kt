@@ -30,7 +30,7 @@ class PodcastsRepo @Inject constructor(
         try {
             Log.d("PodcastRepo", "Fetching RSS Feed: $url")
             val feed = rssHandler.fetch(url)
-            insertOrReplace(url, feed)
+            insertOrReplacePodcast(url, feed)
         } catch (e: Exception) {
             Log.e("PodcastRepo", "Error parsing RSS Feed", e)
             onError(e)
@@ -39,7 +39,8 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
-    fun insertOrReplace(url: String, channel: RssChannel) {
+    /** Podcasts **/
+    fun insertOrReplacePodcast(url: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
@@ -74,6 +75,10 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
+    fun insertOrReplacePodcast(podcastUi: PodcastUi) {
+        db.podcastsQueries.insert_or_replace(podcastUi)
+    }
+
     fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
         return db.podcastsQueries
             .get_by_link(rssLink, podcastMapper)
@@ -81,20 +86,14 @@ class PodcastsRepo @Inject constructor(
             .mapToOneOrNull(dispatcher)
     }
 
-    fun getAllAsFlow(): Flow<List<PodcastUi>> {
+    fun getAllPodcastsFlow(): Flow<List<PodcastUi>> {
         return db.podcastsQueries
             .get_all(podcastMapper)
             .asFlow()
             .mapToList(dispatcher)
     }
 
-    fun getAllAsList(): List<PodcastUi> {
-        return db.podcastsQueries
-            .get_all(podcastMapper)
-            .executeAsList()
-    }
-
-    fun getAllByLatestEpisode(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
+    fun getAllPodcastsByLatestEpisode(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
         val podcasts = db.podcastsQueries.get_all(podcastMapper).executeAsList()
         return db.episodesQueries.get_all(episodeMapper)
             .asFlow()
@@ -108,10 +107,6 @@ class PodcastsRepo @Inject constructor(
             }
     }
 
-    private fun getAllEpisodes(): List<EpisodeUi> {
-        return db.episodesQueries.get_all(episodeMapper).executeAsList()
-    }
-
     fun getAllRssLinks(): List<SubscriptionDto> {
         return db.podcastsQueries
             .get_all_rss_links()
@@ -120,6 +115,11 @@ class PodcastsRepo @Inject constructor(
     }
 
     fun deletePodcastById(link: String) = db.podcastsQueries.delete(link)
+
+    /** Episodes **/
+    private fun getAllEpisodes(): List<EpisodeUi> {
+        return db.episodesQueries.get_all(episodeMapper).executeAsList()
+    }
 
     fun getEpisodesByChannelLink(link: String): Flow<List<EpisodeUi>> {
         return db.episodesQueries
@@ -135,7 +135,7 @@ class PodcastsRepo @Inject constructor(
             .mapToOne(dispatcher)
     }
 
-
+    /** Mappers **/
     private val podcastMapper: (
         id: String,
         link: String,
