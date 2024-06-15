@@ -51,9 +51,9 @@ class PodcastsRepo @Inject constructor(
                     description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     email = itunesChannelData?.owner?.email.orEmpty(),
                     image_url = safeImage,
-                    last_build_date = Time.zonedEpochMillis(lastBuildDate),
+                    last_build_date = Time.zonedEpochSeconds(lastBuildDate),
                     rss_link = url,
-                    last_local_update = Time.nowEpochMillis()
+                    last_local_update = Time.nowSeconds()
                 )
             }
             channel.items.forEach {
@@ -64,7 +64,7 @@ class PodcastsRepo @Inject constructor(
                         channel_title = channel.title!!,
                         title = title.sanitizeHtml() ?: "[No Title]",
                         description = description?.sanitizeHtml() ?: "[No Description]",
-                        date = Time.zonedEpochMillis(pubDate),
+                        date = Time.zonedEpochSeconds(pubDate),
                         link = link?.sanitizeUrl().orEmpty(),
                         streaming_link = audio.orEmpty(),
                         image_url = image?.sanitizeUrl() ?: safeImage,

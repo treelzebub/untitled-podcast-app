@@ -18,6 +18,6 @@ fun PodcastsQueries.insert_or_replace(podcast: PodcastUi) {
     val anchor = this
     with(podcast) {
         anchor.insert_or_replace(id, link, title, description, email, imageUrl,
-            Time.zonedEpochMillis(lastBuildDate), rssLink, lastLocalUpdate)
+            Time.zonedEpochSeconds(lastBuildDate), rssLink, lastLocalUpdate)
     }
 }

@@ -21,12 +21,12 @@ object Time {
 
     private val displayFormat = DateTimeFormatter.ofPattern("MMM d, yyyy", locale)
 
-    fun nowEpochMillis(): Long = System.currentTimeMillis()
+    fun nowSeconds(): Long = System.currentTimeMillis() / 1000L
 
-    fun zonedEpochMillis(string: String?): Long =
+    fun zonedEpochSeconds(string: String?): Long =
         string?.let {
-            parse(string).atZone(zoneClock.zone).toEpochSecond() * 1000
-        } ?: nowEpochMillis()
+            parse(string).atZone(zoneClock.zone).toEpochSecond()
+        } ?: nowSeconds()
 
     fun displayFormat(string: String?): String {
         return try {
@@ -37,16 +37,16 @@ object Time {
         }
     }
 
-    fun displayFormat(millis: Long): String = format(millis, displayFormat)
+    fun displayFormat(seconds: Long): String = format(seconds, displayFormat)
 
-    fun verboseFormat(millis: Long): String = format(millis, rfc2822Lenient)
+    fun verboseFormat(seconds: Long): String = format(seconds, rfc2822Lenient)
 
-    private fun format(millis: Long, formatter: DateTimeFormatter): String {
-        val zoned = Instant.ofEpochMilli(millis).atZone(zoneClock.zone)
+    private fun format(seconds: Long, formatter: DateTimeFormatter): String {
+        val zoned = Instant.ofEpochSecond(seconds).atZone(zoneClock.zone)
         return try {
             zoned.format(formatter)
         } catch (e: Exception) {
-            Log.e("Time", "Error parsing $millis with ${formatter::class.java.simpleName})", e)
+            Log.e("Time", "Error parsing $seconds with ${formatter::class.java.simpleName})", e)
             DATE_UNKNOWN
         }
     }
