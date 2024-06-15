@@ -6,6 +6,8 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import net.treelzebub.podcasts.net.sync.Sync
+import timber.log.Timber
+import timber.log.Timber.DebugTree
 import javax.inject.Inject
 
 
@@ -23,6 +25,7 @@ class App : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        Timber.plant(DebugTree())
         Sync.initialize(this)
     }
 }

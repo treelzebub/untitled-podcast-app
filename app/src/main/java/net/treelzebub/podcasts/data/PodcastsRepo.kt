@@ -5,13 +5,15 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import net.treelzebub.podcasts.util.Log
+import net.treelzebub.podcasts.util.Logger
 import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
@@ -20,47 +22,49 @@ import javax.inject.Inject
 
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
-    private val db: Database
+    private val db: Database,
+    private val dispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun fetchRssFeed(url: String, onError: (Exception) -> Unit) {
+    suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
         try {
-            Log.d("PodcastRepo", "Fetching RSS Feed: $url")
-            val feed = rssHandler.fetch(url)
-            insertOrReplace(url, feed)
+            Logger.d("Fetching RSS Feed: $rssLink")
+            val feed = rssHandler.fetch(rssLink)
+            insertOrReplacePodcast(rssLink, feed)
         } catch (e: Exception) {
-            Log.e("PodcastRepo", "Error parsing RSS Feed", e)
+            Logger.e("Error parsing RSS Feed", e)
             onError(e)
         }
     }
 
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
-    fun insertOrReplace(url: String, channel: RssChannel) {
+    /** Podcasts **/
+    fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
                 db.podcastsQueries.insert_or_replace(
-                    id = url, // Public link to Podcast will be unique, so it's our ID.
+                    id = link!!, // Public link to Podcast will be unique, so it's our ID.
                     link = link!!,
                     title = title!!,
                     description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     email = itunesChannelData?.owner?.email.orEmpty(),
                     image_url = safeImage,
-                    last_build_date = Time.zonedEpochMillis(lastBuildDate),
-                    rss_link = url,
-                    last_local_update = Time.nowEpochMillis()
+                    last_build_date = Time.zonedEpochSeconds(lastBuildDate),
+                    rss_link = rssLink,
+                    last_local_update = Time.nowSeconds()
                 )
             }
             channel.items.forEach {
                 with(it) {
                     db.episodesQueries.upsert(
                         id = guid!!,
-                        channel_id = url,
-                        channel_title = channel.title!!,
+                        podcast_id = channel.link!!,
+                        podcast_title = channel.title!!,
                         title = title.sanitizeHtml() ?: "[No Title]",
                         description = description?.sanitizeHtml() ?: "[No Description]",
-                        date = Time.zonedEpochMillis(pubDate),
+                        date = Time.zonedEpochSeconds(pubDate),
                         link = link?.sanitizeUrl().orEmpty(),
                         streaming_link = audio.orEmpty(),
                         image_url = image?.sanitizeUrl() ?: safeImage,
@@ -71,24 +75,34 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
+    fun insertOrReplacePodcast(podcastUi: PodcastUi) {
+        db.podcastsQueries.insert_or_replace(podcastUi)
+    }
+
+    fun getPodcastById(id: String): Flow<PodcastUi> {
+        return db.podcastsQueries.get_by_id(id, podcastMapper).executeAsList().asFlow()
+    }
+
     fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
         return db.podcastsQueries
-            .get_podcast_by_link(rssLink, podcastMapper)
+            .get_by_link(rssLink, podcastMapper)
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(dispatcher)
     }
 
-    fun getAllAsFlow(): Flow<List<PodcastUi>> {
-        return db.podcastsQueries
-            .get_all_podcasts(podcastMapper)
+    fun getAllPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
+        return db.podcastsQueries.get_all(podcastMapper)
             .asFlow()
-            .mapToList(Dispatchers.IO)
-    }
-
-    fun getAllAsList(): List<PodcastUi> {
-        return db.podcastsQueries
-            .get_all_podcasts(podcastMapper)
-            .executeAsList()
+            .mapToList(dispatcher)
+            .map { podcasts ->
+                db.episodesQueries.get_all(episodeMapper).executeAsList()
+                    .groupBy { it.podcastId }
+                    .entries.sortedByDescending { entry ->
+                        entry.value.maxBy { episode -> episode.sortDate }.sortDate
+                    }.map { entry ->
+                        podcasts.find { podcast -> podcast.id == entry.key }!!
+                    }
+            }
     }
 
     fun getAllRssLinks(): List<SubscriptionDto> {
@@ -100,21 +114,26 @@ class PodcastsRepo @Inject constructor(
 
     fun deletePodcastById(link: String) = db.podcastsQueries.delete(link)
 
-    fun getEpisodesByChannelLink(link: String): Flow<List<EpisodeUi>> {
+    /** Episodes **/
+    private fun getAllEpisodes(): List<EpisodeUi> {
+        return db.episodesQueries.get_all(episodeMapper).executeAsList()
+    }
+
+    fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
         return db.episodesQueries
-            .get_by_channel_id(link, episodeMapper)
+            .get_by_podcast_id(podcastId, episodeMapper)
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(dispatcher)
     }
 
     fun getEpisodeById(id: String): Flow<EpisodeUi> {
         return db.episodesQueries
             .get_by_id(id, episodeMapper)
             .asFlow()
-            .mapToOne(Dispatchers.IO)
+            .mapToOne(dispatcher)
     }
 
-
+    /** Mappers **/
     private val podcastMapper: (
         id: String,
         link: String,
@@ -124,7 +143,7 @@ class PodcastsRepo @Inject constructor(
         image_url: String?,
         last_build_date: Long,
         rss_link: String,
-        lastLocalUpdate: Long
+        last_local_update: Long
     ) -> PodcastUi = { id, link, title, description,
                        email, image_url, last_build_date,
                        rss_link, lastLocalUpdate ->
@@ -136,8 +155,8 @@ class PodcastsRepo @Inject constructor(
 
     private val episodeMapper: (
         id: String,
-        channel_id: String,
-        channel_title: String,
+        podcast_id: String,
+        podcast_title: String,
         title: String,
         description: String?,
         date: Long,
@@ -149,17 +168,18 @@ class PodcastsRepo @Inject constructor(
         progress_seconds: Long,
         is_bookmarked: Boolean,
         is_archived: Boolean
-    ) -> EpisodeUi = { id, channel_id, channel_title, title,
+    ) -> EpisodeUi = { id, podcast_id, podcast_title, title,
                        description, date, link, streaming_link,
                        image_url, duration, has_played, progress_seconds,
                        is_bookmarked, is_archived ->
         EpisodeUi(
             id = id,
-            channelId = channel_id,
-            channelTitle = channel_title,
+            podcastId = podcast_id,
+            podcastTitle = podcast_title,
             title = title,
             description = description.orEmpty(),
-            date = Time.displayFormat(date),
+            displayDate = Time.displayFormat(date),
+            sortDate = date,
             link = link,
             streamingLink = streaming_link,
             imageUrl = image_url.orEmpty(),

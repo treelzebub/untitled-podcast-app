@@ -40,7 +40,7 @@ class NowPlayingViewModel @Inject constructor(
             .setUri(Uri.parse(it.streamingLink))
             .setMediaId(it.id)
             .setMediaMetadata(MediaMetadata.Builder()
-                .setArtist(it.channelTitle)
+                .setArtist(it.podcastTitle)
                 .setTitle(it.title)
                 .setDescription(it.description)
                 .setArtworkUri(Uri.parse(it.imageUrl))

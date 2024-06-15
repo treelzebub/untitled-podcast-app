@@ -15,13 +15,20 @@ INSERT OR REPLACE INTO podcast
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
-DELETE FROM podcast WHERE id = ?;
+DELETE FROM podcast
+WHERE id = ?;
 
-get_podcast_by_link:
-SELECT * FROM podcast WHERE rss_link = ?;
+get_by_id:
+SELECT * FROM podcast
+WHERE id = ?;
 
-get_all_podcasts:
-SELECT * FROM podcast ORDER BY last_build_date DESC;
+get_by_link:
+SELECT * FROM podcast
+WHERE rss_link = ?;
+
+get_all:
+SELECT * FROM podcast
+ORDER BY last_build_date DESC;
 
 get_all_rss_links:
 SELECT id, rss_link FROM podcast ORDER BY last_build_date DESC;

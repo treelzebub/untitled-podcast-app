@@ -4,11 +4,12 @@ kotlin = "2.0.0"
 ksp = "2.0.0-1.0.21"
 hilt = "2.51.1"
 
-coroutines-android = "1.8.1"
+coroutines = "1.8.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 sqldelight = "2.0.2"
 moshi = "1.15.0"
+timber = "5.0.1"
 rssparser = "6.0.3"
 androidx-core = "1.13.1"
 hilt-androidx = "1.2.0"
@@ -22,9 +23,11 @@ exoplayer = "1.3.1"
 coil = "2.6.0"
 junit = "4.13.2"
 robolectric = "4.11.1"
+slf4j = "1.7.36"
+
 
 [libraries]
-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines-android" }
+coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 work = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 
@@ -43,6 +46,8 @@ retrofit-moshi  = { group = "com.squareup.retrofit2", name = "converter-moshi", 
 
 sqldelight-driver  = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines  = { group = "app.cash.sqldelight", name = "coroutines-extensions", version.ref = "sqldelight" }
+
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
 rssparser  = { group = "com.prof18.rssparser", name = "rssparser", version.ref = "rssparser" }
 
@@ -69,10 +74,13 @@ coil-compose  = { group = "io.coil-kt", name = "coil-compose", version.ref = "co
 debug-compose-ui-tooling  = { group = "androidx.compose.ui", name = "ui-tooling" }
 debug-compose-ui-test-manifest  = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
-test-junit  = { group = "junit", name = "junit", version.ref = "junit" }
-test-hilt  = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
-test-hilt-android-compiler  = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-test-robolectric  = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+junit  = { group = "junit", name = "junit", version.ref = "junit" }
+coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+sqldelight-test = { group = "app.cash.sqldelight", name = "sqlite-driver", version.ref = "sqldelight" }
+slf4j = { group = "org.slf4j", name = "slf4j-nop", version.ref = "slf4j"}
+hilt-test  = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
+robolectric  = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-application" }

@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import net.treelzebub.podcasts.BuildConfig
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -37,7 +38,7 @@ class RepoModule {
     fun rssHandler(): RssHandler = PodcastRssHandler(okHttpClient())
 
     @Provides
-    fun podcastsRepo(rssHandler: RssHandler, db: Database): PodcastsRepo {
-        return PodcastsRepo(rssHandler, db)
+    fun podcastsRepo(rssHandler: RssHandler, db: Database, ioDispatcher: CoroutineDispatcher): PodcastsRepo {
+        return PodcastsRepo(rssHandler, db, ioDispatcher)
     }
 }

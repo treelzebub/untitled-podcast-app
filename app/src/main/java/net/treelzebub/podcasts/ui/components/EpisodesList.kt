@@ -58,7 +58,7 @@ fun EpisodeItem(navigator: DestinationsNavigator, item: EpisodeUi) {
                 style = TextStyles.CardSubtitle,
                 text = item.title
             )
-            BasicText(modifier = Modifier.padding(bottom = 2.dp), style = TextStyles.CardDate, text = item.date)
+            BasicText(modifier = Modifier.padding(bottom = 2.dp), style = TextStyles.CardDate, text = item.displayDate)
             BasicText(
                 modifier = Modifier.height(72.dp),
                 style = TextStyle(textAlign = TextAlign.Start),

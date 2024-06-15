@@ -59,6 +59,7 @@ import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.util.PreviewMocks
 import kotlin.math.roundToInt
 
 // TODO: User can't hide sheet. Sheet hides when media is stopped/cleared.
@@ -235,7 +236,7 @@ fun MediaBottomSheetStatelessContent(
                     .padding(8.dp),
             ) {
                 Text(
-                    episode.channelTitle,
+                    episode.podcastTitle,
 //                    style = Type,
 //                    color = MaterialTheme.colors.onBackground,
                     maxLines = 1,
@@ -271,29 +272,10 @@ fun MediaBottomSheetStatelessContent(
 @Composable
 fun PodcastBottomBarPreview() {
     MediaBottomSheetStatelessContent(
-        episode = TEMP_DebugEpisode,
+        episode = PreviewMocks.Episode,
         xOffset = 0,
         icon = R.drawable.account_circle,
         onTogglePlaybackState = { },
         onTap = { }
     )
 }
-
-// TODO remove
-private val TEMP_DebugEpisode = EpisodeUi(
-    "id", "podcast id",
-    "Podcast Name, but it might be long so let's test ellipsizing...",
-    "Episode Title: How Booping Snoots Heals All Wounds, an In-Depth Analysis",
-    """
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 
-    """.trimIndent(),
-    "Mon, Jan 1, 2024",
-    "https://podcast.home/link",
-    "https://podcast.home/stream.mp3",
-    "https://picsum.photos/200",
-    "5h 30m",
-    false,
-    0,
-    false,
-    false
-)
