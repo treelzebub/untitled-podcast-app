@@ -86,24 +86,18 @@ class PodcastsRepo @Inject constructor(
             .mapToOneOrNull(dispatcher)
     }
 
-    fun getAllPodcastsFlow(): Flow<List<PodcastUi>> {
-        return db.podcastsQueries
-            .get_all(podcastMapper)
-            .asFlow()
-            .mapToList(dispatcher)
-    }
-
-    fun getAllPodcastsByLatestEpisode(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
+    fun getAllPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
         val podcasts = db.podcastsQueries.get_all(podcastMapper).executeAsList()
         return db.episodesQueries.get_all(episodeMapper)
             .asFlow()
             .mapToList(dispatcher)
             .map { episodes ->
-                episodes.groupBy {
-                    it.channelId
-                }.entries.associate { (podcastId, episodes) ->
-                    podcasts.find { it.id == podcastId }!! to episodes.sortedByDescending { it.sortDate }
-                }
+                episodes.groupBy { it.channelId }
+                    .entries.sortedByDescending { entry ->
+                        entry.value.maxBy { episode -> episode.sortDate }.sortDate
+                    }.map { entry ->
+                        podcasts.find { podcast -> podcast.id == entry.key }!!
+                    }
             }
     }
 

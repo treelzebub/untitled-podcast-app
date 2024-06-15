@@ -29,7 +29,8 @@ class PodcastDbTests {
     }
 
     @Test fun sanity() = withDatabase { db ->
-        db.podcastsQueries.insert_or_replace("id",
+        db.podcastsQueries.insert_or_replace(
+            "id",
             "link",
             "title",
             "description",
@@ -39,10 +40,26 @@ class PodcastDbTests {
             "rssLink",
             145L
         )
+        db.episodesQueries.upsert(
+            "id",
+            "channelId",
+            "channelTitle",
+            "title",
+            "description",
+            1000L,
+            "link",
+            "streamingLink",
+            "imageUrl",
+            "duration",
+        )
 
-        val all = db.podcastsQueries.get_all().executeAsList()
-        assertEquals(1, all.size)
-        assertEquals(12L, all.first().last_build_date)
+        val podcasts = db.podcastsQueries.get_all().executeAsList()
+        assertEquals(1, podcasts.size)
+        assertEquals(12L, podcasts.first().last_build_date)
+
+        val episodes = db.episodesQueries.get_all().executeAsList()
+        assertEquals(1, episodes.size)
+        assertEquals(1000L, episodes.first().date)
     }
 
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
