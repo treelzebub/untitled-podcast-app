@@ -18,6 +18,10 @@ delete:
 DELETE FROM podcast
 WHERE id = ?;
 
+get_by_id:
+SELECT * FROM podcast
+WHERE id = ?;
+
 get_by_link:
 SELECT * FROM podcast
 WHERE rss_link = ?;

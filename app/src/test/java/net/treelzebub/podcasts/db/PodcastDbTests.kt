@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.StubRssHandler
 import org.junit.After
@@ -30,7 +29,7 @@ class PodcastDbTests {
 
     @Test fun sanity() = withDatabase { db ->
         db.podcastsQueries.insert_or_replace(
-            "id",
+            "channelId",
             "link",
             "title",
             "description",

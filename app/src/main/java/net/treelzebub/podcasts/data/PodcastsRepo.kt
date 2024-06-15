@@ -59,7 +59,7 @@ class PodcastsRepo @Inject constructor(
                 with(it) {
                     db.episodesQueries.upsert(
                         id = guid!!,
-                        channel_id = link!!,
+                        channel_id = channel.link!!,
                         channel_title = channel.title!!,
                         title = title.sanitizeHtml() ?: "[No Title]",
                         description = description?.sanitizeHtml() ?: "[No Description]",
@@ -86,12 +86,12 @@ class PodcastsRepo @Inject constructor(
     }
 
     fun getAllPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
-        val podcasts = db.podcastsQueries.get_all(podcastMapper).executeAsList()
-        return db.episodesQueries.get_all(episodeMapper)
+        return db.podcastsQueries.get_all(podcastMapper)
             .asFlow()
             .mapToList(dispatcher)
-            .map { episodes ->
-                episodes.groupBy { it.channelId }
+            .map { podcasts ->
+                db.episodesQueries.get_all(episodeMapper).executeAsList()
+                    .groupBy { it.channelId }
                     .entries.sortedByDescending { entry ->
                         entry.value.maxBy { episode -> episode.sortDate }.sortDate
                     }.map { entry ->
