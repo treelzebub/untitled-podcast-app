@@ -7,6 +7,7 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
@@ -78,6 +79,10 @@ class PodcastsRepo @Inject constructor(
         db.podcastsQueries.insert_or_replace(podcastUi)
     }
 
+    fun getPodcastById(id: String): Flow<PodcastUi> {
+        return db.podcastsQueries.get_by_id(id, podcastMapper).executeAsList().asFlow()
+    }
+
     fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
         return db.podcastsQueries
             .get_by_link(rssLink, podcastMapper)
@@ -114,9 +119,9 @@ class PodcastsRepo @Inject constructor(
         return db.episodesQueries.get_all(episodeMapper).executeAsList()
     }
 
-    fun getEpisodesByChannelLink(link: String): Flow<List<EpisodeUi>> {
+    fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
         return db.episodesQueries
-            .get_by_channel_id(link, episodeMapper)
+            .get_by_channel_id(podcastId, episodeMapper)
             .asFlow()
             .mapToList(dispatcher)
     }

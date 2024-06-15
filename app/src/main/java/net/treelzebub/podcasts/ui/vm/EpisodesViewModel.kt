@@ -12,5 +12,5 @@ class EpisodesViewModel @Inject constructor(
     private val repo: PodcastsRepo
 ) : ViewModel() {
 
-    fun getFlow(channelId: String): Flow<List<EpisodeUi>> = repo.getEpisodesByChannelLink(channelId)
+    fun getFlow(channelId: String): Flow<List<EpisodeUi>> = repo.getEpisodesByPodcastId(channelId)
 }
