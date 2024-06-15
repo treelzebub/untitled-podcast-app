@@ -9,6 +9,7 @@ retrofit = "2.11.0"
 okhttp = "4.12.0"
 sqldelight = "2.0.2"
 moshi = "1.15.0"
+timber = "5.0.1"
 rssparser = "6.0.3"
 androidx-core = "1.13.1"
 hilt-androidx = "1.2.0"
@@ -46,6 +47,8 @@ retrofit-moshi  = { group = "com.squareup.retrofit2", name = "converter-moshi", 
 sqldelight-driver  = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines  = { group = "app.cash.sqldelight", name = "coroutines-extensions", version.ref = "sqldelight" }
 
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+
 rssparser  = { group = "com.prof18.rssparser", name = "rssparser", version.ref = "rssparser" }
 
 androidx-core  = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
@@ -76,7 +79,6 @@ coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-
 sqldelight-test = { group = "app.cash.sqldelight", name = "sqlite-driver", version.ref = "sqldelight" }
 slf4j = { group = "org.slf4j", name = "slf4j-nop", version.ref = "slf4j"}
 hilt-test  = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
-#hilt-android-compiler-test  = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 robolectric  = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 

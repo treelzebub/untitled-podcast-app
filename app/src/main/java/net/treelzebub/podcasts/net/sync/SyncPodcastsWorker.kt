@@ -28,30 +28,28 @@ class SyncPodcastsWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
-        private val TAG = SyncPodcastsWorker::class.java.simpleName
-
         fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(1L)).build()
     }
 
     // TODO: Improve by defining freshness. Pull all pods, only update when stale.
     override suspend fun doWork(): Result {
-        Logger.d(TAG, "Starting sync...")
+        Logger.d("Starting sync...")
         val subs = podcastsRepo.getAllRssLinks()
-        Logger.d(TAG, "Processing updates for ${subs.size} podcasts...")
+        Logger.d("Processing updates for ${subs.size} podcasts...")
         subs.forEach { sub ->
-            Logger.d(TAG, "Fetching Feed for ${sub.rssLink}")
+            Logger.d("Fetching Feed for ${sub.rssLink}")
             val onFailure: (Call, IOException) -> Unit = { _, e ->
                 // TODO error propagation
-                Logger.e(TAG, "Error Updating Feed with url: ${sub.rssLink}. Error:", e)
+                Logger.e("Error Updating Feed with url: ${sub.rssLink}", e)
             }
             val onResponse: (Call, Response) -> Unit = { call, response ->
                 if (response.isSuccessful && response.body != null) {
-                    Logger.d(TAG, "Updated Feed with url: ${sub.rssLink}. Parsing...")
+                    Logger.d("Updated Feed with url: ${sub.rssLink}. Parsing...")
                     CoroutineScope(Dispatchers.IO).launch {
                         val parsed = podcastsRepo.parseRssFeed(response.body!!.string())
                         podcastsRepo.insertOrReplacePodcast(sub.rssLink, parsed)
                     }
-                    Logger.d(TAG, "Parsed and persisted Feed with url: ${sub.rssLink}")
+                    Logger.d("Parsed and persisted Feed with url: ${sub.rssLink}")
                 } else onFailure(call, IOException("Unknown Error"))
             }
             updater.update(sub, onResponse, onFailure)

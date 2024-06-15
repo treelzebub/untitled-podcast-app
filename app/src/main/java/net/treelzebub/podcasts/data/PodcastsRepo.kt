@@ -28,11 +28,11 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun fetchRssFeed(url: String, onError: (Exception) -> Unit) {
         try {
-            Logger.d("PodcastRepo", "Fetching RSS Feed: $url")
+            Logger.d("Fetching RSS Feed: $url")
             val feed = rssHandler.fetch(url)
             insertOrReplacePodcast(url, feed)
         } catch (e: Exception) {
-            Logger.e("PodcastRepo", "Error parsing RSS Feed", e)
+            Logger.e("Error parsing RSS Feed", e)
             onError(e)
         }
     }

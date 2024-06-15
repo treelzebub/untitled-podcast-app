@@ -102,6 +102,8 @@ dependencies {
     implementation(libs.sqldelight.driver)
     implementation(libs.sqldelight.coroutines)
 
+    implementation(libs.timber)
+
     implementation(libs.rssparser)
 
     implementation(libs.androidx.core)

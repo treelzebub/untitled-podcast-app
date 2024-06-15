@@ -1,6 +1,7 @@
 package net.treelzebub.podcasts.util
 
 import net.treelzebub.podcasts.BuildConfig
+import timber.log.Timber
 import android.util.Log as AndroidLog
 
 
@@ -8,11 +9,11 @@ import android.util.Log as AndroidLog
 // If need arises, will migrate to Timber
 object Logger {
 
-    fun d(tag: String, msg: String, throwable: Throwable? = null) {
-        if (BuildConfig.DEBUG) AndroidLog.d(tag, msg, throwable)
+    fun d(msg: String, throwable: Throwable? = null) {
+        Timber.d(msg, throwable)
     }
 
-    fun e(tag: String, msg: String, throwable: Throwable) {
-        if (BuildConfig.DEBUG) AndroidLog.e(tag, msg, throwable)
+    fun e(msg: String, throwable: Throwable) {
+        Timber.e(msg, throwable)
     }
 }
