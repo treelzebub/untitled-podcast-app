@@ -40,13 +40,14 @@ upsert {
 
 get_all:
 SELECT * FROM episode
-GROUP BY podcast_id
 ORDER BY date DESC;
+
+get_all_unsort:
+SELECT * FROM episode;
 
 get_all_not_archived:
 SELECT * FROM episode
 WHERE is_archived = 0
-GROUP BY podcast_id
 ORDER BY date DESC;
 
 get_by_id:
@@ -56,6 +57,16 @@ get_by_podcast_id:
 SELECT * FROM episode
 WHERE podcast_id = :podcast_id
 ORDER BY date DESC;
+
+-- get_latest_by_podcast_id:
+-- SELECT MAX(date) AS latest FROM episode
+-- WHERE podcast_id = :podcast_id;
+
+get_latest_for_each_podcast:
+SELECT podcast_id, MAX(date) AS latest
+FROM episode
+GROUP BY podcast_id
+ORDER BY latest DESC;
 
 -- Should we persist bookmarked_date and order by that?
 get_bookmarked:

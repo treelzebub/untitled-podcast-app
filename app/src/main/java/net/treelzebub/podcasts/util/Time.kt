@@ -16,7 +16,7 @@ object Time {
     private val epochStart = LocalDateTime.of(1970, 1, 1, 12, 1)
 
     // Parsing formats
-    private val rfc2822Lenient = DateTimeFormatter.ofPattern("E, d MMM yyyy H:m:s[ z]")
+    private val rfc2822Lenient = DateTimeFormatter.ofPattern("E, d MMM yyyy HH:mm:ss[ z]")
     private val rfc1123 = DateTimeFormatter.RFC_1123_DATE_TIME
 
     private val displayFormat = DateTimeFormatter.ofPattern("MMM d, yyyy", locale)

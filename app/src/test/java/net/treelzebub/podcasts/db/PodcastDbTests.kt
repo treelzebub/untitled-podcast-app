@@ -66,7 +66,7 @@ class PodcastDbTests {
         TestCoroutines.scope.launch {
             val repo = PodcastsRepo(StubRssHandler(), db, TestCoroutines.dispatcher)
             var list: List<PodcastUi> = listOf()
-            repo.getAllPodcastsByLatestEpisode().collectLatest { list = it }
+            repo.getPodcastsByLatestEpisode().collectLatest { list = it }
 
             assertEquals("podcast_02", list.first().id)
         }

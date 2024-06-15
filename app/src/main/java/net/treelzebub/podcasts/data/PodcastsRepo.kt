@@ -6,9 +6,11 @@ import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -90,19 +92,32 @@ class PodcastsRepo @Inject constructor(
             .mapToOneOrNull(dispatcher)
     }
 
-    fun getAllPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
-        return db.podcastsQueries.get_all(podcastMapper)
-            .asFlow()
-            .mapToList(dispatcher)
-            .map { podcasts ->
-                db.episodesQueries.get_all(episodeMapper).executeAsList()
-                    .groupBy { it.podcastId }
-                    .entries.sortedByDescending { entry ->
-                        entry.value.maxBy { episode -> episode.sortDate }.sortDate
-                    }.map { entry ->
-                        podcasts.find { podcast -> podcast.id == entry.key }!!
+    fun getPodcastMap(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
+        return db.episodesQueries.transactionWithResult {
+            db.podcastsQueries.get_all(podcastMapper).asFlow()
+                .mapToList(dispatcher)
+                .map { podcasts ->
+                    val map = podcasts.associateBy { it.id }
+                    db.episodesQueries.get_all(episodeMapper).executeAsList()
+                        .groupBy { it.podcastId }.entries.associate { entry ->
+                            map[entry.key]!! to entry.value.sortedByDescending { it.sortDate }
+                        }
+                }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
+        return db.podcastsQueries.transactionWithResult {
+            db.podcastsQueries.get_all(podcastMapper).asFlow()
+                .mapToList(dispatcher)
+                .mapLatest { podcasts ->
+                    val latestList = db.episodesQueries.get_latest_for_each_podcast().executeAsList()
+                    latestList.mapNotNull { latest ->
+                        podcasts.find { pod -> pod.id == latest.podcast_id }
                     }
-            }
+                }
+        }
     }
 
     fun getAllRssLinks(): List<SubscriptionDto> {
