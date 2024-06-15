@@ -12,13 +12,13 @@ class TimeTests {
 
     @Test fun rssParsing() {
         val testStr = "Thu, 5 Mar 2020 12:30:00 PST"
-        val testMillis = Time.zonedEpochSeconds(testStr)
+        val testSeconds = Time.zonedEpochSeconds(testStr)
 
         val strFormat = Time.displayFormat(testStr)
-        val millisFormat = Time.displayFormat(testMillis)
+        val secondsFormat = Time.displayFormat(testSeconds)
 
         assertEquals("Mar 5, 2020", strFormat)
-        assertEquals("Mar 5, 2020", millisFormat)
+        assertEquals("Mar 5, 2020", secondsFormat)
     }
 
     // Just getting the lay of the land...
