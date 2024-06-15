@@ -14,7 +14,7 @@ import java.util.Properties
 
 object TestCoroutines {
     val scheduler = TestCoroutineScheduler()
-    val dispatcher = TestCoroutineDispatcher(scheduler)
+    val dispatcher = StandardTestDispatcher(scheduler)
     val scope = TestScope(dispatcher)
 }
 

@@ -27,7 +27,6 @@ class PodcastDbTests {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
-        TestCoroutines.dispatcher.cleanupTestCoroutines()
     }
 
     @Test fun sanity() = withDatabase { db ->
