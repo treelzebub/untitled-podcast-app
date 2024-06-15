@@ -236,7 +236,7 @@ fun MediaBottomSheetStatelessContent(
                     .padding(8.dp),
             ) {
                 Text(
-                    episode.channelTitle,
+                    episode.podcastTitle,
 //                    style = Type,
 //                    color = MaterialTheme.colors.onBackground,
                     maxLines = 1,

@@ -25,8 +25,8 @@ fun injectMockData(db: Database) {
 
 private val Pod01_Ep01 = EpisodeUi(
     id = "pod01_ep01",
-    channelId = "podcast_01",
-    channelTitle = "Podcast the First",
+    podcastId = "podcast_01",
+    podcastTitle = "Podcast the First",
     title = "How Booping Snoots Heals All Wounds, an In-Depth Analysis",
     description = """
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 
@@ -45,8 +45,8 @@ private val Pod01_Ep01 = EpisodeUi(
 
 private val Pod01_Ep02 = EpisodeUi(
     id = "pod01_ep02",
-    channelId = "podcast_01",
-    channelTitle = "Hey, look! It's episode two!",
+    podcastId = "podcast_01",
+    podcastTitle = "Hey, look! It's episode two!",
     title = "Anton Sleeping in the Sun: A Meditation",
     description = """
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 
@@ -65,8 +65,8 @@ private val Pod01_Ep02 = EpisodeUi(
 
 private val Pod01_Ep03 = EpisodeUi(
     id = "pod01_ep03",
-    channelId = "podcast_01",
-    channelTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
+    podcastId = "podcast_01",
+    podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
     title = "Episode Title: How Booping Snoots Heals All Wounds, an In-Depth Analysis",
     description = """
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 
@@ -98,8 +98,8 @@ private val Pod01 = PodcastUi(
 
 private val Pod02_Ep01 = EpisodeUi(
     id = "pod02_ep01",
-    channelId = "podcast_02",
-    channelTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
+    podcastId = "podcast_02",
+    podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
     title = "Episode Title: How Booping Snoots Heals All Wounds, an In-Depth Analysis",
     description = """
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 
@@ -118,8 +118,8 @@ private val Pod02_Ep01 = EpisodeUi(
 
 private val Pod02_Ep02 = EpisodeUi(
     id = "pod02_ep02",
-    channelId = "podcast_02",
-    channelTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
+    podcastId = "podcast_02",
+    podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
     title = "Episode Title: How Booping Snoots Heals All Wounds, an In-Depth Analysis",
     description = """
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 
@@ -138,8 +138,8 @@ private val Pod02_Ep02 = EpisodeUi(
 
 private val Pod02_Ep03 = EpisodeUi(
     id = "pod02_ep03",
-    channelId = "podcast_02",
-    channelTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
+    podcastId = "podcast_02",
+    podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
     title = "Episode Title: How Booping Snoots Heals All Wounds, an In-Depth Analysis",
     description = """
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 

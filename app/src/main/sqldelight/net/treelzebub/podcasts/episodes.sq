@@ -2,11 +2,11 @@ import kotlin.Boolean;
 
 CREATE TABLE episode (
     id TEXT PRIMARY KEY NOT NULL,
-    channel_id TEXT NOT NULL
+    podcast_id TEXT NOT NULL
         REFERENCES podcast(id)
             ON DELETE CASCADE
             ON UPDATE CASCADE,
-    channel_title TEXT NOT NULL,
+    podcast_title TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
     date INTEGER NOT NULL,
@@ -23,8 +23,8 @@ CREATE TABLE episode (
 upsert {
   UPDATE episode
   SET id = :id,
-      channel_id = :channel_id,
-      channel_title = :channel_title,
+      podcast_id = :podcast_id,
+      podcast_title = :podcast_title,
       title = :title,
       description = :description,
       date = :date,
@@ -34,27 +34,27 @@ upsert {
       duration = :duration
   WHERE id = :id;
 
-  INSERT OR IGNORE INTO episode (id, channel_id, channel_title, title, description, date, link, streaming_link, image_url, duration)
-  VALUES (:id, :channel_id, :channel_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration);
+  INSERT OR IGNORE INTO episode (id, podcast_id, podcast_title, title, description, date, link, streaming_link, image_url, duration)
+  VALUES (:id, :podcast_id, :podcast_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration);
 }
 
 get_all:
 SELECT * FROM episode
-GROUP BY channel_id
+GROUP BY podcast_id
 ORDER BY date DESC;
 
 get_all_not_archived:
 SELECT * FROM episode
 WHERE is_archived = 0
-GROUP BY channel_id
+GROUP BY podcast_id
 ORDER BY date DESC;
 
 get_by_id:
 SELECT * FROM episode WHERE id = :id;
 
-get_by_channel_id:
+get_by_podcast_id:
 SELECT * FROM episode
-WHERE channel_id = :channelId
+WHERE podcast_id = :podcast_id
 ORDER BY date DESC;
 
 -- Should we persist bookmarked_date and order by that?

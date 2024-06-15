@@ -60,8 +60,8 @@ class PodcastsRepo @Inject constructor(
                 with(it) {
                     db.episodesQueries.upsert(
                         id = guid!!,
-                        channel_id = channel.link!!,
-                        channel_title = channel.title!!,
+                        podcast_id = channel.link!!,
+                        podcast_title = channel.title!!,
                         title = title.sanitizeHtml() ?: "[No Title]",
                         description = description?.sanitizeHtml() ?: "[No Description]",
                         date = Time.zonedEpochSeconds(pubDate),
@@ -96,7 +96,7 @@ class PodcastsRepo @Inject constructor(
             .mapToList(dispatcher)
             .map { podcasts ->
                 db.episodesQueries.get_all(episodeMapper).executeAsList()
-                    .groupBy { it.channelId }
+                    .groupBy { it.podcastId }
                     .entries.sortedByDescending { entry ->
                         entry.value.maxBy { episode -> episode.sortDate }.sortDate
                     }.map { entry ->
@@ -121,7 +121,7 @@ class PodcastsRepo @Inject constructor(
 
     fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
         return db.episodesQueries
-            .get_by_channel_id(podcastId, episodeMapper)
+            .get_by_podcast_id(podcastId, episodeMapper)
             .asFlow()
             .mapToList(dispatcher)
     }
@@ -155,8 +155,8 @@ class PodcastsRepo @Inject constructor(
 
     private val episodeMapper: (
         id: String,
-        channel_id: String,
-        channel_title: String,
+        podcast_id: String,
+        podcast_title: String,
         title: String,
         description: String?,
         date: Long,
@@ -168,14 +168,14 @@ class PodcastsRepo @Inject constructor(
         progress_seconds: Long,
         is_bookmarked: Boolean,
         is_archived: Boolean
-    ) -> EpisodeUi = { id, channel_id, channel_title, title,
+    ) -> EpisodeUi = { id, podcast_id, podcast_title, title,
                        description, date, link, streaming_link,
                        image_url, duration, has_played, progress_seconds,
                        is_bookmarked, is_archived ->
         EpisodeUi(
             id = id,
-            channelId = channel_id,
-            channelTitle = channel_title,
+            podcastId = podcast_id,
+            podcastTitle = podcast_title,
             title = title,
             description = description.orEmpty(),
             displayDate = Time.displayFormat(date),

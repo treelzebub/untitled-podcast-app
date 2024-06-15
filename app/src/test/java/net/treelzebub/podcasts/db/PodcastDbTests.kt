@@ -29,7 +29,7 @@ class PodcastDbTests {
 
     @Test fun sanity() = withDatabase { db ->
         db.podcastsQueries.insert_or_replace(
-            "channelId",
+            "podcastId",
             "link",
             "title",
             "description",
@@ -41,9 +41,9 @@ class PodcastDbTests {
         )
         db.episodesQueries.upsert(
             "id",
-            "channelId",
-            "channelTitle",
-            "title",
+            "podcastId",
+            "Podcast Title",
+            "Episode Title",
             "description",
             1000L,
             "link",

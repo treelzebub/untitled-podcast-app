@@ -10,7 +10,7 @@ fun EpisodesQueries.upsert(vararg episodes: EpisodeUi) {
     transaction {
         episodes.forEach {
             upsert(
-                it.id, it.channelId, it.channelTitle, it.title, it.description, it.sortDate, it.link,
+                it.id, it.podcastId, it.podcastTitle, it.title, it.description, it.sortDate, it.link,
                 it.streamingLink, it.imageUrl, it.duration
             )
         }
