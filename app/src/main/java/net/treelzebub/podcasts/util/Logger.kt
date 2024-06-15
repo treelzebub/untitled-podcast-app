@@ -6,7 +6,7 @@ import android.util.Log as AndroidLog
 
 // Quick and dirty logging for non-prod builds.
 // If need arises, will migrate to Timber
-object Log {
+object Logger {
 
     fun d(tag: String, msg: String, throwable: Throwable? = null) {
         if (BuildConfig.DEBUG) AndroidLog.d(tag, msg, throwable)

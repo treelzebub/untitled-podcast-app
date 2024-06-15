@@ -7,18 +7,17 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import net.treelzebub.podcasts.Podcast
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.StubRssHandler
-import net.treelzebub.podcasts.util.Time
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PodcastDbTests {
+
     @Before
     fun setUp() {
         Dispatchers.setMain(TestCoroutines.dispatcher)
@@ -47,15 +46,13 @@ class PodcastDbTests {
     }
 
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
+        injectMockData(db)
         TestCoroutines.scope.launch {
             val repo = PodcastsRepo(StubRssHandler(), db, TestCoroutines.dispatcher)
-
-
-
             var map: Map<PodcastUi, List<EpisodeUi>> = mapOf()
             repo.getAllPodcastsByLatestEpisode().collectLatest { map = it }
 
-            assert(map.isEmpty())
+            assertEquals("podcast_02", map.entries.first().key.id)
         }
     }
 }

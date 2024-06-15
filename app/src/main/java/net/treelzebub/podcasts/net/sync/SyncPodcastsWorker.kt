@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.util.Log
+import net.treelzebub.podcasts.util.Logger
 import okhttp3.Call
 import okhttp3.Response
 import java.io.IOException
@@ -35,23 +35,23 @@ class SyncPodcastsWorker @AssistedInject constructor(
 
     // TODO: Improve by defining freshness. Pull all pods, only update when stale.
     override suspend fun doWork(): Result {
-        Log.d(TAG, "Starting sync...")
+        Logger.d(TAG, "Starting sync...")
         val subs = podcastsRepo.getAllRssLinks()
-        Log.d(TAG, "Processing updates for ${subs.size} podcasts...")
+        Logger.d(TAG, "Processing updates for ${subs.size} podcasts...")
         subs.forEach { sub ->
-            Log.d(TAG, "Fetching Feed for ${sub.rssLink}")
+            Logger.d(TAG, "Fetching Feed for ${sub.rssLink}")
             val onFailure: (Call, IOException) -> Unit = { _, e ->
                 // TODO error propagation
-                Log.e(TAG, "Error Updating Feed with url: ${sub.rssLink}. Error:", e)
+                Logger.e(TAG, "Error Updating Feed with url: ${sub.rssLink}. Error:", e)
             }
             val onResponse: (Call, Response) -> Unit = { call, response ->
                 if (response.isSuccessful && response.body != null) {
-                    Log.d(TAG, "Updated Feed with url: ${sub.rssLink}. Parsing...")
+                    Logger.d(TAG, "Updated Feed with url: ${sub.rssLink}. Parsing...")
                     CoroutineScope(Dispatchers.IO).launch {
                         val parsed = podcastsRepo.parseRssFeed(response.body!!.string())
                         podcastsRepo.insertOrReplacePodcast(sub.rssLink, parsed)
                     }
-                    Log.d(TAG, "Parsed and persisted Feed with url: ${sub.rssLink}")
+                    Logger.d(TAG, "Parsed and persisted Feed with url: ${sub.rssLink}")
                 } else onFailure(call, IOException("Unknown Error"))
             }
             updater.update(sub, onResponse, onFailure)

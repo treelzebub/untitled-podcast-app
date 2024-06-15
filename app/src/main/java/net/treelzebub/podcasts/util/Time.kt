@@ -32,7 +32,7 @@ object Time {
         return try {
             string?.let { parse(string).format(displayFormat) }.orEmpty()
         } catch (e: Exception) {
-            Log.e("Time", "Error parsing in displayFormat(String)", e)
+            Logger.e("Time", "Error parsing in displayFormat(String)", e)
             DATE_UNKNOWN
         }
     }
@@ -46,7 +46,7 @@ object Time {
         return try {
             zoned.format(formatter)
         } catch (e: Exception) {
-            Log.e("Time", "Error parsing $seconds with ${formatter::class.java.simpleName})", e)
+            Logger.e("Time", "Error parsing $seconds with ${formatter::class.java.simpleName})", e)
             DATE_UNKNOWN
         }
     }
@@ -58,7 +58,7 @@ object Time {
             try {
                 LocalDateTime.parse(string, rfc1123)
             } catch (e: Exception) {
-                Log.e("Time", "parse() fell through all tries.", e)
+                Logger.e("Time", "parse() fell through all tries.", e)
                 epochStart
             }
         }

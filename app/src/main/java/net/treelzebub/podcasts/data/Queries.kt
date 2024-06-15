@@ -6,18 +6,26 @@ import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.Time
 
-fun EpisodesQueries.upsert(episode: EpisodeUi) {
+fun EpisodesQueries.upsert(vararg episodes: EpisodeUi) {
     val anchor = this
-    with(episode) {
-        anchor.upsert(id, channelId, channelTitle, title, description, sortDate, link,
-            streamingLink, imageUrl, duration)
+    transaction {
+        episodes.forEach {
+            anchor.upsert(
+                it.id, it.channelId, it.channelTitle, it.title, it.description, it.sortDate, it.link,
+                it.streamingLink, it.imageUrl, it.duration
+            )
+        }
     }
 }
 
-fun PodcastsQueries.insert_or_replace(podcast: PodcastUi) {
+fun PodcastsQueries.insert_or_replace(vararg podcasts: PodcastUi) {
     val anchor = this
-    with(podcast) {
-        anchor.insert_or_replace(id, link, title, description, email, imageUrl,
-            Time.zonedEpochSeconds(lastBuildDate), rssLink, lastLocalUpdate)
+    transaction {
+        podcasts.forEach {
+            anchor.insert_or_replace(
+                it.id, it.link, it.title, it.description, it.email, it.imageUrl,
+                Time.zonedEpochSeconds(it.lastBuildDate), it.rssLink, it.lastLocalUpdate
+            )
+        }
     }
 }
