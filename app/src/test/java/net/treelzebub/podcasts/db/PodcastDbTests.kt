@@ -1,19 +1,34 @@
 package net.treelzebub.podcasts.db
 
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestCoroutineScheduler
-import net.treelzebub.podcasts.Episode
+import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import net.treelzebub.podcasts.Podcast
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.net.PodcastRssHandler
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.StubRssHandler
 import net.treelzebub.podcasts.util.Time
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PodcastDbTests {
-    private val testScheduler = TestCoroutineScheduler()
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(TestCoroutines.dispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        TestCoroutines.dispatcher.cleanupTestCoroutines()
+    }
 
     @Test fun sanity() = withDatabase { db ->
         db.podcastsQueries.insert_or_replace("id",
@@ -33,32 +48,21 @@ class PodcastDbTests {
     }
 
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
-        val repo = PodcastsRepo(StubRssHandler(), db, StandardTestDispatcher(testScheduler))
-        repo.
+        TestCoroutines.scope.launch {
+            val repo = PodcastsRepo(StubRssHandler(), db, TestCoroutines.dispatcher)
+
+
+
+            var map: Map<PodcastUi, List<EpisodeUi>> = mapOf()
+            repo.getAllPodcastsByLatestEpisode().collectLatest { map = it }
+
+            assert(map.isEmpty())
+        }
     }
 
-    private val TestEpisode = Episode(
+    private val TestEpisode = EpisodeUi(
         id = "id",
-        channel_id = "podcast id",
-        channel_title = "Podcast Name, but it might be long so let's test ellipsizing...",
-        title = "Episode Title: How Booping Snoots Heals All Wounds, an In-Depth Analysis",
-        description = """
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eleifend felis a eleifend placerat. Pellentesque eget euismod elit. Pellentesque in lorem odio. Nunc non quam sit amet erat eleifend tincidunt. Donec aliquam nulla nec diam pulvinar imperdiet suscipit in ex. Curabitur id tellus nunc. Etiam vitae nibh volutpat massa cursus convallis eget vitae eros. Phasellus sit amet imperdiet augue. Praesent tempus sed mi et scelerisque. Etiam tellus metus, ultrices non efficitur ac, tristique sed quam. Duis tincidunt feugiat magna sed rutrum. Proin nec libero at mauris tristique consequat. Sed quis felis ut magna sagittis aliquet. Phasellus ullamcorper urna et aliquet congue. Vestibulum efficitur quis felis et accumsan. 
-            """.trimIndent(),
-        date = 0L,
-        link = "https://podcast.home/link",
-        streaming_link = "https://podcast.home/stream.mp3",
-        image_url = "https://picsum.photos/200",
-        duration = "5h 30m",
-        has_played = false,
-        progress_seconds = 0,
-        is_bookmarked = false,
-        is_archived = false
-    )
-
-    private val TestEpisodeUi = EpisodeUi(
-        id = "id",
-        channelId = "podcast id",
+        channelId = "podcast_id",
         channelTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
         title = "Episode Title: How Booping Snoots Heals All Wounds, an In-Depth Analysis",
         description = """
@@ -77,7 +81,7 @@ class PodcastDbTests {
     )
 
     private val TestPodcast = Podcast(
-        "id",
+        "podcast_id",
         "link",
         "title",
         "description",

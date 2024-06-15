@@ -3,10 +3,20 @@ package net.treelzebub.podcasts.db
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import net.treelzebub.podcasts.Database
-import org.junit.Test
+import net.treelzebub.podcasts.db.TestCoroutines.dispatcher
 import java.util.Properties
+
+object TestCoroutines {
+    val scheduler = TestCoroutineScheduler()
+    val dispatcher = TestCoroutineDispatcher(scheduler)
+    val scope = TestScope(dispatcher)
+}
 
 fun createDriver() {
     val driver = JdbcSqliteDriver(
@@ -21,7 +31,7 @@ fun closeDriver() = TestDb.clear()
 
 fun getDb(): Database = TestDb.instance
 
-fun withDatabase(fn: CoroutineScope.(Database) -> Unit) = runTest {
+fun withDatabase(fn: suspend CoroutineScope.(Database) -> Unit) = runTest(dispatcher) {
     createDriver()
     fn(getDb())
     closeDriver()
