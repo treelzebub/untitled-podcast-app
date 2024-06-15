@@ -2,7 +2,7 @@ package net.treelzebub.podcasts.ui.vm
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -14,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PodcastDetailsViewModel @Inject constructor(
-    private val repo: PodcastsRepo
+    private val repo: PodcastsRepo,
+    private val ioDispatcher: CoroutineDispatcher
 ) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 
     data class State(
@@ -25,7 +26,7 @@ class PodcastDetailsViewModel @Inject constructor(
 
     fun getPodcastAndEpisodes(rssLink: String) {
         viewModelScope.launch {
-            val currentStateFlow = withContext(Dispatchers.IO) {
+            val currentStateFlow = withContext(ioDispatcher) {
                 val podcastFlow = repo.getPodcastByLink(rssLink)
                 val episodesFlow = repo.getEpisodesByChannelLink(rssLink)
                 podcastFlow.combine(episodesFlow) { podcast, episodes ->

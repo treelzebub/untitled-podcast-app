@@ -17,8 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.AndroidViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.BuildConfig
@@ -28,20 +28,21 @@ import javax.inject.Inject
 private class _DebugMode constructor(
     private val app: Application,
     private val db: Database,
-    private val repo: PodcastsRepo
+    private val repo: PodcastsRepo,
+    private val ioDispatcher: CoroutineDispatcher
 ) {
     init {
         if (!BuildConfig.DEBUG) throw IllegalAccessException("Accessed Debug Mode in non-debug build!")
     }
 
     fun populateSubs() {
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioDispatcher).launch {
             app.assets.open("test-feed-urls.txt").bufferedReader().use {
                 it.forEachLine {
                     // Seems like a compiler bug: if I just try to call this suspend fun or even use `withContext()`
                     // I get a compilation error that I'm not in a coroutine context :shruggies:
                     // Dumb hack for debug mode, who cares.
-                    CoroutineScope(Dispatchers.IO).launch { repo.fetchRssFeed(it, {}) }
+                    CoroutineScope(ioDispatcher).launch { repo.fetchRssFeed(it, {}) }
                 }
             }
         }
@@ -57,10 +58,11 @@ private class _DebugMode constructor(
 private class _DebugViewModel @Inject constructor(
     app: Application,
     val db: Database,
-    repo: PodcastsRepo
+    repo: PodcastsRepo,
+    ioDispatcher: CoroutineDispatcher
 ) : AndroidViewModel(app) {
 
-    private val debug = _DebugMode(getApplication<App>(), db, repo)
+    private val debug = _DebugMode(getApplication<App>(), db, repo, ioDispatcher)
     fun populateSubs() = debug.populateSubs()
     fun nukeSubs() = debug.nukeSubs()
 }

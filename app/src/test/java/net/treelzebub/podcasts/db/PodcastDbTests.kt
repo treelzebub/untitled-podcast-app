@@ -66,10 +66,10 @@ class PodcastDbTests {
         injectMockData(db)
         TestCoroutines.scope.launch {
             val repo = PodcastsRepo(StubRssHandler(), db, TestCoroutines.dispatcher)
-            var map: Map<PodcastUi, List<EpisodeUi>> = mapOf()
-            repo.getAllPodcastsByLatestEpisode().collectLatest { map = it }
+            var list: List<PodcastUi> = listOf()
+            repo.getAllPodcastsByLatestEpisode().collectLatest { list = it }
 
-            assertEquals("podcast_02", map.entries.first().key.id)
+            assertEquals("podcast_02", list.first().id)
         }
     }
 }

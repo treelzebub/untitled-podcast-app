@@ -2,8 +2,8 @@ package net.treelzebub.podcasts.ui.vm
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -12,7 +12,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SubscriptionsViewModel @Inject constructor(
-    private val repo: PodcastsRepo
+    private val repo: PodcastsRepo,
+    private val ioDispatcher: CoroutineDispatcher
 ) : StatefulViewModel<SubscriptionsViewModel.State>(State()) {
 
     init {
@@ -35,7 +36,7 @@ class SubscriptionsViewModel @Inject constructor(
     }
 
     fun addRssFeed(url: String, onError: (Exception) -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioDispatcher).launch {
             repo.fetchRssFeed(url, onError)
         }
     }

@@ -6,7 +6,6 @@ import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import net.treelzebub.podcasts.Database
@@ -23,14 +22,14 @@ import javax.inject.Inject
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val dispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun fetchRssFeed(url: String, onError: (Exception) -> Unit) {
+    suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
         try {
-            Logger.d("Fetching RSS Feed: $url")
-            val feed = rssHandler.fetch(url)
-            insertOrReplacePodcast(url, feed)
+            Logger.d("Fetching RSS Feed: $rssLink")
+            val feed = rssHandler.fetch(rssLink)
+            insertOrReplacePodcast(rssLink, feed)
         } catch (e: Exception) {
             Logger.e("Error parsing RSS Feed", e)
             onError(e)
@@ -40,19 +39,19 @@ class PodcastsRepo @Inject constructor(
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
     /** Podcasts **/
-    fun insertOrReplacePodcast(url: String, channel: RssChannel) {
+    fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
             with(channel) {
                 db.podcastsQueries.insert_or_replace(
-                    id = url, // Public link to Podcast will be unique, so it's our ID.
+                    id = link!!, // Public link to Podcast will be unique, so it's our ID.
                     link = link!!,
                     title = title!!,
                     description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
                     email = itunesChannelData?.owner?.email.orEmpty(),
                     image_url = safeImage,
                     last_build_date = Time.zonedEpochSeconds(lastBuildDate),
-                    rss_link = url,
+                    rss_link = rssLink,
                     last_local_update = Time.nowSeconds()
                 )
             }
@@ -60,7 +59,7 @@ class PodcastsRepo @Inject constructor(
                 with(it) {
                     db.episodesQueries.upsert(
                         id = guid!!,
-                        channel_id = url,
+                        channel_id = link!!,
                         channel_title = channel.title!!,
                         title = title.sanitizeHtml() ?: "[No Title]",
                         description = description?.sanitizeHtml() ?: "[No Description]",

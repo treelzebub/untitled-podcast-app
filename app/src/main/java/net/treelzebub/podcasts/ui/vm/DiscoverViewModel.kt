@@ -2,8 +2,8 @@ package net.treelzebub.podcasts.ui.vm
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -18,7 +18,8 @@ import javax.inject.Inject
 class DiscoverViewModel @Inject constructor(
     private val api: PodcastIndexService,
     private val queriesRepo: SearchQueriesRepo,
-    private val podcastsRepo: PodcastsRepo
+    private val podcastsRepo: PodcastsRepo,
+    private val ioDispatcher: CoroutineDispatcher
 ) : StatefulViewModel<DiscoverViewModel.State>(State()) {
 
     data class State(
@@ -36,7 +37,7 @@ class DiscoverViewModel @Inject constructor(
         loading()
         viewModelScope.launch {
             loading()
-            val results = withContext(Dispatchers.IO) {
+            val results = withContext(ioDispatcher) {
                 queriesRepo.insert(query)
                 api.searchPodcasts(query)
             }
@@ -51,7 +52,7 @@ class DiscoverViewModel @Inject constructor(
 
     fun select(feed: Feed, onError: (Exception) -> Unit) {
         loading()
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioDispatcher).launch {
             podcastsRepo.fetchRssFeed(feed.url) { onError(it) }
         }
     }
@@ -60,7 +61,7 @@ class DiscoverViewModel @Inject constructor(
 
     private fun getPreviousQueries() {
         viewModelScope.launch {
-            val queriesFlow = withContext(Dispatchers.IO) {
+            val queriesFlow = withContext(ioDispatcher) {
                 queriesRepo.all()
             }
             queriesFlow.collect { queries ->

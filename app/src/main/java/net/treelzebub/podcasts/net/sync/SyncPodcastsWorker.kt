@@ -7,8 +7,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.util.Logger
@@ -25,6 +25,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
     // TODO private val prefs: UserPreferences,
     private val podcastsRepo: PodcastsRepo,
     private val updater: SubscriptionUpdater,
+    private val ioDispatcher: CoroutineDispatcher
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -45,7 +46,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
             val onResponse: (Call, Response) -> Unit = { call, response ->
                 if (response.isSuccessful && response.body != null) {
                     Logger.d("Updated Feed with url: ${sub.rssLink}. Parsing...")
-                    CoroutineScope(Dispatchers.IO).launch {
+                    CoroutineScope(ioDispatcher).launch {
                         val parsed = podcastsRepo.parseRssFeed(response.body!!.string())
                         podcastsRepo.insertOrReplacePodcast(sub.rssLink, parsed)
                     }
