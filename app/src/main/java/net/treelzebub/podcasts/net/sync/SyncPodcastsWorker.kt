@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.util.Logger
 import okhttp3.Call
 import okhttp3.Response
@@ -25,7 +26,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
     // TODO private val prefs: UserPreferences,
     private val podcastsRepo: PodcastsRepo,
     private val updater: SubscriptionUpdater,
-    private val ioDispatcher: CoroutineDispatcher
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {

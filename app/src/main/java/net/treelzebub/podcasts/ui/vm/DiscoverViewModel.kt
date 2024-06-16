@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.SearchQueriesRepo
+import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.net.PodcastIndexService
 import net.treelzebub.podcasts.net.models.Feed
 import javax.inject.Inject
@@ -19,7 +20,7 @@ class DiscoverViewModel @Inject constructor(
     private val api: PodcastIndexService,
     private val queriesRepo: SearchQueriesRepo,
     private val podcastsRepo: PodcastsRepo,
-    private val ioDispatcher: CoroutineDispatcher
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : StatefulViewModel<DiscoverViewModel.State>(State()) {
 
     data class State(

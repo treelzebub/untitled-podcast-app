@@ -38,7 +38,7 @@ class RepoModule {
     fun rssHandler(): RssHandler = PodcastRssHandler(okHttpClient())
 
     @Provides
-    fun podcastsRepo(rssHandler: RssHandler, db: Database, ioDispatcher: CoroutineDispatcher): PodcastsRepo {
+    fun podcastsRepo(rssHandler: RssHandler, db: Database, @IoDispatcher ioDispatcher: CoroutineDispatcher): PodcastsRepo {
         return PodcastsRepo(rssHandler, db, ioDispatcher)
     }
 }

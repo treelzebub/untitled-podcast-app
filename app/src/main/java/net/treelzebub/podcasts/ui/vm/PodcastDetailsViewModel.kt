@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
@@ -15,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PodcastDetailsViewModel @Inject constructor(
     private val repo: PodcastsRepo,
-    private val ioDispatcher: CoroutineDispatcher
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 
     data class State(
