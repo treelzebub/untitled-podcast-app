@@ -20,9 +20,9 @@ class NetworkModule {
 
     @Provides
     fun podcastIndexService(): PodcastIndexService {
-        val logger = HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) }
+        val Timber = HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) }
         val headers = PodcastIndexHeadersInterceptor()
-        val client = OkHttpClient.Builder().addInterceptor(logger).addInterceptor(headers).build()
+        val client = OkHttpClient.Builder().addInterceptor(Timber).addInterceptor(headers).build()
         val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         return Retrofit.Builder()
             .baseUrl("https://api.podcastindex.org/")
