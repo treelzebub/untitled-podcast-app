@@ -6,11 +6,9 @@ import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -25,7 +23,7 @@ import javax.inject.Inject
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
-    private val dispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher
 ) {
 
     suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
@@ -45,6 +43,9 @@ class PodcastsRepo @Inject constructor(
     fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
         db.transaction {
             val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
+            val latestEpisodeTimestamp = channel.items
+                .maxBy { Time.zonedEpochSeconds(it.pubDate) }
+                .let { Time.zonedEpochSeconds(it.pubDate) }
             with(channel) {
                 db.podcastsQueries.insert_or_replace(
                     id = link!!, // Public link to Podcast will be unique, so it's our ID.
@@ -55,7 +56,8 @@ class PodcastsRepo @Inject constructor(
                     image_url = safeImage,
                     last_build_date = Time.zonedEpochSeconds(lastBuildDate),
                     rss_link = rssLink,
-                    last_local_update = Time.nowSeconds()
+                    last_local_update = Time.nowSeconds(),
+                    latest_episode_timestamp = latestEpisodeTimestamp
                 )
             }
             channel.items.forEach {
@@ -89,13 +91,13 @@ class PodcastsRepo @Inject constructor(
         return db.podcastsQueries
             .get_by_link(rssLink, podcastMapper)
             .asFlow()
-            .mapToOneOrNull(dispatcher)
+            .mapToOneOrNull(ioDispatcher)
     }
 
     fun getPodcastMap(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
         return db.episodesQueries.transactionWithResult {
             db.podcastsQueries.get_all(podcastMapper).asFlow()
-                .mapToList(dispatcher)
+                .mapToList(ioDispatcher)
                 .map { podcasts ->
                     val map = podcasts.associateBy { it.id }
                     db.episodesQueries.get_all(episodeMapper).executeAsList()
@@ -106,18 +108,8 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
-        return db.podcastsQueries.transactionWithResult {
-            db.podcastsQueries.get_all(podcastMapper).asFlow()
-                .mapToList(dispatcher)
-                .mapLatest { podcasts ->
-                    val latestList = db.episodesQueries.get_latest_for_each_podcast().executeAsList()
-                    latestList.mapNotNull { latest ->
-                        podcasts.find { pod -> pod.id == latest.podcast_id }
-                    }
-                }
-        }
+        return db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
     }
 
     fun getAllRssLinks(): List<SubscriptionDto> {
@@ -138,14 +130,14 @@ class PodcastsRepo @Inject constructor(
         return db.episodesQueries
             .get_by_podcast_id(podcastId, episodeMapper)
             .asFlow()
-            .mapToList(dispatcher)
+            .mapToList(ioDispatcher)
     }
 
     fun getEpisodeById(id: String): Flow<EpisodeUi> {
         return db.episodesQueries
             .get_by_id(id, episodeMapper)
             .asFlow()
-            .mapToOne(dispatcher)
+            .mapToOne(ioDispatcher)
     }
 
     /** Mappers **/
@@ -158,13 +150,14 @@ class PodcastsRepo @Inject constructor(
         image_url: String?,
         last_build_date: Long,
         rss_link: String,
-        last_local_update: Long
+        last_local_update: Long,
+        latestEpisodeTimestamp: Long
     ) -> PodcastUi = { id, link, title, description,
                        email, image_url, last_build_date,
-                       rss_link, lastLocalUpdate ->
+                       rss_link, lastLocalUpdate, latestEpisodeTimestamp ->
         PodcastUi(
             id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
-            Time.displayFormat(last_build_date), rss_link, lastLocalUpdate
+            Time.displayFormat(last_build_date), rss_link, lastLocalUpdate, latestEpisodeTimestamp
         )
     }
 

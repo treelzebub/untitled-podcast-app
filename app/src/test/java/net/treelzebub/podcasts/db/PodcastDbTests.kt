@@ -37,7 +37,8 @@ class PodcastDbTests {
             "imageUrl",
             12L,
             "rssLink",
-            145L
+            145L,
+            1000000000L
         )
         db.episodesQueries.upsert(
             "id",

@@ -93,6 +93,7 @@ private val Pod01 = PodcastUi(
     Pod01_Ep01.displayDate,
     "rssLink",
     145L,
+    1715733133L
 )
 
 
@@ -166,4 +167,5 @@ private val Pod02 = PodcastUi(
     Pod02_Ep03.displayDate,
     "rssLink",
     145L,
+    1718411533L
 )
