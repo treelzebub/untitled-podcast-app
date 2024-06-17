@@ -22,7 +22,8 @@ fun PodcastsQueries.insert_or_replace(vararg podcasts: PodcastUi) {
         podcasts.forEach {
             insert_or_replace(
                 it.id, it.link, it.title, it.description, it.email, it.imageUrl,
-                Time.zonedEpochSeconds(it.lastBuildDate), it.rssLink, it.lastLocalUpdate
+                Time.zonedEpochSeconds(it.lastBuildDate), it.rssLink, it.lastLocalUpdate,
+                it.latestEpisodeTimestamp
             )
         }
     }

@@ -7,12 +7,13 @@ CREATE TABLE podcast (
     image_url TEXT,
     last_build_date INTEGER NOT NULL,
     rss_link TEXT NOT NULL,
-    last_local_update INTEGER NOT NULL
+    last_local_update INTEGER NOT NULL,
+    latest_episode_timestamp INTEGER NOT NULL
 );
 
 insert_or_replace:
 INSERT OR REPLACE INTO podcast
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM podcast
@@ -28,10 +29,10 @@ WHERE rss_link = ?;
 
 get_all:
 SELECT * FROM podcast
-ORDER BY last_build_date DESC;
+ORDER BY latest_episode_timestamp DESC;
 
 get_all_rss_links:
-SELECT id, rss_link FROM podcast ORDER BY last_build_date DESC;
+SELECT id, rss_link FROM podcast ORDER BY latest_episode_timestamp DESC;
 
 delete_all:
 DELETE FROM podcast;
