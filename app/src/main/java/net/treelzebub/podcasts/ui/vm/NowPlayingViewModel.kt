@@ -1,6 +1,7 @@
 package net.treelzebub.podcasts.ui.vm
 
 import android.net.Uri
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -18,6 +19,7 @@ class NowPlayingViewModel @Inject constructor(
     private val repo: PodcastsRepo,
 ) : StatefulViewModel<NowPlayingViewModel.State>(State()) {
 
+    @Stable
     data class State(
         val loading: Boolean = true,
         val mediaItem: MediaItem? = null

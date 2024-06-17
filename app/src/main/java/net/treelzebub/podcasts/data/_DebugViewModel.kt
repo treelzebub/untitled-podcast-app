@@ -54,18 +54,19 @@ private class _DebugViewModel @Inject constructor(
         assert(db.episodesQueries.get_all().executeAsList().isEmpty())
     }
 
-    @Composable
-    fun DebugMenu() {
-        val vm = hiltViewModel<_DebugViewModel>()
-        var expanded by remember { mutableStateOf(false) }
-        Box {
-            IconButton(onClick = { expanded = !expanded }) {
-                Icon(imageVector = Icons.Outlined.MoreVert, contentDescription = "")
-            }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                DropdownMenuItem(text = { Text(text = "Populate Subs") }, onClick = { vm.populateSubs() })
-                DropdownMenuItem(text = { Text(text = "Nuke Subs") }, onClick = { vm.nukeSubs() })
-            }
+}
+
+@Composable
+fun DebugMenu() {
+    val vm = hiltViewModel<_DebugViewModel>()
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(imageVector = Icons.Outlined.MoreVert, contentDescription = "")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(text = { Text(text = "Populate Subs") }, onClick = { vm.populateSubs() })
+            DropdownMenuItem(text = { Text(text = "Nuke Subs") }, onClick = { vm.nukeSubs() })
         }
     }
 }

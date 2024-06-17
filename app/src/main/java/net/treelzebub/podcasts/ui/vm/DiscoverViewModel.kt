@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.vm
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -23,6 +24,7 @@ class DiscoverViewModel @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : StatefulViewModel<DiscoverViewModel.State>(State()) {
 
+    @Stable
     data class State(
         val loading: Boolean = true,
         val previousQueries: List<String> = emptyList(),
