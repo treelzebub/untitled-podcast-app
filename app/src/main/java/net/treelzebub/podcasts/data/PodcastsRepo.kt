@@ -13,10 +13,10 @@ import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import net.treelzebub.podcasts.util.Logger
 import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -28,11 +28,11 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
         try {
-            Logger.d("Fetching RSS Feed: $rssLink")
+            Timber.d("Fetching RSS Feed: $rssLink")
             val feed = rssHandler.fetch(rssLink)
             insertOrReplacePodcast(rssLink, feed)
         } catch (e: Exception) {
-            Logger.e("Error parsing RSS Feed", e)
+            Timber.e("Error parsing RSS Feed", e)
             onError(e)
         }
     }

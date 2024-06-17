@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.util
 
+import timber.log.Timber
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
@@ -32,7 +33,7 @@ object Time {
         return try {
             string?.let { parse(string).format(displayFormat) }.orEmpty()
         } catch (e: Exception) {
-            Logger.e("Error parsing in displayFormat(String)", e)
+            Timber.e("Error parsing in displayFormat(String)", e)
             DATE_UNKNOWN
         }
     }
@@ -46,7 +47,7 @@ object Time {
         return try {
             zoned.format(formatter)
         } catch (e: Exception) {
-            Logger.e("Error parsing $seconds with ${formatter::class.java.simpleName})", e)
+            Timber.e("Error parsing $seconds with ${formatter::class.java.simpleName})", e)
             DATE_UNKNOWN
         }
     }
@@ -58,7 +59,7 @@ object Time {
             try {
                 LocalDateTime.parse(string, rfc1123)
             } catch (e: Exception) {
-                Logger.e("parse() fell through all tries", e)
+                Timber.e("parse() fell through all tries", e)
                 epochStart
             }
         }

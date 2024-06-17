@@ -1,7 +1,6 @@
 package net.treelzebub.podcasts.di
 
 import android.app.Application
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import dagger.Module
 import dagger.Provides
@@ -15,5 +14,5 @@ object PlayerModule {
 
     @Provides
     @ViewModelScoped
-    fun providePlayer(app: Application): Player = ExoPlayer.Builder(app).build()
+    fun providePlayer(app: Application): ExoPlayer = ExoPlayer.Builder(app).build()
 }
