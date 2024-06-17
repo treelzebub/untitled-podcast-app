@@ -40,15 +40,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import timber.log.Timber
 import javax.inject.Inject
 
-
-@androidx.annotation.OptIn(UnstableApi::class)
-class PodcastNotificationManager(
+@UnstableApi
+class PodcastNotificationManager @Inject constructor(
     private val context: Context,
     sessionToken: SessionToken,
     private val player: Player,
@@ -146,11 +146,12 @@ sealed interface NowPlayingState {
     data object Loading : NowPlayingState
 }
 
-@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+@UnstableApi
 @HiltViewModel
 class NowPlayingViewModel @Inject constructor(
     private val player: ExoPlayer,
     private val repo: PodcastsRepo,
+    private val queue: QueueStore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @MainDispatcher private val mainDispatcher: CoroutineDispatcher
 ) : ViewModel() {
@@ -194,6 +195,7 @@ class NowPlayingViewModel @Inject constructor(
         setupPlaylist(context)
     }
 
+    @UnstableApi
     private fun setupPlaylist(context: Context) {
         val mediaSourceQueue = listOf<EpisodeUi>().map {
             val mediaMetaData = MediaMetadata.Builder()

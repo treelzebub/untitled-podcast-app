@@ -2,6 +2,7 @@ package net.treelzebub.podcasts.util
 
 import android.text.Html
 import android.text.Html.FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH
+import timber.log.Timber
 
 fun String?.sanitizeUrl(): String? {
     return try {

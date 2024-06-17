@@ -15,17 +15,16 @@ import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import timber.log.Timber
 import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
+import timber.log.Timber
 import javax.inject.Inject
 
 
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
-    val queueStore: QueueStore,
     private val dispatcher: CoroutineDispatcher
 ) {
 
