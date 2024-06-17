@@ -12,5 +12,6 @@ data class PodcastUi(
     val imageUrl: String,
     val lastBuildDate: String,
     val rssLink: String,
-    val lastLocalUpdate: Long
+    val lastLocalUpdate: Long,
+    val latestEpisodeTimestamp: Long
 )

@@ -26,7 +26,7 @@ object Time {
     fun zonedEpochSeconds(string: String?): Long =
         string?.let {
             parse(string).atZone(zoneClock.zone).toEpochSecond()
-        } ?: nowSeconds()
+        } ?: -1L
 
     fun displayFormat(string: String?): String {
         return try {
