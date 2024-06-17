@@ -94,6 +94,16 @@ class PodcastsRepo @Inject constructor(
             .mapToOneOrNull(ioDispatcher)
     }
 
+    fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>> {
+        return db.episodesQueries.transactionWithResult {
+            db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOne(ioDispatcher)
+                .map { pod ->
+                    val episodes = db.episodesQueries.get_by_podcast_id(podcastId, episodeMapper).executeAsList()
+                    pod to episodes
+                }
+        }
+    }
+
     fun getPodcastMap(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
         return db.episodesQueries.transactionWithResult {
             db.podcastsQueries.get_all(podcastMapper).asFlow()

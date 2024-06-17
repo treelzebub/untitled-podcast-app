@@ -7,10 +7,8 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -41,23 +39,15 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         val episodes: List<EpisodeUi> = listOf()
     )
 
-    // TODO the repo should be doing most of this
     private fun getPodcastAndEpisodes(podcastId: String) {
         viewModelScope.launch {
-            val currentStateFlow = withContext(ioDispatcher) {
-                val podcastFlow = repo.getPodcastById(podcastId)
-                val episodesFlow = repo.getEpisodesByPodcastId(podcastId)
-                podcastFlow.combine(episodesFlow) { podcast, episodes ->
-                    State(false, podcast, episodes)
-                }
-            }
-            currentStateFlow.collect { currentState ->
+                repo.getPodcastPair(podcastId).collect { currentState ->
                 _state.update {
-                    Timber.d("Updated Pod Details State! ${currentState.episodes.size} Episodes.")
+                    Timber.d("Updated Pod Details State! ${currentState.second.size} Episodes.")
                     it.copy(
                         loading = false,
-                        podcast = currentState.podcast,
-                        episodes = currentState.episodes
+                        podcast = currentState.first,
+                        episodes = currentState.second
                     )
                 }
             }
