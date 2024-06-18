@@ -40,7 +40,7 @@ class PodcastDetailsViewModel @AssistedInject constructor(
             repo.getPodcastPair(podcastId).collect { pair ->
                 _state.update {
                     it.copy(
-                        loading = pair?.first == null,
+                        loading = pair == null,
                         podcast = pair?.first,
                         episodes = pair?.second.orEmpty()
                     )

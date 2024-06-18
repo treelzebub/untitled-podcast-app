@@ -55,7 +55,31 @@ android {
         buildConfigField("String", "USER_AGENT_PODCAST_INDEX", "\"UntitledPodcastApp/$versionName\"")
     }
 
+    signingConfigs {
+//        getByName("debug") {
+//            keyAlias = "debug"
+//            keyPassword = "debug"
+//            storeFile = file("debug.jks")
+//            storePassword = "debug"
+//        }
+        create("release") {
+            enableV1Signing = false
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
+            keyAlias = "release"
+            keyPassword = "my release key password"
+            storeFile = file("/home/miles/keystore.jks")
+            storePassword = "my keystore password"
+        }
+    }
+
     buildTypes {
+        debug {
+            name
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEBUG"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
