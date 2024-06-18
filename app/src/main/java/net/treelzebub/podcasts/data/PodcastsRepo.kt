@@ -104,13 +104,17 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>> {
+    suspend fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
         return withContext(ioDispatcher) {
-            db.episodesQueries.transactionWithResult {
-                db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOne(ioDispatcher)
-                    .map { pod ->
-                        val episodes = db.episodesQueries.get_by_podcast_id(podcastId, episodeMapper).executeAsList()
-                        pod to episodes
+            db.podcastsQueries.transactionWithResult {
+                db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
+                    .map { podcast ->
+                        if (podcast != null) {
+                            val episodes = db.episodesQueries.transactionWithResult {
+                                db.episodesQueries.get_by_podcast_id(podcastId, episodeMapper).executeAsList()
+                            }
+                            podcast to episodes
+                        } else null
                     }
             }
         }
@@ -140,7 +144,7 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun getAllRssLinks(): List<SubscriptionDto> {
         return withContext(ioDispatcher) {
-             db.podcastsQueries
+            db.podcastsQueries
                 .get_all_rss_links()
                 .executeAsList()
                 .map { SubscriptionDto(it.id, it.rss_link) }

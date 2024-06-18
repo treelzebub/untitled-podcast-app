@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import timber.log.Timber
 
 
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
@@ -38,13 +37,12 @@ class PodcastDetailsViewModel @AssistedInject constructor(
 
     private fun getPodcastAndEpisodes(podcastId: String) {
         viewModelScope.launch {
-            repo.getPodcastPair(podcastId).collect { currentState ->
+            repo.getPodcastPair(podcastId).collect { pair ->
                 _state.update {
-                    Timber.d("Updated Pod Details State! ${currentState.second.size} Episodes.")
                     it.copy(
-                        loading = false,
-                        podcast = currentState.first,
-                        episodes = currentState.second
+                        loading = pair?.first == null,
+                        podcast = pair?.first,
+                        episodes = pair?.second.orEmpty()
                     )
                 }
             }
