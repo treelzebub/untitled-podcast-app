@@ -49,7 +49,10 @@ fun PodcastDetailsScreen(
         creationCallback = { factory -> factory.create(podcastId = podcastId) }
     )
     val state by remember { vm.state }.collectAsState()
-    val onDelete = { vm.deletePodcast(podcastId) }
+    val onDelete: () -> Unit = {
+        vm.deletePodcast()
+        navigator.popBackStack()
+    }
 
     if (!state.loading && state.podcast == null) {
         navigator.navigateUp()

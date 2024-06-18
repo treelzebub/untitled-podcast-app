@@ -6,11 +6,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import timber.log.Timber
@@ -19,8 +17,7 @@ import timber.log.Timber
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
 class PodcastDetailsViewModel @AssistedInject constructor(
     @Assisted val podcastId: String,
-    private val repo: PodcastsRepo,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    private val repo: PodcastsRepo
 ) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 
     @AssistedFactory
@@ -41,7 +38,7 @@ class PodcastDetailsViewModel @AssistedInject constructor(
 
     private fun getPodcastAndEpisodes(podcastId: String) {
         viewModelScope.launch {
-                repo.getPodcastPair(podcastId).collect { currentState ->
+            repo.getPodcastPair(podcastId).collect { currentState ->
                 _state.update {
                     Timber.d("Updated Pod Details State! ${currentState.second.size} Episodes.")
                     it.copy(
@@ -54,5 +51,9 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         }
     }
 
-    fun deletePodcast(link: String)  = repo.deletePodcastById(link)
+    fun deletePodcast() {
+        viewModelScope.launch {
+            repo.deletePodcastById(podcastId)
+        }
+    }
 }

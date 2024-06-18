@@ -3,25 +3,19 @@ package net.treelzebub.podcasts.ui.vm
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.SearchQueriesRepo
-import net.treelzebub.podcasts.di.IoDispatcher
-import net.treelzebub.podcasts.net.PodcastIndexService
 import net.treelzebub.podcasts.net.models.Feed
+import timber.log.Timber
 import javax.inject.Inject
 
 
 @HiltViewModel
 class DiscoverViewModel @Inject constructor(
-    private val api: PodcastIndexService,
     private val queriesRepo: SearchQueriesRepo,
     private val podcastsRepo: PodcastsRepo,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : StatefulViewModel<DiscoverViewModel.State>(State()) {
 
     @Stable
@@ -40,10 +34,7 @@ class DiscoverViewModel @Inject constructor(
         loading()
         viewModelScope.launch {
             loading()
-            val results = withContext(ioDispatcher) {
-                queriesRepo.insert(query)
-                api.searchPodcasts(query)
-            }
+            val results = queriesRepo.searchPodcasts(query)
             _state.update {
                 it.copy(
                     loading = false,
@@ -55,19 +46,22 @@ class DiscoverViewModel @Inject constructor(
 
     fun select(feed: Feed, onError: (Exception) -> Unit) {
         loading()
-        CoroutineScope(ioDispatcher).launch {
-            podcastsRepo.fetchRssFeed(feed.url) { onError(it) }
+        viewModelScope.launch {
+            podcastsRepo.fetchRssFeed(feed.url) {
+                onError(it)
+                error()
+            }
         }
     }
 
-    fun deletePreviousSearch(query: String) = queriesRepo.delete(query)
+    fun deletePreviousSearch(query: String) = viewModelScope.launch {
+        queriesRepo.delete(query)
+    }
 
     private fun getPreviousQueries() {
+        loading()
         viewModelScope.launch {
-            val queriesFlow = withContext(ioDispatcher) {
-                queriesRepo.all()
-            }
-            queriesFlow.collect { queries ->
+            queriesRepo.all().collect { queries ->
                 _state.update {
                     it.copy(
                         loading = false,
@@ -80,7 +74,8 @@ class DiscoverViewModel @Inject constructor(
 
     private fun loading() = _state.update { it.copy(loading = true) }
 
+    // TODO
     private fun error() {
-        TODO()
+        Timber.e("Handle error and inform user.")
     }
 }
