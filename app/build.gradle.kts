@@ -67,10 +67,10 @@ android {
             enableV2Signing = true
             enableV3Signing = true
             enableV4Signing = true
-            keyAlias = "release"
-            keyPassword = "my release key password"
-            storeFile = file("/home/miles/keystore.jks")
-            storePassword = "my keystore password"
+            storeFile = file(env("PODCAST_STORE_PATH"))
+            storePassword = env("PODCAST_STORE_PW")
+            keyAlias = env("PODCAST_KEY_ALIAS")
+            keyPassword = env("PODCAST_KEY_PW")
         }
     }
 
@@ -82,6 +82,7 @@ android {
         }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -171,3 +172,5 @@ dependencies {
 //    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 //    androidTestImplementation("androidx.work:work-testing:$work")
 }
+
+fun env(key: String): String = System.getenv(key)
