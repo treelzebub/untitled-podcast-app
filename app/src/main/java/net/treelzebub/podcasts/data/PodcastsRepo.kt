@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
@@ -109,12 +110,10 @@ class PodcastsRepo @Inject constructor(
             db.podcastsQueries.transactionWithResult {
                 db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
                     .map { podcast ->
-                        if (podcast != null) {
-                            val episodes = db.episodesQueries.transactionWithResult {
-                                db.episodesQueries.get_by_podcast_id(podcastId, episodeMapper).executeAsList()
-                            }
-                            podcast to episodes
-                        } else null
+                        podcast?.let {
+                            val episodes = db.episodesQueries.get_by_podcast_id(podcastId, episodeMapper).executeAsList()
+                            it to episodes
+                        }
                     }
             }
         }
