@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
@@ -43,12 +42,11 @@ class PodcastsRepo @Inject constructor(
 
     /** Podcasts **/
     suspend fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
-        withContext(ioDispatcher) {
+        withIoContext {
             db.transaction {
                 val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
                 val latestEpisodeTimestamp = channel.items
-                    .maxBy { Time.zonedEpochSeconds(it.pubDate) }
-                    .let { Time.zonedEpochSeconds(it.pubDate) }
+                    .maxOfOrNull { Time.zonedEpochSeconds(it.pubDate) } ?: -1L
                 with(channel) {
                     db.podcastsQueries.insert_or_replace(
                         id = link!!, // Public link to Podcast will be unique, so it's our ID.
@@ -85,19 +83,19 @@ class PodcastsRepo @Inject constructor(
     }
 
     suspend fun insertOrReplacePodcast(podcastUi: PodcastUi) {
-        withContext(ioDispatcher) {
+        withIoContext {
             db.podcastsQueries.insert_or_replace(podcastUi)
         }
     }
 
     suspend fun getPodcastById(id: String): Flow<PodcastUi> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.podcastsQueries.get_by_id(id, podcastMapper).executeAsList().asFlow()
         }
     }
 
     suspend fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.podcastsQueries
                 .get_by_link(rssLink, podcastMapper)
                 .asFlow()
@@ -106,7 +104,7 @@ class PodcastsRepo @Inject constructor(
     }
 
     suspend fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.podcastsQueries.transactionWithResult {
                 db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
                     .map { podcast ->
@@ -119,30 +117,14 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getPodcastMap(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
-        return withContext(ioDispatcher) {
-            db.episodesQueries.transactionWithResult {
-                db.podcastsQueries.get_all(podcastMapper).asFlow()
-                    .mapToList(ioDispatcher)
-                    .map { podcasts ->
-                        val map = podcasts.associateBy { it.id }
-                        db.episodesQueries.get_all(episodeMapper).executeAsList()
-                            .groupBy { it.podcastId }.entries.associate { entry ->
-                                map[entry.key]!! to entry.value.sortedByDescending { it.sortDate }
-                            }
-                    }
-            }
-        }
-    }
-
     suspend fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
         }
     }
 
     suspend fun getAllRssLinks(): List<SubscriptionDto> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.podcastsQueries
                 .get_all_rss_links()
                 .executeAsList()
@@ -150,19 +132,19 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun deletePodcastById(link: String) = withContext(ioDispatcher) {
+    suspend fun deletePodcastById(link: String) = withIoContext {
         db.podcastsQueries.delete(link)
     }
 
     /** Episodes **/
     private suspend fun getAllEpisodes(): List<EpisodeUi> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.episodesQueries.get_all(episodeMapper).executeAsList()
         }
     }
 
     suspend fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.episodesQueries
                 .get_by_podcast_id(podcastId, episodeMapper)
                 .asFlow()
@@ -171,13 +153,15 @@ class PodcastsRepo @Inject constructor(
     }
 
     suspend fun getEpisodeById(id: String): Flow<EpisodeUi> {
-        return withContext(ioDispatcher) {
+        return withIoContext {
             db.episodesQueries
                 .get_by_id(id, episodeMapper)
                 .asFlow()
                 .mapToOne(ioDispatcher)
         }
     }
+
+    private suspend fun <T> withIoContext(block: () -> T): T = withContext(ioDispatcher) { block() }
 
     /** Mappers **/
     private val podcastMapper: (
