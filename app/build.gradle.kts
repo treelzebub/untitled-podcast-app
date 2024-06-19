@@ -7,7 +7,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.sqldelight)
     id("com.google.devtools.ksp")
-    alias(libs.plugins.compose.compiler)
+    //alias(libs.plugins.compose.compiler)
 }
 
 sqldelight {
@@ -24,9 +24,9 @@ kapt {
 
 kotlin {
     jvmToolchain(17)
-    sourceSets.all {
-        languageSettings.enableLanguageFeature("ExplicitBackingFields")
-    }
+//    sourceSets.all {
+//        languageSettings.enableLanguageFeature("ExplicitBackingFields")
+//    }
 }
 
 android {
@@ -55,9 +55,34 @@ android {
         buildConfigField("String", "USER_AGENT_PODCAST_INDEX", "\"UntitledPodcastApp/$versionName\"")
     }
 
+    signingConfigs {
+//        getByName("debug") {
+//            keyAlias = "debug"
+//            keyPassword = "debug"
+//            storeFile = file("debug.jks")
+//            storePassword = "debug"
+//        }
+        create("release") {
+            enableV1Signing = false
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
+            storeFile = file(env("PODCAST_STORE_PATH"))
+            storePassword = env("PODCAST_STORE_PW")
+            keyAlias = env("PODCAST_KEY_ALIAS")
+            keyPassword = env("PODCAST_KEY_PW")
+        }
+    }
+
     buildTypes {
+        debug {
+            name
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEBUG"
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -71,6 +96,9 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.11"
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -79,7 +107,7 @@ android {
 }
 
 // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-compiler.html#compose-compiler-options-dsl
-composeCompiler {}
+//composeCompiler {}
 
 dependencies {
     implementation(libs.coroutines.android)
@@ -144,3 +172,5 @@ dependencies {
 //    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 //    androidTestImplementation("androidx.work:work-testing:$work")
 }
+
+fun env(key: String): String = System.getenv(key)

@@ -18,13 +18,14 @@ import okhttp3.logging.HttpLoggingInterceptor.Level
 import java.util.concurrent.TimeUnit
 
 
-@InstallIn(SingletonComponent::class)
 @Module
+@InstallIn(SingletonComponent::class)
 class RepoModule {
     companion object {
         private const val TIMEOUT = 90L
         private const val MAX_IDLE_CONNECTIONS = 5
     }
+
     @Provides
     fun okHttpClient(): OkHttpClient {
         val logLevel = if (BuildConfig.DEBUG) Level.BASIC else Level.NONE
@@ -38,7 +39,11 @@ class RepoModule {
     fun rssHandler(): RssHandler = PodcastRssHandler(okHttpClient())
 
     @Provides
-    fun podcastsRepo(rssHandler: RssHandler, db: Database, ioDispatcher: CoroutineDispatcher): PodcastsRepo {
+    fun podcastsRepo(
+        rssHandler: RssHandler,
+        db: Database,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): PodcastsRepo {
         return PodcastsRepo(rssHandler, db, ioDispatcher)
     }
 }

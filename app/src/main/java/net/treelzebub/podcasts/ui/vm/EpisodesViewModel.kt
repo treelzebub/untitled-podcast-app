@@ -1,16 +1,30 @@
 package net.treelzebub.podcasts.ui.vm
 
-import androidx.lifecycle.ViewModel
+import androidx.compose.runtime.Stable
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import javax.inject.Inject
 
 @HiltViewModel
 class EpisodesViewModel @Inject constructor(
-    private val repo: PodcastsRepo
-) : ViewModel() {
+    private val repo: PodcastsRepo,
+    // TODO assisted inject podcastId
+) : StatefulViewModel<EpisodesViewModel.State>(State()) {
 
-    fun getFlow(podcastId: String): Flow<List<EpisodeUi>> = repo.getEpisodesByPodcastId(podcastId)
+    @Stable
+    data class State(
+        val loading: Boolean = false,
+        val episodes: List<EpisodeUi> = emptyList()
+    )
+
+    fun getEpisodes(podcastId: String) {
+        viewModelScope.launch {
+            repo.getEpisodesByPodcastId(podcastId).collect {
+
+            }
+        }
+    }
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -19,6 +20,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.screens.destinations.NowPlayingScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun EpisodesList(
@@ -32,8 +34,8 @@ fun EpisodesList(
             .then(modifier)
     ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            episodes.forEach {
-                item { EpisodeItem(navigator, it) }
+            items(items = episodes, key = { it.id }) {
+                EpisodeItem(navigator, it)
             }
         }
     }

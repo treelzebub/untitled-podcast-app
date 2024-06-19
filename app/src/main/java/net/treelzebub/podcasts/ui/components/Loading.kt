@@ -21,8 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LoadingBox() {
-    Box(modifier = Modifier.fillMaxSize()) {
+fun LoadingBox(modifier: Modifier = Modifier) {
+    Box(modifier = Modifier.fillMaxSize().then(modifier)) {
         LoadingAnimation(modifier = Modifier.align(Alignment.Center))
     }
 }

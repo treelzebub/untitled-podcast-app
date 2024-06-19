@@ -3,6 +3,7 @@ examples/
 app/src/main/assets/*.rss
 app/src/main/assets/*.mp3
 app/src/main/assets/*.txt
+release/
 
 ### Android ###
 # Gradle files

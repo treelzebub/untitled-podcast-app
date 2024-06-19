@@ -45,10 +45,14 @@ fun PodcastDetailsScreen(
     navigator: DestinationsNavigator,
     podcastId: String
 ) {
-    val vm = hiltViewModel<PodcastDetailsViewModel>()
+    val vm = hiltViewModel<PodcastDetailsViewModel, PodcastDetailsViewModel.Factory>(
+        creationCallback = { factory -> factory.create(podcastId = podcastId) }
+    )
     val state by remember { vm.state }.collectAsState()
-    val onDelete = { vm.deletePodcast(podcastId) }
-    vm.getPodcastAndEpisodes(podcastId)
+    val onDelete: () -> Unit = {
+        vm.deletePodcast()
+        navigator.popBackStack()
+    }
 
     if (!state.loading && state.podcast == null) {
         navigator.navigateUp()

@@ -9,14 +9,15 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import net.treelzebub.podcasts.util.Logger
 import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -28,11 +29,11 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
         try {
-            Logger.d("Fetching RSS Feed: $rssLink")
+            Timber.d("Fetching RSS Feed: $rssLink")
             val feed = rssHandler.fetch(rssLink)
             insertOrReplacePodcast(rssLink, feed)
         } catch (e: Exception) {
-            Logger.e("Error parsing RSS Feed", e)
+            Timber.e("Error parsing RSS Feed", e)
             onError(e)
         }
     }
@@ -40,105 +41,127 @@ class PodcastsRepo @Inject constructor(
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
     /** Podcasts **/
-    fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
-        db.transaction {
-            val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
-            val latestEpisodeTimestamp = channel.items
-                .maxBy { Time.zonedEpochSeconds(it.pubDate) }
-                .let { Time.zonedEpochSeconds(it.pubDate) }
-            with(channel) {
-                db.podcastsQueries.insert_or_replace(
-                    id = link!!, // Public link to Podcast will be unique, so it's our ID.
-                    link = link!!,
-                    title = title!!,
-                    description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml().orEmpty(),
-                    email = itunesChannelData?.owner?.email.orEmpty(),
-                    image_url = safeImage,
-                    last_build_date = Time.zonedEpochSeconds(lastBuildDate),
-                    rss_link = rssLink,
-                    last_local_update = Time.nowSeconds(),
-                    latest_episode_timestamp = latestEpisodeTimestamp
-                )
-            }
-            channel.items.forEach {
-                with(it) {
-                    db.episodesQueries.upsert(
-                        id = guid!!,
-                        podcast_id = channel.link!!,
-                        podcast_title = channel.title!!,
-                        title = title.sanitizeHtml() ?: "[No Title]",
-                        description = description?.sanitizeHtml() ?: "[No Description]",
-                        date = Time.zonedEpochSeconds(pubDate),
-                        link = link?.sanitizeUrl().orEmpty(),
-                        streaming_link = audio.orEmpty(),
-                        image_url = image?.sanitizeUrl() ?: safeImage,
-                        duration = itunesItemData?.duration,
+    suspend fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
+        withIoContext {
+            db.transaction {
+                val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
+                val latestEpisodeTimestamp = channel.items
+                    .maxOfOrNull { Time.zonedEpochSeconds(it.pubDate) } ?: -1L
+                with(channel) {
+                    db.podcastsQueries.insert_or_replace(
+                        id = link!!, // Public link to Podcast will be unique, so it's our ID.
+                        link = link!!,
+                        title = title!!,
+                        description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml()
+                            .orEmpty(),
+                        email = itunesChannelData?.owner?.email.orEmpty(),
+                        image_url = safeImage,
+                        last_build_date = Time.zonedEpochSeconds(lastBuildDate),
+                        rss_link = rssLink,
+                        last_local_update = Time.nowSeconds(),
+                        latest_episode_timestamp = latestEpisodeTimestamp
                     )
                 }
+                channel.items.forEach {
+                    with(it) {
+                        db.episodesQueries.upsert(
+                            id = guid!!,
+                            podcast_id = channel.link!!,
+                            podcast_title = channel.title!!,
+                            title = title.sanitizeHtml() ?: "[No Title]",
+                            description = description?.sanitizeHtml() ?: "[No Description]",
+                            date = Time.zonedEpochSeconds(pubDate),
+                            link = link?.sanitizeUrl().orEmpty(),
+                            streaming_link = audio.orEmpty(),
+                            image_url = image?.sanitizeUrl() ?: safeImage,
+                            duration = itunesItemData?.duration,
+                        )
+                    }
+                }
             }
         }
     }
 
-    fun insertOrReplacePodcast(podcastUi: PodcastUi) {
-        db.podcastsQueries.insert_or_replace(podcastUi)
-    }
-
-    fun getPodcastById(id: String): Flow<PodcastUi> {
-        return db.podcastsQueries.get_by_id(id, podcastMapper).executeAsList().asFlow()
-    }
-
-    fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
-        return db.podcastsQueries
-            .get_by_link(rssLink, podcastMapper)
-            .asFlow()
-            .mapToOneOrNull(ioDispatcher)
-    }
-
-    fun getPodcastMap(): Flow<Map<PodcastUi, List<EpisodeUi>>> {
-        return db.episodesQueries.transactionWithResult {
-            db.podcastsQueries.get_all(podcastMapper).asFlow()
-                .mapToList(ioDispatcher)
-                .map { podcasts ->
-                    val map = podcasts.associateBy { it.id }
-                    db.episodesQueries.get_all(episodeMapper).executeAsList()
-                        .groupBy { it.podcastId }.entries.associate { entry ->
-                            map[entry.key]!! to entry.value.sortedByDescending { it.sortDate }
-                        }
-                }
+    suspend fun insertOrReplacePodcast(podcastUi: PodcastUi) {
+        withIoContext {
+            db.podcastsQueries.insert_or_replace(podcastUi)
         }
     }
 
-    fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
-        return db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
+    suspend fun getPodcastById(id: String): Flow<PodcastUi> {
+        return withIoContext {
+            db.podcastsQueries.get_by_id(id, podcastMapper).executeAsList().asFlow()
+        }
     }
 
-    fun getAllRssLinks(): List<SubscriptionDto> {
-        return db.podcastsQueries
-            .get_all_rss_links()
-            .executeAsList()
-            .map { SubscriptionDto(it.id, it.rss_link) }
+    suspend fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
+        return withIoContext {
+            db.podcastsQueries
+                .get_by_link(rssLink, podcastMapper)
+                .asFlow()
+                .mapToOneOrNull(ioDispatcher)
+        }
     }
 
-    fun deletePodcastById(link: String) = db.podcastsQueries.delete(link)
+    suspend fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
+        return withIoContext {
+            db.podcastsQueries.transactionWithResult {
+                db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
+                    .map { podcast ->
+                        podcast?.let {
+                            val episodes = db.episodesQueries.get_by_podcast_id(podcastId, episodeMapper).executeAsList()
+                            it to episodes
+                        }
+                    }
+            }
+        }
+    }
+
+    suspend fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
+        return withIoContext {
+            db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
+        }
+    }
+
+    suspend fun getAllRssLinks(): List<SubscriptionDto> {
+        return withIoContext {
+            db.podcastsQueries
+                .get_all_rss_links()
+                .executeAsList()
+                .map { SubscriptionDto(it.id, it.rss_link) }
+        }
+    }
+
+    suspend fun deletePodcastById(link: String) = withIoContext {
+        db.podcastsQueries.delete(link)
+    }
 
     /** Episodes **/
-    private fun getAllEpisodes(): List<EpisodeUi> {
-        return db.episodesQueries.get_all(episodeMapper).executeAsList()
+    private suspend fun getAllEpisodes(): List<EpisodeUi> {
+        return withIoContext {
+            db.episodesQueries.get_all(episodeMapper).executeAsList()
+        }
     }
 
-    fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
-        return db.episodesQueries
-            .get_by_podcast_id(podcastId, episodeMapper)
-            .asFlow()
-            .mapToList(ioDispatcher)
+    suspend fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
+        return withIoContext {
+            db.episodesQueries
+                .get_by_podcast_id(podcastId, episodeMapper)
+                .asFlow()
+                .mapToList(ioDispatcher)
+        }
     }
 
-    fun getEpisodeById(id: String): Flow<EpisodeUi> {
-        return db.episodesQueries
-            .get_by_id(id, episodeMapper)
-            .asFlow()
-            .mapToOne(ioDispatcher)
+    suspend fun getEpisodeById(id: String): Flow<EpisodeUi> {
+        return withIoContext {
+            db.episodesQueries
+                .get_by_id(id, episodeMapper)
+                .asFlow()
+                .mapToOne(ioDispatcher)
+        }
     }
+
+    private suspend fun <T> withIoContext(block: () -> T): T = withContext(ioDispatcher) { block() }
 
     /** Mappers **/
     private val podcastMapper: (
