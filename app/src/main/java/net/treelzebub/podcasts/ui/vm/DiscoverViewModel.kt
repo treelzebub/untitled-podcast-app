@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.SearchQueriesRepo
 import net.treelzebub.podcasts.net.models.Feed
+import net.treelzebub.podcasts.util.ErrorHandler
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -44,7 +45,7 @@ class DiscoverViewModel @Inject constructor(
         }
     }
 
-    fun select(feed: Feed, onError: (Exception) -> Unit) {
+    fun select(feed: Feed, onError: ErrorHandler) {
         loading()
         viewModelScope.launch {
             podcastsRepo.fetchRssFeed(feed.url) {
@@ -74,8 +75,7 @@ class DiscoverViewModel @Inject constructor(
 
     private fun loading() = _state.update { it.copy(loading = true) }
 
-    // TODO
     private fun error() {
-        Timber.e("Handle error and inform user.")
+        TODO("Handle error and inform user.")
     }
 }

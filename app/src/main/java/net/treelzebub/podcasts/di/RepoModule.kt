@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import net.treelzebub.podcasts.BuildConfig
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.data.RssHandler
 import net.treelzebub.podcasts.net.PodcastRssHandler
 import net.treelzebub.podcasts.util.okHttpClient
@@ -42,8 +43,9 @@ class RepoModule {
     fun podcastsRepo(
         rssHandler: RssHandler,
         db: Database,
+        queueStore: QueueStore,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): PodcastsRepo {
-        return PodcastsRepo(rssHandler, db, ioDispatcher)
+        return PodcastsRepo(rssHandler, db, queueStore, ioDispatcher)
     }
 }

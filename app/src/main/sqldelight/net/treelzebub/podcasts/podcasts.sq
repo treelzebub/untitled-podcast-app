@@ -14,6 +14,10 @@ CREATE TABLE podcast (
 insert_or_replace:
 INSERT OR REPLACE INTO podcast
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+-- INSERT INTO podcast(id, link, title, description, email, image_url, last_build_date, rss_link, last_local_update, latest_episode_timestamp)
+-- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+-- ON CONFLICT(podcastId) DO
+-- UPDATE SET id= ...;
 
 delete:
 DELETE FROM podcast

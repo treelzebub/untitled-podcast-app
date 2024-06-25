@@ -7,13 +7,13 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import net.treelzebub.podcasts.util.ErrorHandler
 import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
@@ -24,10 +24,11 @@ import javax.inject.Inject
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
+    private val queueStore: QueueStore,
     private val ioDispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
+    suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) {
         withIoContext {
             try {
                 Timber.d("Fetching RSS Feed: $rssLink")
@@ -84,27 +85,6 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun insertOrReplacePodcast(podcastUi: PodcastUi) {
-        withIoContext {
-            db.podcastsQueries.insert_or_replace(podcastUi)
-        }
-    }
-
-    suspend fun getPodcastById(id: String): Flow<PodcastUi> {
-        return withIoContext {
-            db.podcastsQueries.get_by_id(id, podcastMapper).executeAsList().asFlow()
-        }
-    }
-
-    suspend fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
-        return withIoContext {
-            db.podcastsQueries
-                .get_by_link(rssLink, podcastMapper)
-                .asFlow()
-                .mapToOneOrNull(ioDispatcher)
-        }
-    }
-
     suspend fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
         return withIoContext {
             db.podcastsQueries.transactionWithResult {
@@ -127,24 +107,18 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun getAllRssLinks(): List<SubscriptionDto> {
         return withIoContext {
-            db.podcastsQueries
-                .get_all_rss_links()
-                .executeAsList()
+            db.podcastsQueries.get_all_rss_links().executeAsList()
                 .map { SubscriptionDto(it.id, it.rss_link) }
         }
     }
 
-    suspend fun deletePodcastById(link: String) = withIoContext {
-        db.podcastsQueries.delete(link)
+    suspend fun deletePodcastById(podcastId: String) = withIoContext {
+        // Cascading delete of episodes declared in episodes.sq
+        db.podcastsQueries.delete(podcastId)
+        queueStore.removeByPodcastId(podcastId) { TODO() }
     }
 
     /** Episodes **/
-    private suspend fun getAllEpisodes(): List<EpisodeUi> {
-        return withIoContext {
-            db.episodesQueries.get_all(episodeMapper).executeAsList()
-        }
-    }
-
     suspend fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
         return withIoContext {
             db.episodesQueries

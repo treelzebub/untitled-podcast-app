@@ -6,10 +6,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 
@@ -18,7 +18,7 @@ import net.treelzebub.podcasts.ui.models.PodcastUi
 class PodcastDetailsViewModel @AssistedInject constructor(
     @Assisted val podcastId: String,
     private val repo: PodcastsRepo,
-    private val queueStore: QueueStore
+    private val externalScope: CoroutineScope
 ) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 
     @AssistedFactory
@@ -34,7 +34,8 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     data class State(
         val loading: Boolean = true,
         val podcast: PodcastUi? = null,
-        val episodes: List<EpisodeUi> = listOf()
+        val episodes: List<EpisodeUi> = listOf(),
+        val queue: List<EpisodeUi> = listOf()
     )
 
     private fun getPodcastAndEpisodes(podcastId: String) {
@@ -52,11 +53,11 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     }
 
     fun addToQueue(episode: EpisodeUi) {
-        queueStore.add(episode)
+
     }
 
     fun addToQueue(index: Int, episode: EpisodeUi) {
-        queueStore.add(index, episode)
+
     }
 
     fun deletePodcast() {

@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import net.treelzebub.podcasts.util.ErrorHandler
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,7 +37,7 @@ class SubscriptionsViewModel @Inject constructor(
         }
     }
 
-    fun addRssFeed(url: String, onError: (Exception) -> Unit) {
+    fun addRssFeed(url: String, onError: ErrorHandler) {
         CoroutineScope(ioDispatcher).launch {
             repo.fetchRssFeed(url, onError)
         }

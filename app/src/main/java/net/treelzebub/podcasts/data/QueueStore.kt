@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.util.ErrorHandler
 import java.io.FileNotFoundException
 import java.io.IOException
 import javax.inject.Inject
@@ -41,7 +42,7 @@ class QueueStore @Inject constructor(
         return _stateFlow.stateIn(scope, SharingStarted.WhileSubscribed(timeout), initialValue)
     }
 
-    suspend fun persist(onError: (Throwable) -> Unit) {
+    suspend fun persist(onError: ErrorHandler) {
         try {
             withContext(ioDispatcher) {
                 _stateFlow.collectLatest {
@@ -61,7 +62,7 @@ class QueueStore @Inject constructor(
         }
     }
 
-    suspend fun load(onError: (Throwable) -> Unit) {
+    suspend fun load(onError: ErrorHandler) {
         try {
             val queue = withContext(ioDispatcher) {
                 app.openFileInput(NAME).bufferedReader().useLines {
@@ -77,22 +78,22 @@ class QueueStore @Inject constructor(
         }
     }
 
-    fun add(episodeUi: EpisodeUi) {
-        update { queue ->
+    suspend fun add(episodeUi: EpisodeUi, onError: ErrorHandler) {
+        update(onError) { queue ->
             queue.copy(list = queue.list.toMutableList().apply { add(episodeUi) })
         }
     }
 
-    fun add(index: Int, episodeUi: EpisodeUi) {
-        update { queue ->
+    suspend fun add(index: Int, episodeUi: EpisodeUi, onError: ErrorHandler) {
+        update(onError) { queue ->
             val list = queue.list
             if (index !in list.indices) throw IndexOutOfBoundsException("Invalid index: $index")
             queue.copy(list = list.toMutableList().apply { add(index, episodeUi) })
         }
     }
 
-    fun reorder(from: Int, to: Int) {
-        update { queue ->
+    suspend fun reorder(from: Int, to: Int, onError: ErrorHandler) {
+        update(onError) { queue ->
             val list = queue.list
             queue.copy(list = list.toMutableList().apply {
                 if (from in indices && to in indices) {
@@ -102,21 +103,32 @@ class QueueStore @Inject constructor(
         }
     }
 
-    fun remove(episodeId: String) {
-        update { queue ->
+    suspend fun remove(episodeId: String, onError: ErrorHandler) {
+        update(onError) { queue ->
             val list = queue.list
             val episode = list.find { it.id == episodeId } ?: throw NoSuchElementException("No episode with id: $episodeId")
             queue.copy(list = list.toMutableList().apply { remove(episode) })
         }
     }
 
-    fun remove(index: Int) {
-        update { queue ->
+    suspend fun remove(index: Int, onError: ErrorHandler) {
+        update(onError) { queue ->
             val list = queue.list
             if (index !in list.indices) throw IndexOutOfBoundsException()
             queue.copy(list = list.toMutableList().apply { removeAt(index) })
         }
     }
 
-    private fun update(block: (PodcastQueue) -> PodcastQueue) = _stateFlow.update(block)
+    suspend fun removeByPodcastId(podcastId: String, onError: ErrorHandler) {
+        update(onError) { queue ->
+            queue.copy(list = queue.list.toMutableList().apply {
+                removeAll { it.podcastId == podcastId }
+            })
+        }
+    }
+
+    private suspend fun update(onError: ErrorHandler, block: (PodcastQueue) -> PodcastQueue) {
+        _stateFlow.update(block)
+        persist(onError)
+    }
 }
