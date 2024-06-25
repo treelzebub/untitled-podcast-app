@@ -26,6 +26,10 @@ fun queueStore(): QueueStore {
     )
 }
 
+fun withQueueStore(fn: suspend CoroutineScope.(QueueStore) -> Unit) = runTest(TestCoroutines.dispatcher) {
+    fn(queueStore())
+}
+
 fun getDb(): Database = TestDb.instance
 
 fun withDatabase(fn: suspend CoroutineScope.(Database) -> Unit) = runTest(TestCoroutines.dispatcher) {

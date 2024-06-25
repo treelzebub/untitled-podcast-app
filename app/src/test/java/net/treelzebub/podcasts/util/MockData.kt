@@ -20,7 +20,7 @@ fun injectMockData(db: Database) {
  * 1589502733 // Friday, May 15, 2020 12:32:13 AM
  */
 
-private val Pod01_Ep01 = EpisodeUi(
+val Pod01_Ep01 = EpisodeUi(
     id = "pod01_ep01",
     podcastId = "podcast_01",
     podcastTitle = "Podcast the First",
@@ -40,7 +40,7 @@ private val Pod01_Ep01 = EpisodeUi(
     isArchived = false
 )
 
-private val Pod01_Ep02 = EpisodeUi(
+val Pod01_Ep02 = EpisodeUi(
     id = "pod01_ep02",
     podcastId = "podcast_01",
     podcastTitle = "Hey, look! It's episode two!",
@@ -60,7 +60,7 @@ private val Pod01_Ep02 = EpisodeUi(
     isArchived = false
 )
 
-private val Pod01_Ep03 = EpisodeUi(
+val Pod01_Ep03 = EpisodeUi(
     id = "pod01_ep03",
     podcastId = "podcast_01",
     podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
@@ -80,7 +80,7 @@ private val Pod01_Ep03 = EpisodeUi(
     isArchived = false
 )
 
-private val Pod01 = PodcastUi(
+val Pod01 = PodcastUi(
     "podcast_01",
     "link",
     "title",
@@ -94,7 +94,7 @@ private val Pod01 = PodcastUi(
 )
 
 
-private val Pod02_Ep01 = EpisodeUi(
+val Pod02_Ep01 = EpisodeUi(
     id = "pod02_ep01",
     podcastId = "podcast_02",
     podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
@@ -114,7 +114,7 @@ private val Pod02_Ep01 = EpisodeUi(
     isArchived = false
 )
 
-private val Pod02_Ep02 = EpisodeUi(
+val Pod02_Ep02 = EpisodeUi(
     id = "pod02_ep02",
     podcastId = "podcast_02",
     podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
@@ -134,7 +134,7 @@ private val Pod02_Ep02 = EpisodeUi(
     isArchived = false
 )
 
-private val Pod02_Ep03 = EpisodeUi(
+val Pod02_Ep03 = EpisodeUi(
     id = "pod02_ep03",
     podcastId = "podcast_02",
     podcastTitle = "Podcast Name, but it might be long so let's test ellipsizing...",
@@ -154,7 +154,7 @@ private val Pod02_Ep03 = EpisodeUi(
     isArchived = false
 )
 
-private val Pod02 = PodcastUi(
+val Pod02 = PodcastUi(
     "podcast_02",
     "link",
     "title",

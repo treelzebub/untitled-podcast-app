@@ -8,7 +8,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
@@ -33,23 +36,23 @@ class QueueStore @Inject constructor(
     }
 
     private val _stateFlow = MutableStateFlow(PodcastQueue())
+    val stateFlow = _stateFlow.asStateFlow()
 
     fun stateFlow(
         scope: CoroutineScope,
         timeout: Long,
         initialValue: PodcastQueue = PodcastQueue()
     ): SharedFlow<PodcastQueue> {
-        return _stateFlow.stateIn(scope, SharingStarted.WhileSubscribed(timeout), initialValue)
+        return _stateFlow.stateIn(scope, SharingStarted.WhileSubscribed(stopTimeoutMillis = timeout), initialValue)
     }
 
     suspend fun persist(onError: ErrorHandler) {
         try {
             withContext(ioDispatcher) {
-                _stateFlow.collectLatest {
-                    val json = serializer.serialize(it)
-                    app.openFileOutput(NAME, Context.MODE_PRIVATE).use { stream ->
-                        stream.write(json.encodeToByteArray())
-                    }
+                val current = _stateFlow.firstOrNull() ?: return@withContext
+                val json = serializer.serialize(current)
+                app.openFileOutput(NAME, Context.MODE_PRIVATE).use { stream ->
+                    stream.write(json.encodeToByteArray())
                 }
             }
         } catch (e: AssertionError) {
@@ -62,19 +65,20 @@ class QueueStore @Inject constructor(
         }
     }
 
-    suspend fun load(onError: ErrorHandler) {
-        try {
-            val queue = withContext(ioDispatcher) {
+    suspend fun load(onError: ErrorHandler): PodcastQueue? {
+        return try {
+            withContext(ioDispatcher) {
                 app.openFileInput(NAME).bufferedReader().useLines {
                     val str = it.joinToString("")
-                    serializer.deserialize<PodcastQueue>(str)
+                    serializer.deserialize(str)
                 }
             }
-            _stateFlow.emit(queue)
         } catch (e: IOException) {
             onError(e)
+            null
         } catch (e: JsonDataException) {
             onError(e)
+            null
         }
     }
 

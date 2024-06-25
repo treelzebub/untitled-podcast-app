@@ -162,6 +162,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     testImplementation(libs.coroutines.test)
+    testImplementation("app.cash.turbine:turbine:1.1.0")
     testImplementation(libs.robolectric)
     testImplementation(libs.hilt.test) // For Robolectric
     testImplementation(libs.sqldelight.test)
