@@ -49,7 +49,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
                     Timber.d("Updated Feed with url: ${sub.rssLink}. Parsing...")
                     CoroutineScope(ioDispatcher).launch {
                         val parsed = podcastsRepo.parseRssFeed(response.body!!.string())
-                        podcastsRepo.insertOrReplacePodcast(sub.rssLink, parsed)
+                        podcastsRepo.upsertPodcast(sub.rssLink, parsed)
                     }
                     Timber.d("Parsed and persisted Feed with url: ${sub.rssLink}")
                 } else onFailure(call, IOException("Unknown Error"))

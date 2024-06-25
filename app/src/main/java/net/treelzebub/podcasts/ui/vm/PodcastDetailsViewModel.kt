@@ -32,12 +32,13 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     data class State(
         val loading: Boolean = true,
         val podcast: PodcastUi? = null,
-        val episodes: List<EpisodeUi> = listOf()
+        val episodes: List<EpisodeUi> = listOf(),
+        val queue: List<EpisodeUi> = listOf()
     )
 
     private fun getPodcastAndEpisodes(podcastId: String) {
         viewModelScope.launch {
-            repo.getPodcastPair(podcastId).collect { pair ->
+            repo.getPodcastWithEpisodes(podcastId).collect { pair ->
                 _state.update {
                     it.copy(
                         loading = pair == null,
@@ -47,6 +48,14 @@ class PodcastDetailsViewModel @AssistedInject constructor(
                 }
             }
         }
+    }
+
+    fun addToQueue(episode: EpisodeUi) {
+
+    }
+
+    fun addToQueue(index: Int, episode: EpisodeUi) {
+
     }
 
     fun deletePodcast() {

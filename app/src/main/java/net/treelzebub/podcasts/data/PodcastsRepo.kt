@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.data
 
+import androidx.annotation.VisibleForTesting
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -7,13 +8,13 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import net.treelzebub.podcasts.util.ErrorHandler
 import net.treelzebub.podcasts.util.Time
 import net.treelzebub.podcasts.util.sanitizeHtml
 import net.treelzebub.podcasts.util.sanitizeUrl
@@ -24,31 +25,42 @@ import javax.inject.Inject
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
+    private val queueStore: QueueStore,
     private val ioDispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
-        try {
-            Timber.d("Fetching RSS Feed: $rssLink")
-            val feed = rssHandler.fetch(rssLink)
-            insertOrReplacePodcast(rssLink, feed)
-        } catch (e: Exception) {
-            Timber.e("Error parsing RSS Feed", e)
-            onError(e)
+    /** RSS Feeds **/
+    suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) {
+        withIoContext {
+            try {
+                Timber.d("Fetching RSS Feed: $rssLink")
+                val feed = rssHandler.fetch(rssLink)
+                upsertPodcast(rssLink, feed)
+            } catch (e: Exception) {
+                Timber.e("Error parsing RSS Feed", e)
+                onError(e)
+            }
         }
     }
 
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
+    suspend fun getAllRssLinks(): List<SubscriptionDto> {
+        return withIoContext {
+            db.podcastsQueries.get_all_rss_links().executeAsList()
+                .map { SubscriptionDto(it.id, it.rss_link) }
+        }
+    }
+
     /** Podcasts **/
-    suspend fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
+    suspend fun upsertPodcast(rssLink: String, channel: RssChannel) {
         withIoContext {
             db.transaction {
                 val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
                 val latestEpisodeTimestamp = channel.items
                     .maxOfOrNull { Time.zonedEpochSeconds(it.pubDate) } ?: -1L
                 with(channel) {
-                    db.podcastsQueries.insert_or_replace(
+                    db.podcastsQueries.upsert(
                         id = link!!, // Public link to Podcast will be unique, so it's our ID.
                         link = link!!,
                         title = title!!,
@@ -82,28 +94,7 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun insertOrReplacePodcast(podcastUi: PodcastUi) {
-        withIoContext {
-            db.podcastsQueries.insert_or_replace(podcastUi)
-        }
-    }
-
-    suspend fun getPodcastById(id: String): Flow<PodcastUi> {
-        return withIoContext {
-            db.podcastsQueries.get_by_id(id, podcastMapper).executeAsList().asFlow()
-        }
-    }
-
-    suspend fun getPodcastByLink(rssLink: String): Flow<PodcastUi?> {
-        return withIoContext {
-            db.podcastsQueries
-                .get_by_link(rssLink, podcastMapper)
-                .asFlow()
-                .mapToOneOrNull(ioDispatcher)
-        }
-    }
-
-    suspend fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
+    suspend fun getPodcastWithEpisodes(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
         return withIoContext {
             db.podcastsQueries.transactionWithResult {
                 db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
@@ -123,26 +114,13 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getAllRssLinks(): List<SubscriptionDto> {
-        return withIoContext {
-            db.podcastsQueries
-                .get_all_rss_links()
-                .executeAsList()
-                .map { SubscriptionDto(it.id, it.rss_link) }
-        }
-    }
-
-    suspend fun deletePodcastById(link: String) = withIoContext {
-        db.podcastsQueries.delete(link)
+    suspend fun deletePodcastById(podcastId: String) = withIoContext {
+        // Cascading delete of episodes declared in episodes.sq
+        db.podcastsQueries.delete(podcastId)
+        queueStore.removeByPodcastId(podcastId) { TODO() }
     }
 
     /** Episodes **/
-    private suspend fun getAllEpisodes(): List<EpisodeUi> {
-        return withIoContext {
-            db.episodesQueries.get_all(episodeMapper).executeAsList()
-        }
-    }
-
     suspend fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
         return withIoContext {
             db.episodesQueries
@@ -161,64 +139,69 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    private suspend fun <T> withIoContext(block: () -> T): T = withContext(ioDispatcher) { block() }
+    private suspend fun <T> withIoContext(block: suspend () -> T): T = withContext(ioDispatcher) { block() }
 
-    /** Mappers **/
-    private val podcastMapper: (
-        id: String,
-        link: String,
-        title: String,
-        description: String?,
-        email: String?,
-        image_url: String?,
-        last_build_date: Long,
-        rss_link: String,
-        last_local_update: Long,
-        latestEpisodeTimestamp: Long
-    ) -> PodcastUi = { id, link, title, description,
-                       email, image_url, last_build_date,
-                       rss_link, lastLocalUpdate, latestEpisodeTimestamp ->
-        PodcastUi(
-            id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
-            Time.displayFormat(last_build_date), rss_link, lastLocalUpdate, latestEpisodeTimestamp
-        )
-    }
+    companion object {
 
-    private val episodeMapper: (
-        id: String,
-        podcast_id: String,
-        podcast_title: String,
-        title: String,
-        description: String?,
-        date: Long,
-        link: String,
-        streaming_link: String,
-        image_url: String?,
-        duration: String?,
-        has_played: Boolean,
-        progress_seconds: Long,
-        is_bookmarked: Boolean,
-        is_archived: Boolean
-    ) -> EpisodeUi = { id, podcast_id, podcast_title, title,
-                       description, date, link, streaming_link,
-                       image_url, duration, has_played, progress_seconds,
-                       is_bookmarked, is_archived ->
-        EpisodeUi(
-            id = id,
-            podcastId = podcast_id,
-            podcastTitle = podcast_title,
-            title = title,
-            description = description.orEmpty(),
-            displayDate = Time.displayFormat(date),
-            sortDate = date,
-            link = link,
-            streamingLink = streaming_link,
-            imageUrl = image_url.orEmpty(),
-            duration = duration.orEmpty(),
-            hasPlayed = has_played,
-            progressSeconds = progress_seconds.toInt(),
-            isBookmarked = is_bookmarked,
-            isArchived = is_archived
-        )
+        /** Mappers **/
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        val podcastMapper: (
+            id: String,
+            link: String,
+            title: String,
+            description: String?,
+            email: String?,
+            image_url: String?,
+            last_build_date: Long,
+            rss_link: String,
+            last_local_update: Long,
+            latestEpisodeTimestamp: Long
+        ) -> PodcastUi = { id, link, title, description,
+                           email, image_url, last_build_date,
+                           rss_link, lastLocalUpdate, latestEpisodeTimestamp ->
+            PodcastUi(
+                id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
+                Time.displayFormat(last_build_date), rss_link, lastLocalUpdate, latestEpisodeTimestamp
+            )
+        }
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        val episodeMapper: (
+            id: String,
+            podcast_id: String,
+            podcast_title: String,
+            title: String,
+            description: String?,
+            date: Long,
+            link: String,
+            streaming_link: String,
+            image_url: String?,
+            duration: String?,
+            has_played: Boolean,
+            progress_seconds: Long,
+            is_bookmarked: Boolean,
+            is_archived: Boolean
+        ) -> EpisodeUi = { id, podcast_id, podcast_title, title,
+                           description, date, link, streaming_link,
+                           image_url, duration, has_played, progress_seconds,
+                           is_bookmarked, is_archived ->
+            EpisodeUi(
+                id = id,
+                podcastId = podcast_id,
+                podcastTitle = podcast_title,
+                title = title,
+                description = description.orEmpty(),
+                displayDate = Time.displayFormat(date),
+                sortDate = date,
+                link = link,
+                streamingLink = streaming_link,
+                imageUrl = image_url.orEmpty(),
+                duration = duration.orEmpty(),
+                hasPlayed = has_played,
+                progressSeconds = progress_seconds.toInt(),
+                isBookmarked = is_bookmarked,
+                isArchived = is_archived
+            )
+        }
     }
 }

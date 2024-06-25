@@ -13,6 +13,7 @@ plugins {
 sqldelight {
     databases {
         create("Database") {
+            dialect("app.cash.sqldelight:sqlite-3-35-dialect:2.0.2")
             packageName.set("net.treelzebub.podcasts")
         }
     }
@@ -30,6 +31,9 @@ kotlin {
 }
 
 android {
+    val localProps = gradleLocalProperties(rootDir, providers)
+    fun local(key: String): String = localProps.getProperty(key)
+
     buildFeatures.buildConfig = true
 
     namespace = "net.treelzebub.podcasts"
@@ -47,9 +51,8 @@ android {
             useSupportLibrary = true
         }
 
-        val localProps = gradleLocalProperties(rootDir, providers)
-        val apiKeyPodcastIndex: String = localProps.getProperty("API_KEY_PODCAST_INDEX")
-        val apiSecretPodcastIndex: String = localProps.getProperty("API_SECRET_PODCAST_INDEX")
+        val apiKeyPodcastIndex: String = local("API_KEY_PODCAST_INDEX") //localProps.getProperty("API_KEY_PODCAST_INDEX")
+        val apiSecretPodcastIndex: String = local("API_SECRET_PODCAST_INDEX")
         buildConfigField("String", "API_KEY_PODCAST_INDEX", apiKeyPodcastIndex)
         buildConfigField("String", "API_SECRET_PODCAST_INDEX", apiSecretPodcastIndex)
         buildConfigField("String", "USER_AGENT_PODCAST_INDEX", "\"UntitledPodcastApp/$versionName\"")
@@ -67,10 +70,10 @@ android {
             enableV2Signing = true
             enableV3Signing = true
             enableV4Signing = true
-            storeFile = file(env("PODCAST_STORE_PATH"))
-            storePassword = env("PODCAST_STORE_PW")
-            keyAlias = env("PODCAST_KEY_ALIAS")
-            keyPassword = env("PODCAST_KEY_PW")
+            storeFile = file(local("PODCAST_STORE_PATH"))
+            storePassword = local("PODCAST_STORE_PW")
+            keyAlias = local("PODCAST_KEY_ALIAS")
+            keyPassword = local("PODCAST_KEY_PW")
         }
     }
 
@@ -161,6 +164,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     testImplementation(libs.coroutines.test)
+    testImplementation("app.cash.turbine:turbine:1.1.0")
     testImplementation(libs.robolectric)
     testImplementation(libs.hilt.test) // For Robolectric
     testImplementation(libs.sqldelight.test)
@@ -172,5 +176,3 @@ dependencies {
 //    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 //    androidTestImplementation("androidx.work:work-testing:$work")
 }
-
-fun env(key: String): String = System.getenv(key)
