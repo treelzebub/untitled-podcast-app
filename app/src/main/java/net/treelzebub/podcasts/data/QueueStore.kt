@@ -19,23 +19,25 @@ import java.io.IOException
 import javax.inject.Inject
 
 
+data class PodcastQueue(val list: List<EpisodeUi> = emptyList())
+
 class QueueStore @Inject constructor(
     private val app: Application,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    private val serializer: StringSerializer<List<EpisodeUi>>
+    private val serializer: StringSerializer<PodcastQueue>,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
     companion object {
         private const val NAME = "queue.json"
     }
 
-    private val _stateFlow = MutableStateFlow<List<EpisodeUi>>(emptyList())
+    private val _stateFlow = MutableStateFlow(PodcastQueue())
 
     fun stateFlow(
         scope: CoroutineScope,
         timeout: Long,
-        initialValue: List<EpisodeUi> = emptyList()
-    ): SharedFlow<List<EpisodeUi>> {
+        initialValue: PodcastQueue = PodcastQueue()
+    ): SharedFlow<PodcastQueue> {
         return _stateFlow.stateIn(scope, SharingStarted.WhileSubscribed(timeout), initialValue)
     }
 
@@ -64,7 +66,7 @@ class QueueStore @Inject constructor(
             val queue = withContext(ioDispatcher) {
                 app.openFileInput(NAME).bufferedReader().useLines {
                     val str = it.joinToString("")
-                    serializer.deserialize<List<EpisodeUi>>(str)
+                    serializer.deserialize<PodcastQueue>(str)
                 }
             }
             _stateFlow.emit(queue)
@@ -76,41 +78,45 @@ class QueueStore @Inject constructor(
     }
 
     fun add(episodeUi: EpisodeUi) {
-        update { list ->
-            list.toMutableList().apply { add(episodeUi) }
+        update { queue ->
+            queue.copy(list = queue.list.toMutableList().apply { add(episodeUi) })
         }
     }
 
     fun add(index: Int, episodeUi: EpisodeUi) {
-        update { list ->
+        update { queue ->
+            val list = queue.list
             if (index !in list.indices) throw IndexOutOfBoundsException("Invalid index: $index")
-            list.toMutableList().apply { add(index, episodeUi) }
+            queue.copy(list = list.toMutableList().apply { add(index, episodeUi) })
         }
     }
 
     fun reorder(from: Int, to: Int) {
-        _stateFlow.update { list ->
-            list.toMutableList().apply {
+        update { queue ->
+            val list = queue.list
+            queue.copy(list = list.toMutableList().apply {
                 if (from in indices && to in indices) {
                     add(to, removeAt(from))
                 } else throw IndexOutOfBoundsException("Invalid index: from=$from, to=$to")
-            }
+            })
         }
     }
 
     fun remove(episodeId: String) {
-        update { list ->
+        update { queue ->
+            val list = queue.list
             val episode = list.find { it.id == episodeId } ?: throw NoSuchElementException("No episode with id: $episodeId")
-            list.toMutableList().apply { remove(episode) }
+            queue.copy(list = list.toMutableList().apply { remove(episode) })
         }
     }
 
     fun remove(index: Int) {
-        update { list ->
+        update { queue ->
+            val list = queue.list
             if (index !in list.indices) throw IndexOutOfBoundsException()
-            list.toMutableList().apply { removeAt(index) }
+            queue.copy(list = list.toMutableList().apply { removeAt(index) })
         }
     }
 
-    private fun update(block: (List<EpisodeUi>) -> List<EpisodeUi>) = _stateFlow.update(block)
+    private fun update(block: (PodcastQueue) -> PodcastQueue) = _stateFlow.update(block)
 }

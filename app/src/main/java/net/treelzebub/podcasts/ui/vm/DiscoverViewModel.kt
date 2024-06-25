@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DiscoverViewModel @Inject constructor(
     private val queriesRepo: SearchQueriesRepo,
-    private val podcastsRepo: PodcastsRepo,
+    private val podcastsRepo: PodcastsRepo
 ) : StatefulViewModel<DiscoverViewModel.State>(State()) {
 
     @Stable

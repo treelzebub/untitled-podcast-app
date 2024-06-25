@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 
@@ -16,7 +17,8 @@ import net.treelzebub.podcasts.ui.models.PodcastUi
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
 class PodcastDetailsViewModel @AssistedInject constructor(
     @Assisted val podcastId: String,
-    private val repo: PodcastsRepo
+    private val repo: PodcastsRepo,
+    private val queueStore: QueueStore
 ) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 
     @AssistedFactory
@@ -47,6 +49,14 @@ class PodcastDetailsViewModel @AssistedInject constructor(
                 }
             }
         }
+    }
+
+    fun addToQueue(episode: EpisodeUi) {
+        queueStore.add(episode)
+    }
+
+    fun addToQueue(index: Int, episode: EpisodeUi) {
+        queueStore.add(index, episode)
     }
 
     fun deletePodcast() {

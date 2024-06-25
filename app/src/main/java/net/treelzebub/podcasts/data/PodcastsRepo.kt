@@ -28,13 +28,15 @@ class PodcastsRepo @Inject constructor(
 ) {
 
     suspend fun fetchRssFeed(rssLink: String, onError: (Exception) -> Unit) {
-        try {
-            Timber.d("Fetching RSS Feed: $rssLink")
-            val feed = rssHandler.fetch(rssLink)
-            insertOrReplacePodcast(rssLink, feed)
-        } catch (e: Exception) {
-            Timber.e("Error parsing RSS Feed", e)
-            onError(e)
+        withIoContext {
+            try {
+                Timber.d("Fetching RSS Feed: $rssLink")
+                val feed = rssHandler.fetch(rssLink)
+                insertOrReplacePodcast(rssLink, feed)
+            } catch (e: Exception) {
+                Timber.e("Error parsing RSS Feed", e)
+                onError(e)
+            }
         }
     }
 
@@ -161,7 +163,7 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    private suspend fun <T> withIoContext(block: () -> T): T = withContext(ioDispatcher) { block() }
+    private suspend fun <T> withIoContext(block: suspend () -> T): T = withContext(ioDispatcher) { block() }
 
     /** Mappers **/
     private val podcastMapper: (
