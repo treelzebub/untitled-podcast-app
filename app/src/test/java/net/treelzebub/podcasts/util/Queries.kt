@@ -1,10 +1,9 @@
-package net.treelzebub.podcasts.data
+package net.treelzebub.podcasts.util
 
 import net.treelzebub.podcasts.EpisodesQueries
 import net.treelzebub.podcasts.PodcastsQueries
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import net.treelzebub.podcasts.util.Time
 
 fun EpisodesQueries.upsert(vararg episodes: EpisodeUi) {
     transaction {
@@ -17,10 +16,10 @@ fun EpisodesQueries.upsert(vararg episodes: EpisodeUi) {
     }
 }
 
-fun PodcastsQueries.insert_or_replace(vararg podcasts: PodcastUi) {
+fun PodcastsQueries.upsert(vararg podcasts: PodcastUi) {
     transaction {
         podcasts.forEach {
-            insert_or_replace(
+            upsert(
                 it.id, it.link, it.title, it.description, it.email, it.imageUrl,
                 Time.zonedEpochSeconds(it.lastBuildDate), it.rssLink, it.lastLocalUpdate,
                 it.latestEpisodeTimestamp

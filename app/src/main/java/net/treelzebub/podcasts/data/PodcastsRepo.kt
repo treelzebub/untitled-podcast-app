@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.data
 
+import androidx.annotation.VisibleForTesting
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -34,7 +35,7 @@ class PodcastsRepo @Inject constructor(
             try {
                 Timber.d("Fetching RSS Feed: $rssLink")
                 val feed = rssHandler.fetch(rssLink)
-                insertOrReplacePodcast(rssLink, feed)
+                upsertPodcast(rssLink, feed)
             } catch (e: Exception) {
                 Timber.e("Error parsing RSS Feed", e)
                 onError(e)
@@ -52,14 +53,14 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Podcasts **/
-    suspend fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
+    suspend fun upsertPodcast(rssLink: String, channel: RssChannel) {
         withIoContext {
             db.transaction {
                 val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
                 val latestEpisodeTimestamp = channel.items
                     .maxOfOrNull { Time.zonedEpochSeconds(it.pubDate) } ?: -1L
                 with(channel) {
-                    db.podcastsQueries.insert_or_replace(
+                    db.podcastsQueries.upsert(
                         id = link!!, // Public link to Podcast will be unique, so it's our ID.
                         link = link!!,
                         title = title!!,
@@ -140,62 +141,67 @@ class PodcastsRepo @Inject constructor(
 
     private suspend fun <T> withIoContext(block: suspend () -> T): T = withContext(ioDispatcher) { block() }
 
-    /** Mappers **/
-    private val podcastMapper: (
-        id: String,
-        link: String,
-        title: String,
-        description: String?,
-        email: String?,
-        image_url: String?,
-        last_build_date: Long,
-        rss_link: String,
-        last_local_update: Long,
-        latestEpisodeTimestamp: Long
-    ) -> PodcastUi = { id, link, title, description,
-                       email, image_url, last_build_date,
-                       rss_link, lastLocalUpdate, latestEpisodeTimestamp ->
-        PodcastUi(
-            id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
-            Time.displayFormat(last_build_date), rss_link, lastLocalUpdate, latestEpisodeTimestamp
-        )
-    }
+    companion object {
 
-    private val episodeMapper: (
-        id: String,
-        podcast_id: String,
-        podcast_title: String,
-        title: String,
-        description: String?,
-        date: Long,
-        link: String,
-        streaming_link: String,
-        image_url: String?,
-        duration: String?,
-        has_played: Boolean,
-        progress_seconds: Long,
-        is_bookmarked: Boolean,
-        is_archived: Boolean
-    ) -> EpisodeUi = { id, podcast_id, podcast_title, title,
-                       description, date, link, streaming_link,
-                       image_url, duration, has_played, progress_seconds,
-                       is_bookmarked, is_archived ->
-        EpisodeUi(
-            id = id,
-            podcastId = podcast_id,
-            podcastTitle = podcast_title,
-            title = title,
-            description = description.orEmpty(),
-            displayDate = Time.displayFormat(date),
-            sortDate = date,
-            link = link,
-            streamingLink = streaming_link,
-            imageUrl = image_url.orEmpty(),
-            duration = duration.orEmpty(),
-            hasPlayed = has_played,
-            progressSeconds = progress_seconds.toInt(),
-            isBookmarked = is_bookmarked,
-            isArchived = is_archived
-        )
+        /** Mappers **/
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        val podcastMapper: (
+            id: String,
+            link: String,
+            title: String,
+            description: String?,
+            email: String?,
+            image_url: String?,
+            last_build_date: Long,
+            rss_link: String,
+            last_local_update: Long,
+            latestEpisodeTimestamp: Long
+        ) -> PodcastUi = { id, link, title, description,
+                           email, image_url, last_build_date,
+                           rss_link, lastLocalUpdate, latestEpisodeTimestamp ->
+            PodcastUi(
+                id, link, title, description.orEmpty(), email.orEmpty(), image_url.orEmpty(),
+                Time.displayFormat(last_build_date), rss_link, lastLocalUpdate, latestEpisodeTimestamp
+            )
+        }
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        val episodeMapper: (
+            id: String,
+            podcast_id: String,
+            podcast_title: String,
+            title: String,
+            description: String?,
+            date: Long,
+            link: String,
+            streaming_link: String,
+            image_url: String?,
+            duration: String?,
+            has_played: Boolean,
+            progress_seconds: Long,
+            is_bookmarked: Boolean,
+            is_archived: Boolean
+        ) -> EpisodeUi = { id, podcast_id, podcast_title, title,
+                           description, date, link, streaming_link,
+                           image_url, duration, has_played, progress_seconds,
+                           is_bookmarked, is_archived ->
+            EpisodeUi(
+                id = id,
+                podcastId = podcast_id,
+                podcastTitle = podcast_title,
+                title = title,
+                description = description.orEmpty(),
+                displayDate = Time.displayFormat(date),
+                sortDate = date,
+                link = link,
+                streamingLink = streaming_link,
+                imageUrl = image_url.orEmpty(),
+                duration = duration.orEmpty(),
+                hasPlayed = has_played,
+                progressSeconds = progress_seconds.toInt(),
+                isBookmarked = is_bookmarked,
+                isArchived = is_archived
+            )
+        }
     }
 }

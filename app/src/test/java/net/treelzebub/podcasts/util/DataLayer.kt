@@ -1,13 +1,32 @@
-package net.treelzebub.podcasts.data
+package net.treelzebub.podcasts.util
 
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
+import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.Database
-import net.treelzebub.podcasts.util.TestCoroutines
+import net.treelzebub.podcasts.data.MoshiSerializer
+import net.treelzebub.podcasts.data.PodcastQueue
+import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.data.QueueStore
 import java.util.Properties
 
+
+fun podcastRepo(): PodcastsRepo {
+    return PodcastsRepo(StubRssHandler(), getDb(), queueStore(), TestCoroutines.dispatcher)
+}
+
+fun queueStore(): QueueStore {
+    return QueueStore(
+        getApplicationContext<App>(),
+        MoshiSerializer(PodcastQueue::class.java),
+        TestCoroutines.dispatcher
+    )
+}
+
+fun getDb(): Database = TestDb.instance
 
 fun withDatabase(fn: suspend CoroutineScope.(Database) -> Unit) = runTest(TestCoroutines.dispatcher) {
     createDriver()
@@ -25,8 +44,6 @@ private fun createDriver() {
 }
 
 private fun closeDriver() = TestDb.clear()
-
-private fun getDb(): Database = TestDb.instance
 
 private object TestDb {
     private var _driver: SqlDriver? = null

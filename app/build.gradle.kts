@@ -13,6 +13,7 @@ plugins {
 sqldelight {
     databases {
         create("Database") {
+            dialect("app.cash.sqldelight:sqlite-3-35-dialect:2.0.2")
             packageName.set("net.treelzebub.podcasts")
         }
     }

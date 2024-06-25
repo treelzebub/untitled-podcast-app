@@ -11,13 +11,13 @@ CREATE TABLE podcast (
     latest_episode_timestamp INTEGER NOT NULL
 );
 
-insert_or_replace:
-INSERT OR REPLACE INTO podcast
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
--- INSERT INTO podcast(id, link, title, description, email, image_url, last_build_date, rss_link, last_local_update, latest_episode_timestamp)
--- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
--- ON CONFLICT(podcastId) DO
--- UPDATE SET id= ...;
+upsert:
+INSERT INTO podcast(id, link, title, description, email, image_url, last_build_date, rss_link, last_local_update, latest_episode_timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(id) DO
+UPDATE SET id=excluded.id, link=excluded.link, title=excluded.title, description=excluded.description, email=excluded.email,
+    image_url=excluded.image_url, last_build_date=excluded.last_build_date, rss_link=excluded.rss_link,
+    last_local_update=excluded.last_local_update, latest_episode_timestamp=excluded.latest_episode_timestamp;
 
 delete:
 DELETE FROM podcast

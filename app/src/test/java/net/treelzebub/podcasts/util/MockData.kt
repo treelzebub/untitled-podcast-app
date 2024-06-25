@@ -1,14 +1,12 @@
 package net.treelzebub.podcasts.util
 
 import net.treelzebub.podcasts.Database
-import net.treelzebub.podcasts.data.insert_or_replace
-import net.treelzebub.podcasts.data.upsert
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 
 
 fun injectMockData(db: Database) {
-    db.podcastsQueries.insert_or_replace(Pod01, Pod02)
+    db.podcastsQueries.upsert(Pod01, Pod02)
     db.episodesQueries.upsert(Pod01_Ep01, Pod01_Ep02, Pod01_Ep03, Pod02_Ep01, Pod02_Ep02, Pod02_Ep03)
 }
 

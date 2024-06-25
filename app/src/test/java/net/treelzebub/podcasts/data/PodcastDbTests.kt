@@ -1,40 +1,39 @@
 package net.treelzebub.podcasts.data
 
-import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import net.treelzebub.podcasts.App
+import net.treelzebub.podcasts.data.PodcastsRepo.Companion.podcastMapper
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import net.treelzebub.podcasts.util.StubRssHandler
 import net.treelzebub.podcasts.util.TestCoroutines
 import net.treelzebub.podcasts.util.injectMockData
+import net.treelzebub.podcasts.util.podcastRepo
+import net.treelzebub.podcasts.util.upsert
+import net.treelzebub.podcasts.util.withDatabase
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class PodcastDbTests {
 
-    @Before
-    fun setUp() {
+    @Before fun setUp() {
         Dispatchers.setMain(TestCoroutines.dispatcher)
     }
 
-    @After
-    fun tearDown() {
+    @After fun tearDown() {
         Dispatchers.resetMain()
     }
 
     @Test fun sanity() = withDatabase { db ->
-        db.podcastsQueries.insert_or_replace(
+        db.podcastsQueries.upsert(
             "podcastId",
             "link",
             "title",
@@ -71,13 +70,21 @@ class PodcastDbTests {
     // TODO update with Hilt best practices
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
         injectMockData(db)
-        TestCoroutines.scope.launch {
-            val queueStore = QueueStore(getApplicationContext<App>(), MoshiSerializer(PodcastQueue::class.java), TestCoroutines.dispatcher)
-            val repo = PodcastsRepo(StubRssHandler(), db, queueStore, TestCoroutines.dispatcher)
-            var list: List<PodcastUi> = listOf()
-            repo.getPodcastsByLatestEpisode().collectLatest { list = it }
+        val repo = podcastRepo()
+        var list: List<PodcastUi> = listOf()
+        repo.getPodcastsByLatestEpisode().collectLatest { list = it }
 
-            assertEquals("podcast_02", list.first().id)
-        }
+        assertEquals("podcast_02", list.first().id)
+    }
+
+    @Test fun upsert() = withDatabase { db ->
+        injectMockData(db)
+        val podcast = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
+        val other = podcast.copy(link = "otherLink", title = "otherTitle", description = "otherDescription", lastLocalUpdate = 43562436L)
+
+        db.podcastsQueries.upsert(other)
+
+        val updated = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
+        assertEquals(other, updated)
     }
 }
