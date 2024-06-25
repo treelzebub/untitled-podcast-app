@@ -1,5 +1,6 @@
-package net.treelzebub.podcasts.db
+package net.treelzebub.podcasts.data
 
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -7,13 +8,18 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.StubRssHandler
+import net.treelzebub.podcasts.util.TestCoroutines
+import net.treelzebub.podcasts.util.injectMockData
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class PodcastDbTests {
 
@@ -62,10 +68,12 @@ class PodcastDbTests {
         assertEquals(1000L, episodes.first().date)
     }
 
+    // TODO update with Hilt best practices
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
         injectMockData(db)
         TestCoroutines.scope.launch {
-            val repo = PodcastsRepo(StubRssHandler(), db, TestCoroutines.dispatcher)
+            val queueStore = QueueStore(getApplicationContext<App>(), MoshiSerializer(PodcastQueue::class.java), TestCoroutines.dispatcher)
+            val repo = PodcastsRepo(StubRssHandler(), db, queueStore, TestCoroutines.dispatcher)
             var list: List<PodcastUi> = listOf()
             repo.getPodcastsByLatestEpisode().collectLatest { list = it }
 

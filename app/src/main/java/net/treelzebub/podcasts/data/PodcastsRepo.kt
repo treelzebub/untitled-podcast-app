@@ -28,6 +28,7 @@ class PodcastsRepo @Inject constructor(
     private val ioDispatcher: CoroutineDispatcher
 ) {
 
+    /** RSS Feeds **/
     suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) {
         withIoContext {
             try {
@@ -42,6 +43,13 @@ class PodcastsRepo @Inject constructor(
     }
 
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
+
+    suspend fun getAllRssLinks(): List<SubscriptionDto> {
+        return withIoContext {
+            db.podcastsQueries.get_all_rss_links().executeAsList()
+                .map { SubscriptionDto(it.id, it.rss_link) }
+        }
+    }
 
     /** Podcasts **/
     suspend fun insertOrReplacePodcast(rssLink: String, channel: RssChannel) {
@@ -85,7 +93,7 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getPodcastPair(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
+    suspend fun getPodcastWithEpisodes(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
         return withIoContext {
             db.podcastsQueries.transactionWithResult {
                 db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
@@ -102,13 +110,6 @@ class PodcastsRepo @Inject constructor(
     suspend fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
         return withIoContext {
             db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
-        }
-    }
-
-    suspend fun getAllRssLinks(): List<SubscriptionDto> {
-        return withIoContext {
-            db.podcastsQueries.get_all_rss_links().executeAsList()
-                .map { SubscriptionDto(it.id, it.rss_link) }
         }
     }
 

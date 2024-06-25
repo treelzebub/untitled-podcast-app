@@ -1,24 +1,21 @@
-package net.treelzebub.podcasts.db
+package net.treelzebub.podcasts.data
 
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.TestCoroutineScheduler
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import net.treelzebub.podcasts.Database
-import net.treelzebub.podcasts.db.TestCoroutines.dispatcher
+import net.treelzebub.podcasts.util.TestCoroutines
 import java.util.Properties
 
-object TestCoroutines {
-    val scheduler = TestCoroutineScheduler()
-    val dispatcher = StandardTestDispatcher(scheduler)
-    val scope = TestScope(dispatcher)
+
+fun withDatabase(fn: suspend CoroutineScope.(Database) -> Unit) = runTest(TestCoroutines.dispatcher) {
+    createDriver()
+    fn(getDb())
+    closeDriver()
 }
 
-fun createDriver() {
+private fun createDriver() {
     val driver = JdbcSqliteDriver(
         url = JdbcSqliteDriver.IN_MEMORY,
         properties = Properties().apply { put("foreign_keys", "true") }
@@ -27,19 +24,16 @@ fun createDriver() {
     TestDb.setUp(driver)
 }
 
-fun closeDriver() = TestDb.clear()
+private fun closeDriver() = TestDb.clear()
 
-fun getDb(): Database = TestDb.instance
-
-fun withDatabase(fn: suspend CoroutineScope.(Database) -> Unit) = runTest(dispatcher) {
-    createDriver()
-    fn(getDb())
-    closeDriver()
-}
+private fun getDb(): Database = TestDb.instance
 
 private object TestDb {
     private var _driver: SqlDriver? = null
     private var _instance: Database? = null
+
+    val instance: Database
+        get() = _instance!!
 
     fun setUp(driver: SqlDriver) {
         val db = Database(driver)
@@ -52,7 +46,4 @@ private object TestDb {
         _instance = null
         _driver = null
     }
-
-    val instance: Database
-        get() = _instance!!
 }

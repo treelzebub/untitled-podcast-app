@@ -6,7 +6,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -17,8 +16,7 @@ import net.treelzebub.podcasts.ui.models.PodcastUi
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
 class PodcastDetailsViewModel @AssistedInject constructor(
     @Assisted val podcastId: String,
-    private val repo: PodcastsRepo,
-    private val externalScope: CoroutineScope
+    private val repo: PodcastsRepo
 ) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 
     @AssistedFactory
@@ -40,7 +38,7 @@ class PodcastDetailsViewModel @AssistedInject constructor(
 
     private fun getPodcastAndEpisodes(podcastId: String) {
         viewModelScope.launch {
-            repo.getPodcastPair(podcastId).collect { pair ->
+            repo.getPodcastWithEpisodes(podcastId).collect { pair ->
                 _state.update {
                     it.copy(
                         loading = pair == null,

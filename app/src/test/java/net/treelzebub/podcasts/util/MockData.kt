@@ -1,11 +1,10 @@
-package net.treelzebub.podcasts.db
+package net.treelzebub.podcasts.util
 
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.data.insert_or_replace
 import net.treelzebub.podcasts.data.upsert
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import net.treelzebub.podcasts.util.Time
 
 
 fun injectMockData(db: Database) {
