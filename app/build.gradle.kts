@@ -51,7 +51,7 @@ android {
             useSupportLibrary = true
         }
 
-        val apiKeyPodcastIndex: String = local("API_KEY_PODCAST_INDEX") //localProps.getProperty("API_KEY_PODCAST_INDEX")
+        val apiKeyPodcastIndex: String = local("API_KEY_PODCAST_INDEX")
         val apiSecretPodcastIndex: String = local("API_SECRET_PODCAST_INDEX")
         buildConfigField("String", "API_KEY_PODCAST_INDEX", apiKeyPodcastIndex)
         buildConfigField("String", "API_SECRET_PODCAST_INDEX", apiSecretPodcastIndex)
@@ -164,7 +164,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     testImplementation(libs.coroutines.test)
-    testImplementation("app.cash.turbine:turbine:1.1.0")
+    testImplementation(libs.turbine)
     testImplementation(libs.robolectric)
     testImplementation(libs.hilt.test) // For Robolectric
     testImplementation(libs.sqldelight.test)
