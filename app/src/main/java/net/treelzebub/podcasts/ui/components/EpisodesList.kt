@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -18,9 +17,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.EpisodeUi
-import net.treelzebub.podcasts.ui.screens.destinations.NowPlayingScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import androidx.compose.foundation.lazy.items
+import net.treelzebub.podcasts.ui.screens.destinations.EpisodeDetailDestination
 
 @Composable
 fun EpisodesList(
@@ -42,10 +41,10 @@ fun EpisodesList(
 }
 
 @Composable
-fun EpisodeItem(navigator: DestinationsNavigator, item: EpisodeUi) {
+fun EpisodeItem(navigator: DestinationsNavigator, episode: EpisodeUi) {
     ItemCard(
         modifier = Modifier.clickable {
-            navigator.navigate(NowPlayingScreenDestination(item.id))
+            navigator.navigate(EpisodeDetailDestination(episode.id))
         }
     ) {
         Column(
@@ -58,14 +57,14 @@ fun EpisodeItem(navigator: DestinationsNavigator, item: EpisodeUi) {
             BasicText(
                 modifier = Modifier.padding(bottom = 2.dp),
                 style = TextStyles.CardSubtitle,
-                text = item.title
+                text = episode.title
             )
-            BasicText(modifier = Modifier.padding(bottom = 2.dp), style = TextStyles.CardDate, text = item.displayDate)
+            BasicText(modifier = Modifier.padding(bottom = 2.dp), style = TextStyles.CardDate, text = episode.displayDate)
             BasicText(
                 modifier = Modifier.height(72.dp),
                 style = TextStyle(textAlign = TextAlign.Start),
                 overflow = TextOverflow.Ellipsis,
-                text = item.description
+                text = episode.description
             )
         }
     }

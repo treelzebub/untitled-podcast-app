@@ -15,7 +15,7 @@ import net.treelzebub.podcasts.ui.models.PodcastUi
 
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
 class PodcastDetailsViewModel @AssistedInject constructor(
-    @Assisted val podcastId: String,
+    @Assisted private val podcastId: String,
     private val repo: PodcastsRepo
 ) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
 

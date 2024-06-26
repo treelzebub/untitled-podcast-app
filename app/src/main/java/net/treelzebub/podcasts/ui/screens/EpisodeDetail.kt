@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.screens
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,9 +11,11 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
 
 @Destination
 @Composable
-fun EpisodeDetail(id: String) {
-    val vm: EpisodeDetailViewModel = hiltViewModel()
+fun EpisodeDetail(episodeId: String) {
+    val vm = hiltViewModel<EpisodeDetailViewModel, EpisodeDetailViewModel.Factory>(
+        creationCallback = { factory -> factory.create(episodeId = episodeId) }
+    )
     val episode by remember { vm.state }.collectAsState()
-    vm.getEpisode(id)
 
+    Text(text = "Episode Details")
 }
