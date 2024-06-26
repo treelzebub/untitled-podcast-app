@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.*
 
 @HiltViewModel(assistedFactory = EpisodeDetailViewModel.Factory::class)
 class EpisodeDetailViewModel @AssistedInject constructor(
@@ -22,6 +23,10 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         fun create(episodeId: String): EpisodeDetailViewModel
     }
 
+    enum class EpisodeDetailAction {
+        Fave, Share, Download, AddToQueue, Play, MarkPlayed, Archive
+    }
+
     data class EpisodeState(
         val loading: Boolean = true,
         val episodeUi: EpisodeUi? = null
@@ -31,7 +36,47 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         getEpisode(episodeId)
     }
 
-    fun getEpisode(episodeId: String) {
+    val actionHandler: (EpisodeDetailAction) -> Unit = {
+        when (it) {
+            Fave -> fave()
+            Share -> share()
+            Download -> download()
+            AddToQueue -> addToQueue()
+            Play -> playPause()
+            MarkPlayed -> markPlayed()
+            Archive -> archive()
+        }
+    }
+
+    private fun fave() {
+
+    }
+
+    private fun share() {
+
+    }
+
+    private fun playPause() {
+
+    }
+
+    private fun download() {
+
+    }
+
+    private fun addToQueue() {
+
+    }
+
+    private fun markPlayed() {
+
+    }
+
+    private fun archive() {
+
+    }
+
+    private fun getEpisode(episodeId: String) {
         viewModelScope.launch {
             repo.getEpisodeById(episodeId).collectLatest { episode ->
                 _state.update { it.copy(loading = false, episodeUi = episode) }
