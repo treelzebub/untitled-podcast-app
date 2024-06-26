@@ -17,6 +17,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Play
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Share
 
+
 @HiltViewModel(assistedFactory = EpisodeDetailViewModel.Factory::class)
 class EpisodeDetailViewModel @AssistedInject constructor(
     private val repo: PodcastsRepo,
@@ -75,7 +76,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun addToQueue() {
-
+        viewModelScope.launch {
+            episode?.let { repo.addToQueue(it) { TODO() } }
+        }
     }
 
     private fun toggleHasPlayed() {

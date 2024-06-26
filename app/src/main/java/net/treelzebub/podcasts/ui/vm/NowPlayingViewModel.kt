@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NowPlayingViewModel @Inject constructor(
-    private val repo: PodcastsRepo,
+    private val repo: PodcastsRepo
 ) : StatefulViewModel<NowPlayingViewModel.State>(State()) {
 
     @Stable
