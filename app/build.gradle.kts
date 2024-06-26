@@ -13,7 +13,7 @@ plugins {
 sqldelight {
     databases {
         create("Database") {
-            dialect("app.cash.sqldelight:sqlite-3-35-dialect:2.0.2")
+            dialect(libs.sqldelight.sql335)
             packageName.set("net.treelzebub.podcasts")
         }
     }
@@ -37,12 +37,12 @@ android {
     buildFeatures.buildConfig = true
 
     namespace = "net.treelzebub.podcasts"
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "net.treelzebub.podcasts"
-        minSdk = 28
-        targetSdk = 34
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = compileSdk
         versionCode = 1
         versionName = "0.1"
 
@@ -100,7 +100,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
     }
     packaging {
         resources {
