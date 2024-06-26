@@ -78,7 +78,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     private fun getEpisode(episodeId: String) {
         viewModelScope.launch {
-            repo.getEpisodeById(episodeId).collectLatest { episode ->
+            repo.getEpisodeById(episodeId).collect { episode ->
                 _state.update { it.copy(loading = false, episodeUi = episode) }
             }
         }

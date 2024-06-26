@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,9 +18,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.EpisodeUi
-import net.treelzebub.podcasts.ui.theme.TextStyles
-import androidx.compose.foundation.lazy.items
 import net.treelzebub.podcasts.ui.screens.destinations.EpisodeDetailDestination
+import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Composable
 fun EpisodesList(
@@ -27,11 +27,7 @@ fun EpisodesList(
     modifier: Modifier,
     episodes: List<EpisodeUi>
 ) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .then(modifier)
-    ) {
+    Column(modifier = Modifier.fillMaxSize().then(modifier)) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = episodes, key = { it.id }) {
                 EpisodeItem(navigator, it)
@@ -59,7 +55,11 @@ fun EpisodeItem(navigator: DestinationsNavigator, episode: EpisodeUi) {
                 style = TextStyles.CardSubtitle,
                 text = episode.title
             )
-            BasicText(modifier = Modifier.padding(bottom = 2.dp), style = TextStyles.CardDate, text = episode.displayDate)
+            BasicText(
+                modifier = Modifier.padding(bottom = 2.dp),
+                style = TextStyles.CardDate,
+                text = episode.displayDate
+            )
             BasicText(
                 modifier = Modifier.height(72.dp),
                 style = TextStyle(textAlign = TextAlign.Start),

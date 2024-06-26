@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -17,6 +21,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,27 +60,21 @@ fun EpisodeContent(
     episode: EpisodeUi,
     actionHandler: (EpisodeDetailViewModel.EpisodeDetailAction) -> Unit
 ) {
+    // TODO move all to reusable theme values
+    val buttonPadding = 18.dp
+    val outerPadding = 16.dp
+    val fontSize = 24.sp
+
     Scaffold(
         modifier = Modifier.fillMaxSize().then(modifier),
-        topBar = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Absolute.Right
-            ) {
-                Text(text = "♥", Modifier.padding(16.dp).clickable { actionHandler(Fave) })
-                Text(
-                    text = "\uD83D\uDCE4",
-                    Modifier.padding(16.dp).clickable { actionHandler(Share) })
-            }
-        },
+        topBar = { EpisodeDetailTopBar(modifier = Modifier, actionHandler = actionHandler) },
         bottomBar = {}
     ) { contentPadding ->
         Column(
-            modifier = Modifier.padding(contentPadding)
+            modifier = Modifier.padding(contentPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AsyncImage(model = episode.imageUrl, contentDescription = "")
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
+            AsyncImage(modifier = Modifier.padding(buttonPadding).size(256.dp).clip(RoundedCornerShape(8.dp)), model = episode.imageUrl, contentDescription = "")
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -82,39 +82,61 @@ fun EpisodeContent(
             ) {
                 Text(
                     text = "\uD83D\uDCBE",
-                    modifier = Modifier.padding(18.dp).clickable { actionHandler(Download) },
-                    fontSize = 24.sp
+                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(Download) },
+                    fontSize = fontSize
                 )
                 Text(
                     text = "➕",
-                    modifier = Modifier.padding(18.dp).clickable { actionHandler(AddToQueue) },
-                    fontSize = 24.sp
+                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(AddToQueue) },
+                    fontSize = fontSize
                 )
                 Button(
-                    modifier = Modifier.padding(18.dp),
+                    modifier = Modifier.padding(buttonPadding),
                     onClick = { actionHandler(Play) }
                 ) {
-                    Text(text = "▶", fontSize = 18.sp)
+                    Text(text = "▶", fontSize = fontSize)
                 }
                 Text(
-                    text = "✔",
-                    modifier = Modifier.padding(24.dp).clickable { actionHandler(MarkPlayed) },
-                    fontSize = 24.sp
+                    text = "\u2714\uFE0F",
+                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(MarkPlayed) },
+                    fontSize = fontSize
                 )
                 Text(
                     text = "\uD83D\uDDC4\uFE0F",
-                    modifier = Modifier.padding(24.dp).clickable { actionHandler(Archive) },
-                    fontSize = 24.sp
+                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(Archive) },
+                    fontSize = fontSize + 2.sp
                 )
             }
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Spacer(modifier = Modifier.padding(vertical = 4.dp))
+
+            Row(modifier = Modifier.padding(horizontal = outerPadding)) {
                 Text(text = episode.displayDate)
                 Spacer(modifier = Modifier.weight(1.0f))
                 Text(text = episode.duration)
             }
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            Text(modifier = Modifier.padding(horizontal = 16.dp), text = episode.description)
+            Spacer(modifier = Modifier.padding(vertical = 2.dp))
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                Text(modifier = Modifier.padding(horizontal = outerPadding), text = episode.description)
+            }
         }
     }
+}
+
+@Composable
+fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDetailViewModel.EpisodeDetailAction) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().then(modifier),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Absolute.Right
+    ) {
+        Text(fontSize = 24.sp, text = "♥", modifier = Modifier.padding(16.dp).clickable { actionHandler(Fave) })
+        Text(
+            fontSize = 24.sp,
+            text = "\uD83D\uDCE4",
+            modifier = Modifier.padding(16.dp).clickable { actionHandler(Share) })
+    }
+}
+
+operator fun TextUnit.plus(other: TextUnit): TextUnit {
+    return (this.value + other.value).sp
 }
