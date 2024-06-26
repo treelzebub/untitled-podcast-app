@@ -22,6 +22,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 
+/** TODO revisit this dependency graph, this class is outta hand **/
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
@@ -138,6 +139,45 @@ class PodcastsRepo @Inject constructor(
                 .mapToOne(ioDispatcher)
         }
     }
+
+    suspend fun setIsBookmarked(episodeId: String, isBookmarked: Boolean) {
+        withIoContext {
+            db.episodesQueries.set_is_bookmarked(id = episodeId, is_bookmarked = isBookmarked)
+        }
+    }
+
+    suspend fun setHasPlayed(episodeId: String, hasPlayed: Boolean) {
+        withIoContext {
+            db.episodesQueries.set_has_played(id = episodeId, has_played = hasPlayed)
+        }
+    }
+
+    suspend fun setIsArchived(episodeId: String, isArchived: Boolean) {
+        withIoContext {
+            db.episodesQueries.set_is_archived(id = episodeId, is_archived = isArchived)
+        }
+    }
+
+
+    /** Queue **/
+    suspend fun addToQueue(episode: EpisodeUi, errorHandler: ErrorHandler) {
+        withIoContext {
+            queueStore.add(episode, errorHandler)
+        }
+    }
+
+    suspend fun removeFromQueue(episodeId: String, errorHandler: ErrorHandler) {
+        withIoContext {
+            queueStore.remove(episodeId, errorHandler)
+        }
+    }
+
+    suspend fun reorderQueue(from: Int, to: Int, errorHandler: ErrorHandler) {
+        withIoContext {
+            queueStore.reorder(from, to, errorHandler)
+        }
+    }
+
 
     private suspend fun <T> withIoContext(block: suspend () -> T): T = withContext(ioDispatcher) { block() }
 

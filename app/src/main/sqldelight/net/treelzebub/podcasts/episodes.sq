@@ -81,3 +81,18 @@ ORDER BY date DESC;
 
 delete_all:
 DELETE FROM episode;
+
+set_is_bookmarked:
+UPDATE episode
+SET is_bookmarked = :is_bookmarked
+WHERE episode.id = :id;
+
+set_has_played:
+UPDATE episode
+SET has_played = :has_played
+WHERE episode.id = :id;
+
+set_is_archived:
+UPDATE episode
+SET is_archived = :is_archived
+WHERE episode.id = :id;
