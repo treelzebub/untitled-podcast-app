@@ -139,6 +139,25 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
+    suspend fun setIsBookmarked(episodeId: String, isBookmarked: Boolean) {
+        withIoContext {
+            db.episodesQueries.set_is_bookmarked(id = episodeId, is_bookmarked = isBookmarked)
+        }
+    }
+
+    suspend fun setHasPlayed(episodeId: String, hasPlayed: Boolean) {
+        withIoContext {
+            db.episodesQueries.set_has_played(id = episodeId, has_played = hasPlayed)
+        }
+    }
+
+    suspend fun setIsArchived(episodeId: String, isArchived: Boolean) {
+        withIoContext {
+            db.episodesQueries.set_is_archived(id = episodeId, is_archived = isArchived)
+        }
+    }
+
+
     private suspend fun <T> withIoContext(block: suspend () -> T): T = withContext(ioDispatcher) { block() }
 
     companion object {

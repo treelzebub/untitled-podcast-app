@@ -5,12 +5,17 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.models.EpisodeUi
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.*
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.AddToQueue
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Archive
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Download
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Fave
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.MarkPlayed
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Play
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Share
 
 @HiltViewModel(assistedFactory = EpisodeDetailViewModel.Factory::class)
 class EpisodeDetailViewModel @AssistedInject constructor(
@@ -38,18 +43,23 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     val actionHandler: (EpisodeDetailAction) -> Unit = {
         when (it) {
-            Fave -> fave()
+            Fave -> toggleBookmarked()
             Share -> share()
             Download -> download()
             AddToQueue -> addToQueue()
             Play -> playPause()
-            MarkPlayed -> markPlayed()
+            MarkPlayed -> toggleHasPlayed()
             Archive -> archive()
         }
     }
 
-    private fun fave() {
+    private val episode: EpisodeUi?
+        get() = state.value.episodeUi
 
+    private fun toggleBookmarked() {
+        viewModelScope.launch {
+            episode?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
+        }
     }
 
     private fun share() {
@@ -68,12 +78,16 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     }
 
-    private fun markPlayed() {
-
+    private fun toggleHasPlayed() {
+        viewModelScope.launch {
+            episode?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
+        }
     }
 
     private fun archive() {
-
+        viewModelScope.launch {
+            episode?.let { repo.setIsArchived(it.id, !it.isArchived) }
+        }
     }
 
     private fun getEpisode(episodeId: String) {

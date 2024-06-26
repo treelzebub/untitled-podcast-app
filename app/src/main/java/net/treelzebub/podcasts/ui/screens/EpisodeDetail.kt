@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -99,10 +101,12 @@ fun EpisodeContent(
                 Text(
                     text = "\u2714\uFE0F",
                     modifier = Modifier.padding(buttonPadding).clickable { actionHandler(MarkPlayed) },
+                    fontStyle = if (episode.hasPlayed) FontStyle.Italic else FontStyle.Normal,
                     fontSize = fontSize
                 )
                 Text(
                     text = "\uD83D\uDDC4\uFE0F",
+                    fontStyle = if (episode.isArchived) FontStyle.Italic else FontStyle.Normal,
                     modifier = Modifier.padding(buttonPadding).clickable { actionHandler(Archive) },
                     fontSize = fontSize + 2.sp
                 )
