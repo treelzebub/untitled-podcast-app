@@ -155,6 +155,7 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.session)
 
+    implementation(libs.androidx.graphics.core)
     implementation(libs.coil)
     implementation(libs.coil.compose)
 

@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -33,12 +32,13 @@ import com.ramcosta.composedestinations.annotation.Destination
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Archive
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Fave
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.MarkPlayed
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Play
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleHasPlayed
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Share
 
 @Destination
@@ -60,7 +60,7 @@ fun EpisodeDetail(episodeId: String) {
 fun EpisodeContent(
     modifier: Modifier = Modifier,
     episode: EpisodeUi,
-    actionHandler: (EpisodeDetailViewModel.EpisodeDetailAction) -> Unit
+    actionHandler: (EpisodeDetailAction) -> Unit
 ) {
     // TODO move all to reusable theme values
     val buttonPadding = 18.dp
@@ -94,13 +94,13 @@ fun EpisodeContent(
                 )
                 Button(
                     modifier = Modifier.padding(buttonPadding),
-                    onClick = { actionHandler(Play) }
+                    onClick = { actionHandler(PlayPause) }
                 ) {
                     Text(text = "▶", fontSize = fontSize)
                 }
                 Text(
                     text = "\u2714\uFE0F",
-                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(MarkPlayed) },
+                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(ToggleHasPlayed) },
                     fontStyle = if (episode.hasPlayed) FontStyle.Italic else FontStyle.Normal,
                     fontSize = fontSize
                 )
@@ -133,7 +133,7 @@ fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDe
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.Right
     ) {
-        Text(fontSize = 24.sp, text = "♥", modifier = Modifier.padding(16.dp).clickable { actionHandler(Fave) })
+        Text(fontSize = 24.sp, text = "♥", modifier = Modifier.padding(16.dp).clickable { actionHandler(ToggleBookmarked) })
         Text(
             fontSize = 24.sp,
             text = "\uD83D\uDCE4",

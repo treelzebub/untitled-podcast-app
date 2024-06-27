@@ -10,4 +10,6 @@
 
     <string name="invalid_rss_url">Invalid RSS Feed URL.</string>
     <string name="error_fetch_parse">Error processing RSS Feed. Check the URL and try again.</string>
+    <string name="media_notification_channel">MediaNotification</string>
+    <string name="media_notification_channel_description">Podcasts persistent media notification</string>
 </resources>

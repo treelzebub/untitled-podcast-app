@@ -12,9 +12,9 @@ import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Archive
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Fave
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.MarkPlayed
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Play
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleHasPlayed
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Share
 
 
@@ -30,7 +30,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     enum class EpisodeDetailAction {
-        Fave, Share, Download, AddToQueue, Play, MarkPlayed, Archive
+        ToggleBookmarked, Share, Download, AddToQueue, PlayPause, ToggleHasPlayed, Archive
     }
 
     data class EpisodeState(
@@ -44,12 +44,12 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     val actionHandler: (EpisodeDetailAction) -> Unit = {
         when (it) {
-            Fave -> toggleBookmarked()
+            ToggleBookmarked -> toggleBookmarked()
             Share -> share()
             Download -> download()
             AddToQueue -> addToQueue()
-            Play -> playPause()
-            MarkPlayed -> toggleHasPlayed()
+            PlayPause -> playPause()
+            ToggleHasPlayed -> toggleHasPlayed()
             Archive -> archive()
         }
     }
