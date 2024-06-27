@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.screens.destinations.EpisodeDetailDestination
+import net.treelzebub.podcasts.ui.screens.destinations.NowPlayingScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
 @Composable
@@ -40,7 +41,8 @@ fun EpisodesList(
 fun EpisodeItem(navigator: DestinationsNavigator, episode: EpisodeUi) {
     ItemCard(
         modifier = Modifier.clickable {
-            navigator.navigate(EpisodeDetailDestination(episode.id))
+//            navigator.navigate(EpisodeDetailDestination(episode.id))
+            navigator.navigate(NowPlayingScreenDestination(episode.id))
         }
     ) {
         Column(
