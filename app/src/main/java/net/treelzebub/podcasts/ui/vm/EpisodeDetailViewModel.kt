@@ -34,16 +34,16 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     data class EpisodeState(
-        val loading: Boolean = true,
-        val episodeUi: EpisodeUi? = null
+        val episodeUi: EpisodeUi? = null,
+        val loading: Boolean = episodeUi == null
     )
 
     init {
         getEpisode(episodeId)
     }
 
-    val actionHandler: (EpisodeDetailAction) -> Unit = {
-        when (it) {
+    val actionHandler: (EpisodeDetailAction) -> Unit = { action ->
+        when (action) {
             ToggleBookmarked -> toggleBookmarked()
             Share -> share()
             Download -> download()

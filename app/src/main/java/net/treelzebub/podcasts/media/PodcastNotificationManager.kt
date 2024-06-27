@@ -55,8 +55,7 @@ class PodcastNotificationManager @Inject constructor(
         .setMediaDescriptionAdapter(DescriptionAdapter(app, controllerFuture, scope, ioDispatcher))
         .setNotificationListener(listener)
         .setSmallIconResourceId(androidx.media3.session.R.drawable.media3_notification_play) // TODO use my own
-        .build()
-        .apply {
+        .build().apply {
             setPlayer(player)
             setUseRewindAction(true)
             setUseFastForwardAction(true)
