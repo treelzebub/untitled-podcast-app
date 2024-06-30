@@ -13,10 +13,14 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.media3.ui.PlayerNotificationManager
 import androidx.media3.ui.PlayerNotificationManager.BitmapCallback
+import androidx.media3.ui.PlayerNotificationManager.NotificationListener
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.size.Size
 import com.google.common.util.concurrent.ListenableFuture
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -25,24 +29,31 @@ import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
-import javax.inject.Inject
 
 
 @UnstableApi
-class PodcastNotificationManager @Inject constructor(
-    private val app: Application,
+class PodcastNotificationManager @AssistedInject constructor(
+    app: Application,
     private val player: ExoPlayer,
-    sessionToken: SessionToken,
-    listener: PlayerNotificationManager.NotificationListener,
+    @Assisted sessionToken: SessionToken,
+    @Assisted listener: NotificationListener,
     @MainDispatcher mainDispatcher: CoroutineDispatcher,
     @IoDispatcher ioDispatcher: CoroutineDispatcher
 ) {
 
-    companion object {
+    private companion object {
 
         const val NOTIF_ID = 0xd00d
         const val NOTIF_CHANNEL = "media.podspispops"
         @Px const val NOTIF_ICON_SIZE = 144
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            sessionToken: SessionToken,
+            listener: NotificationListener
+        ): PodcastNotificationManager
     }
 
     private val job = SupervisorJob()

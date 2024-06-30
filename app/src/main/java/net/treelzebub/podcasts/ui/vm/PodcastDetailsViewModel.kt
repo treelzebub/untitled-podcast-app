@@ -51,11 +51,11 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     }
 
     fun addToQueue(episode: EpisodeUi) {
-
+        TODO()
     }
 
     fun addToQueue(index: Int, episode: EpisodeUi) {
-
+        TODO()
     }
 
     fun deletePodcast() {

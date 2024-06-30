@@ -3,8 +3,6 @@ package net.treelzebub.podcasts.ui.components
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
@@ -19,14 +17,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSession
-import androidx.media3.session.SessionToken
 import androidx.media3.ui.PlayerNotificationManager
-import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
-import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -36,109 +28,15 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
+import net.treelzebub.podcasts.media.PodcastNotificationManager
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * WIP
- */
-
-@UnstableApi
-class PodcastNotificationManager @Inject constructor(
-    private val context: Context,
-    sessionToken: SessionToken,
-    private val player: Player,
-    notificationListener: PlayerNotificationManager.NotificationListener,
-    @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
-) {
-
-    companion object {
-        const val NOTIFICATION_LARGE_ICON_PX = 144 // px
-        const val NOW_PLAYING_CHANNEL_ID = "media.NOW_PLAYING"
-        const val NOW_PLAYING_NOTIFICATION_ID = 0xb339
-    }
-
-    private val serviceJob = SupervisorJob()
-    private val serviceScope = CoroutineScope(mainDispatcher + serviceJob)
-    private val notificationManager: PlayerNotificationManager
-
-    init {
-        val mediaController = MediaController.Builder(context, sessionToken).buildAsync()
-        notificationManager =
-            PlayerNotificationManager.Builder(context, NOW_PLAYING_NOTIFICATION_ID, NOW_PLAYING_CHANNEL_ID)
-                .setChannelNameResourceId(R.string.notif_channel_name)
-                .setChannelDescriptionResourceId(R.string.notif_channel_description)
-                .setMediaDescriptionAdapter(DescriptionAdapter(mediaController))
-                .setNotificationListener(notificationListener)
-                .setSmallIconResourceId(R.drawable.ic_launcher_foreground)
-                .build()
-                .apply {
-                    setPlayer(player)
-                    setUseRewindAction(true)
-                    setUseFastForwardAction(true)
-                    setUseRewindActionInCompactView(true)
-                    setUseFastForwardActionInCompactView(true)
-                    setUseRewindActionInCompactView(true)
-                    setUseFastForwardActionInCompactView(true)
-                }
-    }
-
-    fun hideNotification() = notificationManager.setPlayer(null)
-
-    fun showNotificationForPlayer(player: Player) = notificationManager.setPlayer(player)
-
-    private inner class DescriptionAdapter(
-        private val controller: ListenableFuture<MediaController>
-    ) : PlayerNotificationManager.MediaDescriptionAdapter {
-
-        // TODO replace all this shit with immutable state
-        var currentIconUri: Uri? = null
-        var currentBitmap: Bitmap? = null
-
-        override fun createCurrentContentIntent(player: Player): PendingIntent? = controller.get().sessionActivity
-
-        override fun getCurrentContentText(player: Player) = controller.get().mediaMetadata.description
-
-        override fun getCurrentContentTitle(player: Player) = controller.get().mediaMetadata.title.toString()
-
-        override fun getCurrentLargeIcon(
-            player: Player,
-            callback: PlayerNotificationManager.BitmapCallback
-        ): Bitmap? {
-            val iconUri = controller.get().mediaMetadata.artworkUri
-            return if (currentIconUri != iconUri || currentBitmap == null) {
-                // Cache current track's bitmap so that successive calls to
-                // `getCurrentLargeIcon` don't cause the bitmap to be recreated.
-                currentIconUri = iconUri
-                serviceScope.launch {
-                    currentBitmap = iconUri?.let { resolveUriAsBitmap(it) }
-                    currentBitmap?.let { callback.onBitmap(it) }
-                }
-                null
-            } else currentBitmap
-        }
-
-        private suspend fun resolveUriAsBitmap(uri: Uri): Bitmap {
-            return withContext(ioDispatcher) {
-                val loader = ImageLoader(context)
-                val request = ImageRequest.Builder(context)
-                    .data(uri)
-                    .build()
-                val result = (loader.execute(request) as SuccessResult).drawable
-                (result as BitmapDrawable).bitmap
-            }
-        }
-    }
-}
 
 enum class PlayerButton {
     PlayPause, Stop, FastForward, Rewind,
@@ -262,7 +160,7 @@ class NowPlayingViewModel @Inject constructor(
                 ioDispatcher,
                 mainDispatcher
             )
-        notificationManager.showNotificationForPlayer(player)
+        notificationManager.show(player)
     }
 
     fun onDestroy() {
@@ -274,7 +172,7 @@ class NowPlayingViewModel @Inject constructor(
         if (!hasStarted) return
         hasStarted = false
         mediaSession.run { release() }
-        notificationManager.hideNotification()
+        notificationManager.hide()
         player.removeListener(playerListener)
     }
 
