@@ -26,13 +26,12 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.
 class EpisodeDetailViewModel @AssistedInject constructor(
     private val repo: PodcastsRepo,
     @Assisted private val episodeId: String,
-    @Assisted private val sessionToken: SessionToken,
     notificationManagerFactory: PodcastNotificationManager.Factory
 ) : StatefulViewModel<EpisodeDetailViewModel.EpisodeState>(EpisodeState()) {
 
     @AssistedFactory
     interface Factory {
-        fun create(episodeId: String, sessionToken: SessionToken): EpisodeDetailViewModel
+        fun create(episodeId: String): EpisodeDetailViewModel
     }
 
     enum class EpisodeDetailAction {

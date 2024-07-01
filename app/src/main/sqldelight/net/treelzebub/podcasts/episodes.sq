@@ -12,6 +12,7 @@ CREATE TABLE episode (
     date INTEGER NOT NULL,
     link TEXT NOT NULL,
     streaming_link TEXT NOT NULL,
+    local_file_uri TEXT DEFAULT NULL,
     image_url TEXT,
     duration TEXT,
     has_played INTEGER AS Boolean NOT NULL DEFAULT 0,
@@ -30,12 +31,21 @@ upsert {
       date = :date,
       link = :link,
       streaming_link = :streaming_link,
+      local_file_uri = COALESCE(episode.local_file_uri, :local_file_uri),
       image_url = :image_url,
-      duration = :duration
+      duration = :duration,
+      has_played = COALESCE(episode.has_played, :has_played),
+      progress_seconds = COALESCE(episode.progress_seconds, :progress_seconds),
+      is_bookmarked = COALESCE(episode.is_bookmarked, :is_bookmarked),
+      is_archived = COALESCE(episode.is_archived, :is_archived)
   WHERE id = :id;
 
-  INSERT OR IGNORE INTO episode (id, podcast_id, podcast_title, title, description, date, link, streaming_link, image_url, duration)
-  VALUES (:id, :podcast_id, :podcast_title, :title, :description, :date, :link, :streaming_link, :image_url, :duration);
+  INSERT OR IGNORE INTO episode (id, podcast_id, podcast_title, title, description, date, link, streaming_link,
+                                 local_file_uri, image_url, duration, has_played, progress_seconds, is_bookmarked,
+                                 is_archived)
+  VALUES (:id, :podcast_id, :podcast_title, :title, :description, :date, :link, :streaming_link,
+          :local_file_uri, :image_url, :duration, :has_played, :progress_seconds, :is_bookmarked,
+          :is_archived);
 }
 
 get_all:
@@ -81,6 +91,11 @@ ORDER BY date DESC;
 
 delete_all:
 DELETE FROM episode;
+
+set_local_file_uri:
+UPDATE episode
+SET local_file_uri = :local_file_uri
+WHERE episode.id = :id;
 
 set_is_bookmarked:
 UPDATE episode

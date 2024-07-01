@@ -86,8 +86,13 @@ class PodcastsRepo @Inject constructor(
                             date = Time.zonedEpochSeconds(pubDate),
                             link = link?.sanitizeUrl().orEmpty(),
                             streaming_link = audio.orEmpty(),
+                            local_file_uri = null,
                             image_url = image?.sanitizeUrl() ?: safeImage,
                             duration = itunesItemData?.duration,
+                            has_played = false,
+                            progress_seconds = 0,
+                            is_bookmarked = false,
+                            is_archived = false
                         )
                     }
                 }
@@ -215,6 +220,7 @@ class PodcastsRepo @Inject constructor(
             date: Long,
             link: String,
             streaming_link: String,
+            local_file_uri: String?,
             image_url: String?,
             duration: String?,
             has_played: Boolean,
@@ -222,7 +228,7 @@ class PodcastsRepo @Inject constructor(
             is_bookmarked: Boolean,
             is_archived: Boolean
         ) -> EpisodeUi = { id, podcast_id, podcast_title, title,
-                           description, date, link, streaming_link,
+                           description, date, link, streaming_link, local_file_uri,
                            image_url, duration, has_played, progress_seconds,
                            is_bookmarked, is_archived ->
             EpisodeUi(
@@ -235,10 +241,11 @@ class PodcastsRepo @Inject constructor(
                 sortDate = date,
                 link = link,
                 streamingLink = streaming_link,
+                localFileUri = local_file_uri,
                 imageUrl = image_url.orEmpty(),
                 duration = duration.orEmpty(),
                 hasPlayed = has_played,
-                progressSeconds = progress_seconds.toInt(),
+                progressSeconds = progress_seconds,
                 isBookmarked = is_bookmarked,
                 isArchived = is_archived
             )

@@ -4,9 +4,6 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.net.Uri
-import androidx.compose.runtime.Composable
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -23,24 +20,20 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.media.PodcastNotificationManager
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.ui.vm.StatefulViewModel
 import timber.log.Timber
 import javax.inject.Inject
 
 
 enum class PlayerButton {
-    PlayPause, Stop, FastForward, Rewind,
-    Previous, Next
+    PlayPause, Stop, FastForward, Rewind, Previous, Next
 }
 
 sealed interface NowPlayingState {
@@ -54,29 +47,23 @@ class NowPlayingViewModel @Inject constructor(
     private val player: ExoPlayer,
     private val repo: PodcastsRepo,
     private val queue: QueueStore,
+    private val notificationManagerFactory: PodcastNotificationManager.Factory,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @MainDispatcher private val mainDispatcher: CoroutineDispatcher
-) : ViewModel() {
+) : StatefulViewModel<NowPlayingViewModel.State>(State()) {
 
     companion object {
-        const val SESSION_INTENT_REQUEST_CODE = 0x1337
+        const val SESSION_INTENT_REQUEST_CODE = 0xf00d
     }
 
-    private val _currentPlayingIndex = MutableStateFlow(0)
-    val currentPlayingIndex = _currentPlayingIndex.asStateFlow()
-
-    private val _totalDurationInMS = MutableStateFlow(0L)
-    val totalDurationInMS = _totalDurationInMS.asStateFlow()
-
-    private val _isPlaying = MutableStateFlow(false)
-    val isPlaying = _isPlaying.asStateFlow()
-
-    val uiState: StateFlow<NowPlayingState> =
-        MutableStateFlow(NowPlayingState.Tracks(emptyList())).stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            initialValue = NowPlayingState.Loading
-        )
+    data class State(
+        val episode: EpisodeUi? = null,
+        val queueIndex: Int = 0,
+        val bufferedPercentage: Int = 0,
+        val durationMillis: Long = 0L,
+        val progressMillis: Long = 0,
+        val isPlaying: Boolean = false
+    )
 
     private lateinit var notificationManager: PodcastNotificationManager
     private lateinit var mediaSession: MediaSession
@@ -151,15 +138,10 @@ class NowPlayingViewModel @Inject constructor(
         mediaSession = MediaSession.Builder(context, player)
             .setSessionActivity(sessionActivityPendingIntent!!)
             .build()
-        notificationManager =
-            PodcastNotificationManager(
-                context,
-                mediaSession.token,
-                player,
-                PlayerNotificationListener(),
-                ioDispatcher,
-                mainDispatcher
-            )
+        notificationManager = notificationManagerFactory.create(
+            sessionToken = mediaSession.token,
+            listener = PlayerNotificationListener()
+        )
         notificationManager.show(player)
     }
 
@@ -174,6 +156,7 @@ class NowPlayingViewModel @Inject constructor(
         mediaSession.run { release() }
         notificationManager.hide()
         player.removeListener(playerListener)
+        // serviceScope.cancel()
     }
 
     private inner class PlayerNotificationListener : PlayerNotificationManager.NotificationListener {
@@ -193,40 +176,38 @@ class NowPlayingViewModel @Inject constructor(
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             Timber.d("onPlaybackStateChanged: $playbackState")
-            super.onPlaybackStateChanged(playbackState)
-            syncPlayerFlows()
+            updateState()
             when (playbackState) {
-                Player.STATE_BUFFERING,
-                Player.STATE_READY -> notificationManager.showNotificationForPlayer(player)
-                else -> notificationManager.hideNotification()
+                Player.STATE_BUFFERING, Player.STATE_READY -> notificationManager.show(player)
+                else -> notificationManager.hide()
             }
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             Timber.d("onMediaItemTransition: ${mediaItem?.mediaMetadata?.title}")
-            super.onMediaItemTransition(mediaItem, reason)
-            syncPlayerFlows()
+            updateState()
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             Timber.d("onIsPlayingChanged: $isPlaying")
-            super.onIsPlayingChanged(isPlaying)
-            _isPlaying.value = isPlaying
+            _state.update { it.copy(isPlaying = isPlaying) }
         }
 
         override fun onPlayerError(error: PlaybackException) {
             super.onPlayerError(error)
             Timber.e("Error: ${error.message}")
+            TODO()
         }
     }
 
-    private fun syncPlayerFlows() {
-        _currentPlayingIndex.value = player.currentMediaItemIndex
-        _totalDurationInMS.value = player.duration.coerceAtLeast(0L)
+    private fun updateState() {
+        _state.update {
+            it.copy(
+                queueIndex = player.currentMediaItemIndex,
+                durationMillis = player.duration.coerceAtLeast(0L),
+                bufferedPercentage = player.bufferedPercentage,
+                progressMillis = player.currentPosition
+            )
+        }
     }
-}
-
-@Composable
-fun NowPlaying() {
-
 }
