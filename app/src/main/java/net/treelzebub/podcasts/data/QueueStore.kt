@@ -16,6 +16,7 @@ import javax.inject.Inject
 
 data class PodcastQueue(val list: List<EpisodeUi> = emptyList())
 
+// TODO all signatures of add() need to account for "episode exists in queue"
 class QueueStore @Inject constructor(
     private val app: Application,
     private val serializer: StringSerializer<PodcastQueue>,

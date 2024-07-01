@@ -16,17 +16,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import net.treelzebub.podcasts.ui.components.LoadingBox
@@ -36,29 +38,34 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Archive
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleBookmarked
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleHasPlayed
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Share
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleHasPlayed
 
+@UnstableApi
 @Destination
 @Composable
 fun EpisodeDetail(episodeId: String) {
     val vm = hiltViewModel<EpisodeDetailViewModel, EpisodeDetailViewModel.Factory>(
-        creationCallback = { factory -> factory.create(episodeId = episodeId) }
+        creationCallback = { factory -> factory.create(episodeId) }
     )
-    val state by remember { vm.state }.collectAsState()
+    val state by remember { vm.state }.collectAsStateWithLifecycle()
+    val episode by remember { vm.episode }.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     if (state.loading) {
         LoadingBox()
-    } else if (state.episodeUi != null) {
-        EpisodeContent(episode = state.episodeUi!!, actionHandler = vm.actionHandler)
-    } // else illegal state
+    } else if (episode != null) {
+        EpisodeContent(state = state, episode = episode!!, actionHandler = vm.actionHandler)
+    }
 }
 
+@UnstableApi
 @Composable
 fun EpisodeContent(
     modifier: Modifier = Modifier,
+    state: EpisodeDetailViewModel.State,
     episode: EpisodeUi,
     actionHandler: (EpisodeDetailAction) -> Unit
 ) {
@@ -96,7 +103,7 @@ fun EpisodeContent(
                     modifier = Modifier.padding(buttonPadding),
                     onClick = { actionHandler(PlayPause) }
                 ) {
-                    Text(text = "▶", fontSize = fontSize)
+                    Text(text = if (state.isPlaying) "⏸" else "▶", fontSize = fontSize)
                 }
                 Text(
                     text = "\u2714\uFE0F",
@@ -126,8 +133,9 @@ fun EpisodeContent(
     }
 }
 
+@UnstableApi
 @Composable
-fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDetailViewModel.EpisodeDetailAction) -> Unit) {
+fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDetailAction) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().then(modifier),
         verticalAlignment = Alignment.CenterVertically,
@@ -141,6 +149,6 @@ fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDe
     }
 }
 
-operator fun TextUnit.plus(other: TextUnit): TextUnit {
+private operator fun TextUnit.plus(other: TextUnit): TextUnit {
     return (this.value + other.value).sp
 }

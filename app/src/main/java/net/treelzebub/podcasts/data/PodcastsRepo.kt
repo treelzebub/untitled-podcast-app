@@ -3,7 +3,6 @@ package net.treelzebub.podcasts.data
 import androidx.annotation.VisibleForTesting
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -136,12 +135,9 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getEpisodeById(id: String): Flow<EpisodeUi> {
+    suspend fun getEpisodeById(id: String): EpisodeUi? {
         return withIoContext {
-            db.episodesQueries
-                .get_by_id(id, episodeMapper)
-                .asFlow()
-                .mapToOne(ioDispatcher)
+            db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
         }
     }
 

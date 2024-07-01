@@ -32,13 +32,14 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.service.PlaybackService
-import net.treelzebub.podcasts.ui.vm.NowPlayingViewModel
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
 
+@Deprecated("Use EpisodeDetailViewModel")
 @OptIn(UnstableApi::class)
 @Destination
 @Composable
 fun NowPlayingScreen(navigator: DestinationsNavigator, episodeId: String) {
-    val vm = hiltViewModel<NowPlayingViewModel>()
+    val vm = hiltViewModel<EpisodeDetailViewModel>()
     var lifecycle by remember { mutableStateOf(Lifecycle.Event.ON_CREATE) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -78,12 +79,12 @@ fun NowPlayingScreen(navigator: DestinationsNavigator, episodeId: String) {
                     }
                     Lifecycle.Event.ON_RESUME -> {
                         controllerFuture.addListener({
-                            val player = controllerFuture.get()
-                            state.mediaItem?.let { item ->
-                                if (player.currentMediaItem == item) return@addListener
-                                player.setMediaItem(item)
+//                            val player = controllerFuture.get()
+//                            state.mediaItem?.let { item ->
+//                                if (player.currentMediaItem == item) return@addListener
+//                                player.setMediaItem(item)
 //                                playerView.showController()
-                            }
+//                            }
                         }, MoreExecutors.directExecutor())
                     }
                     else -> Unit
@@ -95,7 +96,7 @@ fun NowPlayingScreen(navigator: DestinationsNavigator, episodeId: String) {
                 .aspectRatio(16 / 9f)
         )
 
-        vm.play(episodeId)
+//        vm.play(episodeId)
     }
 }
 
