@@ -23,10 +23,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -47,7 +43,7 @@ import timber.log.Timber
 @HiltViewModel(assistedFactory = EpisodeDetailViewModel.Factory::class)
 class EpisodeDetailViewModel @AssistedInject constructor(
     @Assisted episodeId: String,
-    private val app: Application, // todo use AndroidViewModel
+    private val app: Application,
     private val player: ExoPlayer,
     private val repo: PodcastsRepo,
     private val queueStore: QueueStore,
@@ -67,6 +63,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     @Stable
     data class State(
         val loading: Boolean = true,
+        val episode: EpisodeUi? = null,
         val queueIndex: Int = 0,
         val bufferedPercentage: Int = 0,
         val durationMillis: Long = 0L,
@@ -82,9 +79,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private lateinit var notificationManager: PodcastNotificationManager
     private val mediaSession: MediaSession = MediaSession.Builder(app, player).build()
     private val listener = PodcastPlayerListener()
-    private val _episode = MutableStateFlow<EpisodeUi?>(null)
-    val episode = _episode.asStateFlow()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TIMEOUT), null)
 
     private var hasStarted = false
 
@@ -111,7 +105,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                 ?: throw IllegalArgumentException("Episode is not in database!")
             Timber.d("Got episode with id: ${episode.id}")
             with (episode) {
-                _episode.update { episode }
+                _state.update { it.copy(episode = this) }
                 queueStore.add(this) {}
             }
             _state.update { it.copy(loading = false) }
@@ -207,7 +201,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     private fun toggleBookmarked() {
         viewModelScope.launch {
-            episode.value?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
+            state.value.episode?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
         }
     }
 
@@ -225,19 +219,19 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     private fun addToQueue() {
         viewModelScope.launch {
-            episode.value?.let { repo.addToQueue(it) { TODO() } }
+            state.value.episode?.let { repo.addToQueue(it) { TODO() } }
         }
     }
 
     private fun toggleHasPlayed() {
         viewModelScope.launch {
-            episode.value?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
+            state.value.episode?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
         }
     }
 
     private fun archive() {
         viewModelScope.launch {
-            episode.value?.let { repo.setIsArchived(it.id, !it.isArchived) }
+            state.value.episode?.let { repo.setIsArchived(it.id, !it.isArchived) }
         }
     }
 

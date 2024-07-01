@@ -50,12 +50,11 @@ fun EpisodeDetail(episodeId: String) {
         creationCallback = { factory -> factory.create(episodeId) }
     )
     val state by remember { vm.state }.collectAsStateWithLifecycle()
-    val episode by remember { vm.episode }.collectAsStateWithLifecycle()
 
     if (state.loading) {
         LoadingBox()
-    } else if (episode != null) {
-        EpisodeContent(state = state, episode = episode!!, actionHandler = vm.actionHandler)
+    } else if (state.episode != null) {
+        EpisodeContent(state = state, episode = state.episode!!, actionHandler = vm.actionHandler)
     }
 }
 
