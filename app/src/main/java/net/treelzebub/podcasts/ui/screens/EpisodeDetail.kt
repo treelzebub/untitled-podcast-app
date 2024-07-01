@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -52,7 +51,6 @@ fun EpisodeDetail(episodeId: String) {
     )
     val state by remember { vm.state }.collectAsStateWithLifecycle()
     val episode by remember { vm.episode }.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
     if (state.loading) {
         LoadingBox()

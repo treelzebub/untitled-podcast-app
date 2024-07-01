@@ -23,9 +23,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +31,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.QueueStore
-import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.media.PodcastNotificationManager
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.AddToQueue
@@ -55,8 +51,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private val player: ExoPlayer,
     private val repo: PodcastsRepo,
     private val queueStore: QueueStore,
-    private val notificationManagerFactory: PodcastNotificationManager.Factory,
-    @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
+    private val notificationManagerFactory: PodcastNotificationManager.Factory
 ) : StatefulViewModel<EpisodeDetailViewModel.State>(State()) {
 
     companion object {
@@ -201,11 +196,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private inner class PlayerNotificationListener : PlayerNotificationManager.NotificationListener {
-        override fun onNotificationPosted(
-            notificationId: Int,
-            notification: Notification,
-            ongoing: Boolean
-        ) {
+        override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
             Timber.d("onNotificationPosted")
         }
 
