@@ -31,7 +31,6 @@ import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import net.treelzebub.podcasts.ui.components.LoadingBox
-import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.AddToQueue
@@ -49,12 +48,13 @@ fun EpisodeDetail(episodeId: String) {
     val vm = hiltViewModel<EpisodeDetailViewModel, EpisodeDetailViewModel.Factory>(
         creationCallback = { factory -> factory.create(episodeId) }
     )
-    val state by remember { vm.state }.collectAsStateWithLifecycle()
+    val uiState by remember { vm.state }.collectAsStateWithLifecycle()
+    val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
 
-    if (state.loading) {
+    if (uiState.loading) {
         LoadingBox()
-    } else if (state.episode != null) {
-        EpisodeContent(state = state, episode = state.episode!!, actionHandler = vm.actionHandler)
+    } else if (episodeState.streamingLink != null) {
+        EpisodeContent(uiState = uiState, episodeState = episodeState, actionHandler = vm.actionHandler)
     }
 }
 
@@ -62,8 +62,8 @@ fun EpisodeDetail(episodeId: String) {
 @Composable
 fun EpisodeContent(
     modifier: Modifier = Modifier,
-    state: EpisodeDetailViewModel.State,
-    episode: EpisodeUi,
+    uiState: EpisodeDetailViewModel.State,
+    episodeState: EpisodeDetailViewModel.EpisodeState,
     actionHandler: (EpisodeDetailAction) -> Unit
 ) {
     // TODO move all to reusable theme values
@@ -80,7 +80,7 @@ fun EpisodeContent(
             modifier = Modifier.padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AsyncImage(modifier = Modifier.padding(buttonPadding).size(256.dp).clip(RoundedCornerShape(8.dp)), model = episode.imageUrl, contentDescription = "")
+            AsyncImage(modifier = Modifier.padding(buttonPadding).size(256.dp).clip(RoundedCornerShape(8.dp)), model = episodeState.imageUrl, contentDescription = "")
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -100,17 +100,17 @@ fun EpisodeContent(
                     modifier = Modifier.padding(buttonPadding),
                     onClick = { actionHandler(PlayPause) }
                 ) {
-                    Text(text = if (state.isPlaying) "⏸" else "▶", fontSize = fontSize)
+                    Text(text = if (uiState.isPlaying) "⏸" else "▶", fontSize = fontSize)
                 }
                 Text(
                     text = "\u2714\uFE0F",
                     modifier = Modifier.padding(buttonPadding).clickable { actionHandler(ToggleHasPlayed) },
-                    fontStyle = if (episode.hasPlayed) FontStyle.Italic else FontStyle.Normal,
+                    fontStyle = if (uiState.hasPlayed) FontStyle.Italic else FontStyle.Normal,
                     fontSize = fontSize
                 )
                 Text(
                     text = "\uD83D\uDDC4\uFE0F",
-                    fontStyle = if (episode.isArchived) FontStyle.Italic else FontStyle.Normal,
+                    fontStyle = if (uiState.isArchived) FontStyle.Italic else FontStyle.Normal,
                     modifier = Modifier.padding(buttonPadding).clickable { actionHandler(Archive) },
                     fontSize = fontSize + 2.sp
                 )
@@ -118,13 +118,13 @@ fun EpisodeContent(
             Spacer(modifier = Modifier.padding(vertical = 4.dp))
 
             Row(modifier = Modifier.padding(horizontal = outerPadding)) {
-                Text(text = episode.displayDate)
+                Text(text = episodeState.displayDate.orEmpty())
                 Spacer(modifier = Modifier.weight(1.0f))
-                Text(text = episode.duration)
+                Text(text = episodeState.duration.orEmpty())
             }
             Spacer(modifier = Modifier.padding(vertical = 2.dp))
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                Text(modifier = Modifier.padding(horizontal = outerPadding), text = episode.description)
+                Text(modifier = Modifier.padding(horizontal = outerPadding), text = episodeState.description.orEmpty())
             }
         }
     }

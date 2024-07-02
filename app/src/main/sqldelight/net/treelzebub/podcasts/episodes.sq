@@ -16,7 +16,7 @@ CREATE TABLE episode (
     image_url TEXT,
     duration TEXT,
     has_played INTEGER AS Boolean NOT NULL DEFAULT 0,
-    progress_seconds INTEGER NOT NULL DEFAULT 0,
+    progress_millis INTEGER NOT NULL DEFAULT 0,
     is_bookmarked INTEGER AS Boolean NOT NULL DEFAULT 0,
     is_archived INTEGER AS Boolean NOT NULL DEFAULT 0
 );
@@ -35,16 +35,16 @@ upsert {
       image_url = :image_url,
       duration = :duration,
       has_played = COALESCE(episode.has_played, :has_played),
-      progress_seconds = COALESCE(episode.progress_seconds, :progress_seconds),
+      progress_millis = COALESCE(episode.progress_millis, :progress_millis),
       is_bookmarked = COALESCE(episode.is_bookmarked, :is_bookmarked),
       is_archived = COALESCE(episode.is_archived, :is_archived)
   WHERE id = :id;
 
   INSERT OR IGNORE INTO episode (id, podcast_id, podcast_title, title, description, date, link, streaming_link,
-                                 local_file_uri, image_url, duration, has_played, progress_seconds, is_bookmarked,
+                                 local_file_uri, image_url, duration, has_played, progress_millis, is_bookmarked,
                                  is_archived)
   VALUES (:id, :podcast_id, :podcast_title, :title, :description, :date, :link, :streaming_link,
-          :local_file_uri, :image_url, :duration, :has_played, :progress_seconds, :is_bookmarked,
+          :local_file_uri, :image_url, :duration, :has_played, :progress_millis, :is_bookmarked,
           :is_archived);
 }
 

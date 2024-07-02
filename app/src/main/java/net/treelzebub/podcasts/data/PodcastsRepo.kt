@@ -89,7 +89,7 @@ class PodcastsRepo @Inject constructor(
                             image_url = image?.sanitizeUrl() ?: safeImage,
                             duration = itunesItemData?.duration,
                             has_played = false,
-                            progress_seconds = 0,
+                            progress_millis = 0L,
                             is_bookmarked = false,
                             is_archived = false
                         )
@@ -241,7 +241,7 @@ class PodcastsRepo @Inject constructor(
                 imageUrl = image_url.orEmpty(),
                 duration = duration.orEmpty(),
                 hasPlayed = has_played,
-                progressSeconds = progress_seconds,
+                progressMillis = progress_seconds,
                 isBookmarked = is_bookmarked,
                 isArchived = is_archived
             )

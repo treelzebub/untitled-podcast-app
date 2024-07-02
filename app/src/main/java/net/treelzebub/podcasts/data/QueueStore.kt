@@ -102,6 +102,11 @@ class QueueStore @Inject constructor(
         }
     }
 
+    // No such element returns -1
+    fun indexFor(episodeId: String): Int {
+        return stateFlow.value.list.indexOfFirst { it.id == episodeId }
+    }
+
     private suspend fun persist(onError: ErrorHandler) {
         try {
             withContext(ioDispatcher) {

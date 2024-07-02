@@ -5,6 +5,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.AudioAttributes
@@ -23,6 +24,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -51,7 +54,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 ) : StatefulViewModel<EpisodeDetailViewModel.State>(State()) {
 
     companion object {
-        const val TIMEOUT = 5000L
         const val SESSION_INTENT_REQUEST_CODE = 0xf00d
     }
 
@@ -61,14 +63,32 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     @Stable
+    @Immutable
+    data class EpisodeState(
+        val id: String? = null,
+        val imageUrl: String? = null,
+        val displayDate: String? = null,
+        val duration: String? = null,
+        val description: String? = null,
+        val streamingLink: String? = null
+    ) {
+        fun isPopulated(): Boolean {
+            // Bare minimum for playback
+            return id != null && streamingLink != null
+        }
+    }
+
+    @Stable
     data class State(
         val loading: Boolean = true,
-        val episode: EpisodeUi? = null,
         val queueIndex: Int = 0,
         val bufferedPercentage: Int = 0,
         val durationMillis: Long = 0L,
-        val progressMillis: Long = 0,
-        val isPlaying: Boolean = false
+        val progressMillis: Long = 0L,
+        val isPlaying: Boolean = false,
+        val hasPlayed: Boolean = false,
+        val isBookmarked: Boolean = false,
+        val isArchived: Boolean = false
     )
 
     enum class EpisodeDetailAction {
@@ -80,7 +100,10 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private val mediaSession: MediaSession = MediaSession.Builder(app, player).build()
     private val listener = PodcastPlayerListener()
 
-    private var hasStarted = false
+    private val _episodeState = MutableStateFlow(EpisodeState())
+    val episodeState = _episodeState.asStateFlow()
+
+    private val episodeHolder = MutableStateFlow<EpisodeUi?>(null)
 
     val actionHandler: (EpisodeDetailAction) -> Unit = { action ->
         Timber.d("Received action: $action")
@@ -91,7 +114,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
             AddToQueue -> addToQueue()
             PlayPause -> playPause()
             ToggleHasPlayed -> toggleHasPlayed()
-            Archive -> archive()
+            Archive -> toggleArchived()
         }
     }
 
@@ -103,12 +126,27 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             val episode = repo.getEpisodeById(episodeId)
                 ?: throw IllegalArgumentException("Episode is not in database!")
-            Timber.d("Got episode with id: ${episode.id}")
             with (episode) {
-                _state.update { it.copy(episode = this) }
+                episodeHolder.update { this }
+                _episodeState.update {
+                    it.copy(
+                        id = id,
+                        imageUrl = imageUrl,
+                        streamingLink = streamingLink
+                    )
+                }
                 queueStore.add(this) {}
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        queueIndex = queueStore.indexFor(id),
+                        // durationMillis = ,
+                        progressMillis = progressMillis,
+                        isBookmarked = isBookmarked,
+                        isArchived = isArchived
+                    )
+                }
             }
-            _state.update { it.copy(loading = false) }
         }.invokeOnCompletion { error ->
             error?.let { Timber.e(it) }
         }
@@ -145,9 +183,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     fun seekTo(position: Long) = player.seekTo(position)
 
     private fun showNotif(context: Context) {
-        if (hasStarted) return
-        hasStarted = true
-
         val sessionActivityPendingIntent =
             context.packageManager?.getLaunchIntentForPackage(context.packageName)
                 ?.let { sessionIntent ->
@@ -180,12 +215,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     override fun onCleared() {
-        if (!hasStarted) return
-        hasStarted = false
         mediaSession.run { release() }
         notificationManager.hide()
         player.removeListener(listener)
-        // serviceScope.cancel()
         super.onCleared()
     }
 
@@ -200,8 +232,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun toggleBookmarked() {
+        _state.update { it.copy(isBookmarked = !it.isBookmarked) }
         viewModelScope.launch {
-            state.value.episode?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
+            episodeHolder.value?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
         }
     }
 
@@ -210,6 +243,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun playPause() {
+        _state.update { it.copy(isPlaying = !it.isPlaying) }
         if (player.isPlaying) player.pause() else player.play()
     }
 
@@ -219,19 +253,22 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     private fun addToQueue() {
         viewModelScope.launch {
-            state.value.episode?.let { repo.addToQueue(it) { TODO() } }
+            // TODO UI State -> isInQueue
+            episodeHolder.value?.let { repo.addToQueue(it) { TODO() } }
         }
     }
 
     private fun toggleHasPlayed() {
         viewModelScope.launch {
-            state.value.episode?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
+            _state.update { it.copy(hasPlayed = !it.hasPlayed) }
+            episodeHolder.value?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
         }
     }
 
-    private fun archive() {
+    private fun toggleArchived() {
         viewModelScope.launch {
-            state.value.episode?.let { repo.setIsArchived(it.id, !it.isArchived) }
+            _state.update { it.copy (isArchived = !it.isArchived) }
+            episodeHolder.value?.let { repo.setIsArchived(it.id, !it.isArchived) }
         }
     }
 
@@ -249,7 +286,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private inner class PodcastPlayerListener : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             Timber.d("onPlaybackStateChanged: $playbackState")
-            updateState()
+            // updateState()
             when (playbackState) {
                 Player.STATE_BUFFERING, Player.STATE_READY -> notificationManager.show(player)
                 else -> notificationManager.hide()
@@ -257,12 +294,10 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            Timber.d("onMediaItemTransition: ${mediaItem?.mediaMetadata?.title}; Reason: $reason")
-            updateState()
+            // updateState()
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            Timber.d("onIsPlayingChanged: $isPlaying")
             _state.update { it.copy(isPlaying = isPlaying) }
         }
 
