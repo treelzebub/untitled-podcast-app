@@ -19,7 +19,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Podcasts"
-        tools:targetApi="34">
+        tools:targetApi="34"
+        tools:ignore="UnusedAttribute"
+        android:enableOnBackInvokedCallback="true">
 
         <service
             android:name=".service.PlaybackService"

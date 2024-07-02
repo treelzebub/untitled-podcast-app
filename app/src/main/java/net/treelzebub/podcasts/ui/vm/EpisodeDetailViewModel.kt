@@ -191,8 +191,8 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private fun showNotif() {
         val context = getApplication<App>()
         val sessionActivityPendingIntent =
-            context.packageManager?.getLaunchIntentForPackage(context.packageName)
-                ?.let { sessionIntent ->
+            context.packageManager!!.getLaunchIntentForPackage(context.packageName)!!
+                .let { sessionIntent ->
                     PendingIntent.getActivity(
                         context,
                         SESSION_INTENT_REQUEST_CODE,
@@ -200,7 +200,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                         PendingIntent.FLAG_IMMUTABLE
                     )
                 }
-        mediaSession.setSessionActivity(sessionActivityPendingIntent!!)
+        mediaSession.setSessionActivity(sessionActivityPendingIntent)
         notificationManager = notificationManagerFactory.create(
             sessionToken = mediaSession.token,
             listener = PlayerNotificationListener()
@@ -246,7 +246,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun share() {
-
+        Timber.d("TODO: Share")
     }
 
     private fun playPause() {
@@ -255,7 +255,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun download() {
-
+        Timber.d("TODO: Download")
     }
 
     private fun addToQueue() {
