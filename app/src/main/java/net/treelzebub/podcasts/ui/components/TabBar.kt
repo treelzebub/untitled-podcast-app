@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.navigation.popBackStack
@@ -24,6 +25,8 @@ import net.treelzebub.podcasts.ui.screens.destinations.SettingsScreenDestination
 import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.screens.startAppDestination
 
+
+@UnstableApi
 sealed class TabItem(
     @StringRes val text: Int,
     @DrawableRes val image: Int,
@@ -37,6 +40,7 @@ sealed class TabItem(
     data object Settings : TabItem(R.string.tab_settings, R.drawable.settings, SettingsScreenDestination)
 }
 
+@UnstableApi
 @Composable
 fun BottomBar(navController: NavHostController, tabs: List<TabItem>) {
     val currentDestination = navController.appCurrentDestinationAsState().value

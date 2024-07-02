@@ -22,12 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.ui.screens.destinations.PodcastDetailsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
+
+@UnstableApi
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 fun PodcastList(
@@ -46,6 +49,7 @@ fun PodcastList(
     }
 }
 
+@UnstableApi
 @Composable
 fun PodcastItem(
     modifier: Modifier,
