@@ -1,5 +1,8 @@
 package net.treelzebub.podcasts.ui.screens
 
+import android.os.Build
+import android.os.Build.VERSION_CODES
+import android.system.Os
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction
@@ -51,6 +55,10 @@ fun EpisodeDetail(episodeId: String) {
     )
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
+
+    if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
+        RequestNotificationPermission()
+    }
 
     if (uiState.loading) {
         LoadingBox()
