@@ -7,6 +7,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import net.treelzebub.podcasts.App
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.media.PodcastNotificationManager
@@ -46,12 +48,12 @@ import timber.log.Timber
 @HiltViewModel(assistedFactory = EpisodeDetailViewModel.Factory::class)
 class EpisodeDetailViewModel @AssistedInject constructor(
     @Assisted episodeId: String,
-    private val app: Application,
+    app: Application,
     private val player: ExoPlayer,
     private val repo: PodcastsRepo,
     private val queueStore: QueueStore,
     private val notificationManagerFactory: PodcastNotificationManager.Factory
-) : StatefulViewModel<EpisodeDetailViewModel.State>(State()) {
+) : AndroidViewModel(app) {
 
     companion object {
         const val SESSION_INTENT_REQUEST_CODE = 0xf00d
@@ -72,14 +74,13 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         val description: String? = null,
         val streamingLink: String? = null
     ) {
-        fun isPopulated(): Boolean {
-            // Bare minimum for playback
-            return id != null && streamingLink != null
-        }
+        val isPopulated: Boolean
+            // Bare minimum for playback.
+            get() = id != null && streamingLink != null
     }
 
     @Stable
-    data class State(
+    data class UiState(
         val loading: Boolean = true,
         val queueIndex: Int = 0,
         val bufferedPercentage: Int = 0,
@@ -100,7 +101,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private val mediaSession: MediaSession = MediaSession.Builder(app, player).build()
     private val listener = PodcastPlayerListener()
 
+    private val _uiState = MutableStateFlow(UiState())
     private val _episodeState = MutableStateFlow(EpisodeState())
+    val uiState = _uiState.asStateFlow()
     val episodeState = _episodeState.asStateFlow()
 
     private val episodeHolder = MutableStateFlow<EpisodeUi?>(null)
@@ -132,11 +135,14 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                     it.copy(
                         id = id,
                         imageUrl = imageUrl,
+                        displayDate = displayDate,
+                        duration = duration,
+                        description = description,
                         streamingLink = streamingLink
                     )
                 }
                 queueStore.add(this) {}
-                _state.update {
+                _uiState.update {
                     it.copy(
                         loading = false,
                         queueIndex = queueStore.indexFor(id),
@@ -170,19 +176,20 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                         .setMediaId(item.id)
                         .setMediaMetadata(mediaMetaData)
                         .build()
-                    val dataSourceFactory = DefaultDataSource.Factory(app)
+                    val dataSourceFactory = DefaultDataSource.Factory(getApplication())
                     ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
                 }
                 player.setMediaSources(mediaSourceQueue)
             }
         }
 
-        showNotif(app)
+        showNotif()
     }
 
     fun seekTo(position: Long) = player.seekTo(position)
 
-    private fun showNotif(context: Context) {
+    private fun showNotif() {
+        val context = getApplication<App>()
         val sessionActivityPendingIntent =
             context.packageManager?.getLaunchIntentForPackage(context.packageName)
                 ?.let { sessionIntent ->
@@ -207,7 +214,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                     .build(), true
             )
             addListener(listener)
-            playWhenReady = false
+            playWhenReady = true
             prepare()
         }
 
@@ -232,7 +239,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun toggleBookmarked() {
-        _state.update { it.copy(isBookmarked = !it.isBookmarked) }
+        _uiState.update { it.copy(isBookmarked = !it.isBookmarked) }
         viewModelScope.launch {
             episodeHolder.value?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
         }
@@ -243,7 +250,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun playPause() {
-        _state.update { it.copy(isPlaying = !it.isPlaying) }
+        _uiState.update { it.copy(isPlaying = !it.isPlaying) }
         if (player.isPlaying) player.pause() else player.play()
     }
 
@@ -260,20 +267,20 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     private fun toggleHasPlayed() {
         viewModelScope.launch {
-            _state.update { it.copy(hasPlayed = !it.hasPlayed) }
+            _uiState.update { it.copy(hasPlayed = !it.hasPlayed) }
             episodeHolder.value?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
         }
     }
 
     private fun toggleArchived() {
         viewModelScope.launch {
-            _state.update { it.copy (isArchived = !it.isArchived) }
+            _uiState.update { it.copy (isArchived = !it.isArchived) }
             episodeHolder.value?.let { repo.setIsArchived(it.id, !it.isArchived) }
         }
     }
 
     private fun updateState() {
-        _state.update {
+        _uiState.update {
             it.copy(
                 queueIndex = player.currentMediaItemIndex,
                 durationMillis = player.duration.coerceAtLeast(0L),
@@ -298,7 +305,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            _state.update { it.copy(isPlaying = isPlaying) }
+            _uiState.update { it.copy(isPlaying = isPlaying) }
         }
 
         override fun onPlayerError(error: PlaybackException) {

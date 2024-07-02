@@ -41,6 +41,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleHasPlayed
 
+
 @UnstableApi
 @Destination
 @Composable
@@ -48,12 +49,12 @@ fun EpisodeDetail(episodeId: String) {
     val vm = hiltViewModel<EpisodeDetailViewModel, EpisodeDetailViewModel.Factory>(
         creationCallback = { factory -> factory.create(episodeId) }
     )
-    val uiState by remember { vm.state }.collectAsStateWithLifecycle()
+    val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
 
     if (uiState.loading) {
         LoadingBox()
-    } else if (episodeState.streamingLink != null) {
+    } else if (episodeState.isPopulated) {
         EpisodeContent(uiState = uiState, episodeState = episodeState, actionHandler = vm.actionHandler)
     }
 }
@@ -62,7 +63,7 @@ fun EpisodeDetail(episodeId: String) {
 @Composable
 fun EpisodeContent(
     modifier: Modifier = Modifier,
-    uiState: EpisodeDetailViewModel.State,
+    uiState: EpisodeDetailViewModel.UiState,
     episodeState: EpisodeDetailViewModel.EpisodeState,
     actionHandler: (EpisodeDetailAction) -> Unit
 ) {
