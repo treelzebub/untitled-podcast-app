@@ -9,7 +9,6 @@ import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.SearchQueriesRepo
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.util.ErrorHandler
-import timber.log.Timber
 import javax.inject.Inject
 
 
