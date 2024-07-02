@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.plusAssign
@@ -34,6 +35,8 @@ import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestin
 import net.treelzebub.podcasts.ui.screens.startAppDestination
 import net.treelzebub.podcasts.ui.theme.Purple40
 
+
+@UnstableApi
 @Composable
 @OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 fun PodcastsApp() {

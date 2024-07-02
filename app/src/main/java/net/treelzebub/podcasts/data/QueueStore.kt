@@ -16,6 +16,7 @@ import javax.inject.Inject
 
 data class PodcastQueue(val list: List<EpisodeUi> = emptyList())
 
+// TODO all signatures of add() need to account for "episode exists in queue"
 class QueueStore @Inject constructor(
     private val app: Application,
     private val serializer: StringSerializer<PodcastQueue>,
@@ -99,6 +100,11 @@ class QueueStore @Inject constructor(
                 removeAll { it.podcastId == podcastId }
             })
         }
+    }
+
+    // No such element returns -1
+    fun indexFor(episodeId: String): Int {
+        return stateFlow.value.list.indexOfFirst { it.id == episodeId }
     }
 
     private suspend fun persist(onError: ErrorHandler) {

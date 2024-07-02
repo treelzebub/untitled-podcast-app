@@ -139,6 +139,7 @@ dependencies {
 
     implementation(libs.androidx.core)
     implementation(libs.lifecycle.runtime)
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.activity.compose)
     implementation(libs.compose.foundation)
@@ -155,6 +156,7 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.session)
 
+    implementation(libs.androidx.graphics.core)
     implementation(libs.coil)
     implementation(libs.coil.compose)
 

@@ -16,10 +16,11 @@ object PreviewMocks {
         sortDate = 1704096060L,
         link = "https://podcast.home/link",
         streamingLink = "https://podcast.home/stream.mp3",
+        localFileUri = "file://data/stream.mp3",
         imageUrl = "https://picsum.photos/200",
         duration = "5h 30m",
         hasPlayed = false,
-        progressSeconds = 0,
+        progressMillis = 0,
         isBookmarked = false,
         isArchived = false
     )

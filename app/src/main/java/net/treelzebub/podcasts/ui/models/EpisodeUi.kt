@@ -13,10 +13,13 @@ data class EpisodeUi(
     val sortDate: Long,
     val link: String,
     val streamingLink: String,
+    val localFileUri: String?,
     val imageUrl: String,
     val duration: String,
     val hasPlayed: Boolean,
-    val progressSeconds: Int,
+    val progressMillis: Long,
     val isBookmarked: Boolean,
     val isArchived: Boolean
-)
+) {
+    val hasLocalCopy = localFileUri != null
+}

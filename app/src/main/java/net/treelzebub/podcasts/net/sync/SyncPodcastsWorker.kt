@@ -12,9 +12,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
-import timber.log.Timber
 import okhttp3.Call
 import okhttp3.Response
+import timber.log.Timber
 import java.io.IOException
 import java.time.Duration
 

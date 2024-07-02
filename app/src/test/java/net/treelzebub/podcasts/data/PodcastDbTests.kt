@@ -57,8 +57,13 @@ class PodcastDbTests {
             1000L,
             "link",
             "streamingLink",
+            "localLink",
             "imageUrl",
             "duration",
+            false,
+            0,
+            false,
+            false
         )
 
         val podcasts = db.podcastsQueries.get_all().executeAsList()
