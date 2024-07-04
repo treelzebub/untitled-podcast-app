@@ -25,6 +25,8 @@ fun RequestNotificationPermission() {
         onResult = { hasGrantedPermission = it }
     )
 
+    // TODO handle denial
+
     LaunchedEffect("notif-permission") {
         permissionResult.launch(Manifest.permission.POST_NOTIFICATIONS)
     }

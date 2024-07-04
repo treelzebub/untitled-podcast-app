@@ -1,8 +1,5 @@
 package net.treelzebub.podcasts.ui.screens
 
-import android.os.Build
-import android.os.Build.VERSION_CODES
-import android.system.Os
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,6 +41,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Share
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleHasPlayed
+import net.treelzebub.podcasts.util.DeviceApi
 
 
 @UnstableApi
@@ -56,9 +54,7 @@ fun EpisodeDetail(episodeId: String) {
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
 
-    if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
-        RequestNotificationPermission()
-    }
+    if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
     if (uiState.loading) {
         LoadingBox()

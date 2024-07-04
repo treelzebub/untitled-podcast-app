@@ -1,11 +1,15 @@
 package net.treelzebub.podcasts.service
 
+import android.content.Intent
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import dagger.hilt.android.AndroidEntryPoint
 
+
+@AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
 
     private var session: MediaSession? = null
@@ -22,6 +26,10 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+    }
 
     override fun onDestroy() {
         session?.run {
