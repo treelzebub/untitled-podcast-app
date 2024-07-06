@@ -1,19 +1,16 @@
 package net.treelzebub.podcasts.ui.vm
 
 import android.app.Application
-import android.app.Notification
 import android.content.ComponentName
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import androidx.media3.ui.PlayerNotificationManager
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -226,34 +223,17 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         }
     }
 
-    private inner class PlayerNotificationListener : PlayerNotificationManager.NotificationListener {
-        override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
-            Timber.d("onNotificationPosted")
-        }
-
-        override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
-            Timber.d("onNotificationCancelled")
-        }
-    }
-
     private inner class PodcastPlayerListener : Player.Listener {
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            Timber.d("onPlaybackStateChanged: $playbackState")
-        }
-
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-        }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            Timber.d("Listener heard isPlaying: $isPlaying")
             viewModelScope.launch(ioDispatcher) {
                 _uiState.update { it.copy(isPlaying = isPlaying) }
             }
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            super.onPlayerError(error)
             Timber.e("Error: ${error.message}")
+            super.onPlayerError(error)
         }
     }
 }
