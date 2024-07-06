@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,24 +28,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Archive
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Download
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.PlayPause
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleHasPlayed
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.AddToQueue
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Archive
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.PlayPause
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.Share
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleBookmarked
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.EpisodeDetailAction.ToggleHasPlayed
 import net.treelzebub.podcasts.util.DeviceApi
 
 
-@UnstableApi
+@SuppressLint("UnsafeOptInUsageError")
 @Destination
 @Composable
 fun EpisodeDetail(episodeId: String) {
@@ -63,7 +62,7 @@ fun EpisodeDetail(episodeId: String) {
     }
 }
 
-@UnstableApi
+@SuppressLint("UnsafeOptInUsageError")
 @Composable
 fun EpisodeContent(
     modifier: Modifier = Modifier,
@@ -135,7 +134,6 @@ fun EpisodeContent(
     }
 }
 
-@UnstableApi
 @Composable
 fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDetailAction) -> Unit) {
     Row(
@@ -147,7 +145,7 @@ fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDe
         Text(
             fontSize = 24.sp,
             text = "\uD83D\uDCE4",
-            modifier = Modifier.padding(16.dp).clickable { actionHandler(Share) })
+            modifier = Modifier.padding(16.dp).clickable { actionHandler(EpisodeDetailAction.Share) })
     }
 }
 
