@@ -14,6 +14,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.media3.ui.PlayerNotificationManager
+import com.google.common.util.concurrent.MoreExecutors
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -117,7 +118,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         get() = controllerFuture.let { if (it.isDone) it.get() else null }
 
     init {
-        loadEpisode(episodeId)
+        with(controllerFuture) {
+            addListener({ if (isDone) loadEpisode(episodeId) }, MoreExecutors.directExecutor())
+        }
     }
 
     private fun loadEpisode(episodeId: String) {
