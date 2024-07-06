@@ -2,6 +2,9 @@ package net.treelzebub.podcasts.data
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +17,23 @@ import timber.log.Timber
 import javax.inject.Inject
 
 
-data class PodcastQueue(val list: List<EpisodeUi> = emptyList())
+data class PodcastQueue(val list: List<EpisodeUi> = emptyList()) {
+    fun asMediaItems(): List<MediaItem> {
+        return list.map { item ->
+            val mediaMetaData = MediaMetadata.Builder()
+                .setArtworkUri(Uri.parse(item.imageUrl))
+                .setTitle(item.title)
+                .setAlbumArtist(item.podcastTitle)
+                .build()
+            val trackUri = Uri.parse(item.streamingLink)
+            MediaItem.Builder()
+                .setUri(trackUri)
+                .setMediaId(item.id)
+                .setMediaMetadata(mediaMetaData)
+                .build()
+        }
+    }
+}
 
 // TODO all signatures of add() need to account for "episode exists in queue"
 class QueueStore @Inject constructor(

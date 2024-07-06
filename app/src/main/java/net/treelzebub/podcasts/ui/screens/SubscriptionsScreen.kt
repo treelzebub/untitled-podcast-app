@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.util.UnstableApi
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -30,7 +29,6 @@ import net.treelzebub.podcasts.util.toast
 
 private fun validateUrl(url: String): Boolean = Patterns.WEB_URL.matcher(url).matches()
 
-@UnstableApi
 @RootNavGraph(start = true)
 @Destination
 @Composable

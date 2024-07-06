@@ -16,14 +16,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.util.UnstableApi
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.screens.destinations.EpisodeDetailDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 
 
-@UnstableApi
 @Composable
 fun EpisodesList(
     navigator: DestinationsNavigator,
@@ -39,7 +37,6 @@ fun EpisodesList(
     }
 }
 
-@UnstableApi
 @Composable
 fun EpisodeItem(navigator: DestinationsNavigator, episode: EpisodeUi) {
     ItemCard(
