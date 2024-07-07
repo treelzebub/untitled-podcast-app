@@ -67,8 +67,6 @@ interface PlayerState {
 
 private class PlayerStateImpl(override val player: Player) : PlayerState {
 
-    override suspend fun listenPosition(collector: FlowCollector<String>) = listener.listenPosition(collector)
-
     override var timeline: Timeline by mutableStateOf(player.currentTimeline)
         private set
 
@@ -120,34 +118,40 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     override var deviceInfo: DeviceInfo by mutableStateOf(player.deviceInfo)
         private set
 
+    override suspend fun listenPosition(collector: FlowCollector<String>) = listener.listenPosition(collector)
+
+    override fun dispose() {
+        listener.active = false
+        player.removeListener(listener)
+    }
+
     private val listener = object : Player.Listener {
-        var active = true
+        private val POLLING_MILLIS = 1000L
 
         private val state = this@PlayerStateImpl
-
         private val positionFlow = flow {
             while (active) {
                 emit(player.currentPosition)
-                delay(300)
+                delay(POLLING_MILLIS)
             }
         }
 
+        var active = true
+
         suspend fun listenPosition(collector: FlowCollector<String>) {
             positionFlow.collect {
-                val initialDelay = 1000 - (player.currentPosition % 1000)
+                val initialDelay = POLLING_MILLIS - (player.currentPosition % POLLING_MILLIS)
                 delay(initialDelay)
 
                 while (active) {
                     val str = if (
-                        !player.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) ||
-                        player.contentDuration == TIME_UNSET
+                        player.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
+                        player.contentDuration != TIME_UNSET
                     ) {
-                        "00:00 / 00:00"
-                    } else {
                         formatPosition(player.currentPosition, player.contentDuration)
-                    }
+                    } else ""
                     collector.emit(str)
-                    delay(1000) // Update every second
+                    delay(POLLING_MILLIS) // Update every second
                 }
             }
         }
@@ -222,11 +226,6 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     init {
         listener.active = true
         player.addListener(listener)
-    }
-
-    override fun dispose() {
-        listener.active = false
-        player.removeListener(listener)
     }
 }
 

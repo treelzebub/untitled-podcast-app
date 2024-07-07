@@ -84,7 +84,7 @@ fun EpisodeContent(
     val fontSize = 24.sp
 
     val coroutineScope = rememberCoroutineScope()
-    var position by remember { mutableStateOf("00:00") }
+    var position by remember { mutableStateOf("") }
 
     LaunchedEffect("position") {
         coroutineScope.launch {
