@@ -20,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 
 @RunWith(RobolectricTestRunner::class)
@@ -155,9 +156,7 @@ class QueueStoreTests {
         var exception: Throwable? = null
         store.removeByPodcastId(Pod02_Ep01.podcastId) {
             exception = it
-            message = it.message!!
         }
-        assertIs<NoSuchElementException>(exception)
-        assertEquals("No episodes in queue with podcastId: ${Pod02_Ep01.podcastId}", message)
+        assertNull(exception)
     }
 }

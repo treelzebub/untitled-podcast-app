@@ -9,13 +9,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
+import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.ui.PodcastsApp
 import net.treelzebub.podcasts.ui.theme.PodcastsTheme
+import javax.inject.Inject
 
 
 @UnstableApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var podcastsRepo: PodcastsRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,5 +34,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        podcastsRepo.cancelScope()
+        super.onDestroy()
     }
 }

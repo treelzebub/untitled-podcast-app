@@ -6,9 +6,12 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -29,9 +32,13 @@ class PodcastsRepo @Inject constructor(
     private val ioDispatcher: CoroutineDispatcher
 ) {
 
+    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
+
+    fun cancelScope() = scope.cancel()
+
     /** RSS Feeds **/
     suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) {
-        withIoContext {
+        await {
             try {
                 Timber.d("Fetching RSS Feed: $rssLink")
                 val feed = rssHandler.fetch(rssLink)
@@ -46,7 +53,7 @@ class PodcastsRepo @Inject constructor(
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
     suspend fun getAllRssLinks(): List<SubscriptionDto> {
-        return withIoContext {
+        return await {
             db.podcastsQueries.get_all_rss_links().executeAsList()
                 .map { SubscriptionDto(it.id, it.rss_link) }
         }
@@ -54,7 +61,7 @@ class PodcastsRepo @Inject constructor(
 
     /** Podcasts **/
     suspend fun upsertPodcast(rssLink: String, channel: RssChannel) {
-        withIoContext {
+        await {
             db.transaction {
                 val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
                 val latestEpisodeTimestamp = channel.items
@@ -100,7 +107,7 @@ class PodcastsRepo @Inject constructor(
     }
 
     suspend fun getPodcastWithEpisodes(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
-        return withIoContext {
+        return await {
             db.podcastsQueries.transactionWithResult {
                 db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
                     .map { podcast ->
@@ -114,20 +121,20 @@ class PodcastsRepo @Inject constructor(
     }
 
     suspend fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
-        return withIoContext {
+        return await {
             db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
         }
     }
 
-    suspend fun deletePodcastById(podcastId: String) = withIoContext {
-        // Cascading delete of episodes declared in episodes.sq
+    // Cascading delete of episodes declared in episodes.sq
+    suspend fun deletePodcastById(podcastId: String) = await {
+        queueStore.removeByPodcastId(podcastId) {}
         db.podcastsQueries.delete(podcastId)
-        queueStore.removeByPodcastId(podcastId) { TODO() }
     }
 
     /** Episodes **/
     suspend fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
-        return withIoContext {
+        return await {
             db.episodesQueries
                 .get_by_podcast_id(podcastId, episodeMapper)
                 .asFlow()
@@ -136,26 +143,26 @@ class PodcastsRepo @Inject constructor(
     }
 
     suspend fun getEpisodeById(id: String): EpisodeUi {
-        return withIoContext {
+        return await {
             db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
                 ?: throw IllegalArgumentException("Episode is not in database!")
         }
     }
 
     suspend fun setIsBookmarked(episodeId: String, isBookmarked: Boolean) {
-        withIoContext {
+        await {
             db.episodesQueries.set_is_bookmarked(id = episodeId, is_bookmarked = isBookmarked)
         }
     }
 
     suspend fun setHasPlayed(episodeId: String, hasPlayed: Boolean) {
-        withIoContext {
+        await {
             db.episodesQueries.set_has_played(id = episodeId, has_played = hasPlayed)
         }
     }
 
     suspend fun setIsArchived(episodeId: String, isArchived: Boolean) {
-        withIoContext {
+        await {
             db.episodesQueries.set_is_archived(id = episodeId, is_archived = isArchived)
         }
     }
@@ -163,25 +170,24 @@ class PodcastsRepo @Inject constructor(
 
     /** Queue **/
     suspend fun addToQueue(episode: EpisodeUi, errorHandler: ErrorHandler) {
-        withIoContext {
+        await {
             queueStore.add(episode, errorHandler)
         }
     }
 
     suspend fun removeFromQueue(episodeId: String, errorHandler: ErrorHandler) {
-        withIoContext {
+        await {
             queueStore.remove(episodeId, errorHandler)
         }
     }
 
     suspend fun reorderQueue(from: Int, to: Int, errorHandler: ErrorHandler) {
-        withIoContext {
+        await {
             queueStore.reorder(from, to, errorHandler)
         }
     }
 
-
-    private suspend fun <T> withIoContext(block: suspend () -> T): T = withContext(ioDispatcher) { block() }
+    private suspend fun <T> await(block: suspend () -> T): T = scope.async { block() }.await()
 
     companion object {
 

@@ -64,7 +64,7 @@ fun EpisodeDetail(episodeId: String) {
 
     if (uiState.loading) {
         LoadingBox()
-    } else if (episodeState.isPopulated) {
+    } else if (episodeState.isPopulated && playerState != null) {
         EpisodeContent(uiState = uiState, episodeState = episodeState, playerState = playerState!!, actionHandler = vm.actionHandler)
     }
 }

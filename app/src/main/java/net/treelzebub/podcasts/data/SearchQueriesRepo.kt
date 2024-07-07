@@ -17,16 +17,12 @@ class SearchQueriesRepo @Inject constructor(
 ) {
 
     suspend fun searchPodcasts(query: String) = withContext(ioDispatcher) {
-        insert(query)
+        db.searchesQueries.insert(query)
         api.searchPodcasts(query)
     }
 
     suspend fun all() = withContext(ioDispatcher) {
         db.searchesQueries.select_all().asFlow().mapToList(ioDispatcher)
-    }
-
-    suspend fun insert(query: String) = withContext(ioDispatcher) {
-        db.searchesQueries.insert(query)
     }
 
     suspend fun delete(query: String) = withContext(ioDispatcher) {
