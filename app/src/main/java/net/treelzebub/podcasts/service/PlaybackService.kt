@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import androidx.annotation.Px
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.media3.common.AudioAttributes
@@ -43,7 +42,6 @@ class PlaybackService : MediaSessionService() {
             .setSessionActivity(intent)
             .build()
         setListener(PlaybackServiceListener())
-        Timber.d("Service creation complete.")
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _session

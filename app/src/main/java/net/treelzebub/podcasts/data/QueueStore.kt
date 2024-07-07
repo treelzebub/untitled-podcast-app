@@ -112,9 +112,6 @@ class QueueStore @Inject constructor(
 
     suspend fun removeByPodcastId(podcastId: String, onError: ErrorHandler) {
         update(onError) { queue ->
-            if (queue.list.none { it.podcastId == podcastId }) {
-                throw NoSuchElementException("No episodes in queue with podcastId: $podcastId")
-            }
             queue.copy(list = queue.list.toMutableList().apply {
                 removeAll { it.podcastId == podcastId }
             })
