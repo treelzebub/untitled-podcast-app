@@ -135,9 +135,10 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getEpisodeById(id: String): EpisodeUi? {
+    suspend fun getEpisodeById(id: String): EpisodeUi {
         return withIoContext {
             db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
+                ?: throw IllegalArgumentException("Episode is not in database!")
         }
     }
 

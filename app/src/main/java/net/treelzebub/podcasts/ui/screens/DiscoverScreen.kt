@@ -54,10 +54,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
 
-    val onSearch = { query: String? ->
-        val trimmed = query?.trim()
-        if (!trimmed.isNullOrBlank()) vm.search(trimmed)
-    }
+    val onSearch = { query: String? -> vm.search(query) }
     val onSelect: (Feed) -> Unit = {
         vm.select(it) { TODO() }
         navigator.navigate(SubscriptionsScreenDestination)

@@ -30,23 +30,21 @@ class DiscoverViewModel @Inject constructor(
         getPreviousQueries()
     }
 
-    fun search(query: String) {
-        loading()
+    fun search(query: String?) {
+        val clean = query?.trim().orEmpty()
+        if (clean.isBlank()) return
         viewModelScope.launch {
             loading()
-            val results = queriesRepo.searchPodcasts(query)
+            val results = queriesRepo.searchPodcasts(clean)
             _state.update {
-                it.copy(
-                    loading = false,
-                    feeds = results.feeds
-                )
+                it.copy(loading = false, feeds = results.feeds)
             }
         }
     }
 
     fun select(feed: Feed, onError: ErrorHandler) {
-        loading()
         viewModelScope.launch {
+            loading()
             podcastsRepo.fetchRssFeed(feed.url) {
                 onError(it)
                 error()
@@ -59,8 +57,8 @@ class DiscoverViewModel @Inject constructor(
     }
 
     private fun getPreviousQueries() {
-        loading()
         viewModelScope.launch {
+            loading()
             queriesRepo.all().collect { queries ->
                 _state.update {
                     it.copy(

@@ -86,7 +86,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         val isArchived: Boolean = false
     )
 
-
     private val _uiState = MutableStateFlow(UiState())
     private val _episodeState = MutableStateFlow(EpisodeState())
     private val episodeHolder = MutableStateFlow<EpisodeUi?>(null)
@@ -115,15 +114,37 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         get() = controllerFuture.let { if (it.isDone) it.get() else null }
 
     init {
+        init(episodeId)
+    }
+
+    override fun onCleared() {
+        controller?.removeListener(listener)
+        super.onCleared()
+    }
+
+    private fun init(episodeId: String) {
         with(controllerFuture) {
             addListener({ if (isDone) loadEpisode(episodeId) }, MoreExecutors.directExecutor())
+        }
+        viewModelScope.launch(ioDispatcher) {
+            queueStore.stateFlow.collect { queue ->
+                if (controller == null) return@collect
+                val mediaItems = queue.asMediaItems()
+                withContext(mainDispatcher) {
+                    with(controller!!) {
+                        addListener(listener)
+                        setMediaItems(mediaItems)
+                        playWhenReady = true
+                        prepare()
+                    }
+                }
+            }
         }
     }
 
     private fun loadEpisode(episodeId: String) {
         viewModelScope.launch(ioDispatcher) {
             val episode = repo.getEpisodeById(episodeId)
-                ?: throw IllegalArgumentException("Episode is not in database!")
             with(episode) {
                 episodeHolder.update { this }
                 _episodeState.update {
@@ -155,29 +176,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     @UnstableApi
     private fun prepareQueue(episode: EpisodeUi) {
-        Timber.d("Preparing Queue")
         viewModelScope.launch(ioDispatcher) {
             queueStore.add(episode) { Timber.e("Error preparing queue, adding to queue") }
-            queueStore.stateFlow.collect { queue ->
-                val mediaItems = queue.asMediaItems()
-                withContext(mainDispatcher) {
-                    controller?.let {
-                        it.setMediaItems(mediaItems)
-                        it.addListener(listener)
-                        it.playWhenReady = true
-                        it.prepare()
-                        Timber.d("controller is not null")
-                    } ?: Timber.d("controller is null.")
-                }
-            }
         }
-    }
-
-    fun seekTo(position: Long) = controller?.seekTo(position)
-
-    override fun onCleared() {
-        controller?.removeListener(listener)
-        super.onCleared()
     }
 
     private fun toggleBookmarked() {
