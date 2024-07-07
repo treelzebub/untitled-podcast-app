@@ -4,11 +4,16 @@ import android.app.Application
 import android.content.ComponentName
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
@@ -27,6 +32,8 @@ import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
+import net.treelzebub.podcasts.service.PlayerState
+import net.treelzebub.podcasts.service.state
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Archive
@@ -112,6 +119,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private val controllerFuture = MediaController.Builder(getApplication(), sessionToken).buildAsync()
     private val controller: MediaController?
         get() = controllerFuture.let { if (it.isDone) it.get() else null }
+    var playerState = MutableStateFlow<PlayerState?>(null)
 
     init {
         init(episodeId)
@@ -119,12 +127,19 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     override fun onCleared() {
         controller?.removeListener(listener)
+        playerState.value?.dispose()
+        playerState.value = null
         super.onCleared()
     }
 
     private fun init(episodeId: String) {
         with(controllerFuture) {
-            addListener({ if (isDone) loadEpisode(episodeId) }, MoreExecutors.directExecutor())
+            addListener({
+                if (isDone) {
+                    loadEpisode(episodeId)
+                    playerState.update { controller!!.state() }
+                }
+            }, MoreExecutors.directExecutor())
         }
         viewModelScope.launch(ioDispatcher) {
             queueStore.stateFlow.collect { queue ->

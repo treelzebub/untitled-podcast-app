@@ -17,8 +17,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,7 +34,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
+import net.treelzebub.podcasts.service.PlayerState
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
@@ -52,13 +59,14 @@ fun EpisodeDetail(episodeId: String) {
     )
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
+    val playerState by remember { vm.playerState }.collectAsStateWithLifecycle()
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
     if (uiState.loading) {
         LoadingBox()
     } else if (episodeState.isPopulated) {
-        EpisodeContent(uiState = uiState, episodeState = episodeState, actionHandler = vm.actionHandler)
+        EpisodeContent(uiState = uiState, episodeState = episodeState, playerState = playerState!!, actionHandler = vm.actionHandler)
     }
 }
 
@@ -68,12 +76,25 @@ fun EpisodeContent(
     modifier: Modifier = Modifier,
     uiState: EpisodeDetailViewModel.UiState,
     episodeState: EpisodeDetailViewModel.EpisodeState,
+    playerState: PlayerState,
     actionHandler: (EpisodeDetailAction) -> Unit
 ) {
     // TODO move all to reusable theme values
     val buttonPadding = 18.dp
     val outerPadding = 16.dp
     val fontSize = 24.sp
+
+    val coroutineScope = rememberCoroutineScope()
+    var position by remember { mutableStateOf("00:00") }
+
+    LaunchedEffect("position") {
+        coroutineScope.launch {
+            // Boy is this dumb, but it works
+            playerState.listenPosition {
+                position = it
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().then(modifier),
@@ -124,7 +145,9 @@ fun EpisodeContent(
             Row(modifier = Modifier.padding(horizontal = outerPadding)) {
                 Text(text = episodeState.displayDate.orEmpty())
                 Spacer(modifier = Modifier.weight(1.0f))
-                Text(text = episodeState.duration.orEmpty())
+                Text(text = position)
+//                Spacer(modifier = Modifier.weight(1.0f))
+//                Text(text = episodeState.duration.orEmpty())
             }
             Spacer(modifier = Modifier.padding(vertical = 2.dp))
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {

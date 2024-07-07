@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import androidx.annotation.Px
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.media3.common.AudioAttributes
@@ -16,6 +15,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.util.DeviceApi
 import timber.log.Timber
 
@@ -28,6 +28,10 @@ class PlaybackService : MediaSessionService() {
         const val NOTIF_CHANNEL = "media.podspispops"
         const val SESSION_INTENT_REQUEST_CODE = 0xf00d
     }
+
+    private data class State(
+        val episode: EpisodeUi? = null
+    )
 
     private var _session: MediaSession? = null
     private val session: MediaSession
@@ -43,7 +47,6 @@ class PlaybackService : MediaSessionService() {
             .setSessionActivity(intent)
             .build()
         setListener(PlaybackServiceListener())
-        Timber.d("Service creation complete.")
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _session
