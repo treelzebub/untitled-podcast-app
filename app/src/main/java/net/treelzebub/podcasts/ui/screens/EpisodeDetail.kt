@@ -34,7 +34,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.service.PlayerState
@@ -89,7 +88,6 @@ fun EpisodeContent(
 
     LaunchedEffect("position") {
         coroutineScope.launch {
-            // Boy is this dumb, but it works
             playerState.listenPosition {
                 position = it
             }
@@ -146,8 +144,6 @@ fun EpisodeContent(
                 Text(text = episodeState.displayDate.orEmpty())
                 Spacer(modifier = Modifier.weight(1.0f))
                 Text(text = position)
-//                Spacer(modifier = Modifier.weight(1.0f))
-//                Text(text = episodeState.duration.orEmpty())
             }
             Spacer(modifier = Modifier.padding(vertical = 2.dp))
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {

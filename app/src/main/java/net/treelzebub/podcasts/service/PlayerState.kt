@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C.TIME_UNSET
 import androidx.media3.common.DeviceInfo
 import androidx.media3.common.MediaItem
@@ -15,10 +14,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
-import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
-import androidx.media3.common.VideoSize
-import androidx.media3.common.text.CueGroup
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
@@ -44,48 +40,25 @@ interface PlayerState {
 
     val isLoading: Boolean
 
-    val availableCommands: Player.Commands
-
-    val trackSelectionParameters: TrackSelectionParameters
-
     @get:Player.State
     val playbackState: Int
 
-    val playWhenReady: Boolean
-
     @get:Player.PlaybackSuppressionReason
     val playbackSuppressionReason: Int
-
-    val isPlaying: Boolean
-
-    @get:Player.RepeatMode
-    val repeatMode: Int
-
-    val shuffleModeEnabled: Boolean
 
     val playerError: PlaybackException?
 
     val playbackParameters: PlaybackParameters
 
-    val seekBackIncrement: Long
-
-    val seekForwardIncrement: Long
-
     val maxSeekToPreviousPosition: Long
 
-    val audioAttributes: AudioAttributes
-
     val volume: Float
-
-    val deviceInfo: DeviceInfo
 
     val deviceVolume: Int
 
     val isDeviceMuted: Boolean
 
-    val videoSize: VideoSize
-
-    val cues: CueGroup
+    val deviceInfo: DeviceInfo
 
     suspend fun listenPosition(collector: FlowCollector<String>)
 
@@ -117,31 +90,12 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     override var isLoading: Boolean by mutableStateOf(player.isLoading)
         private set
 
-    override var availableCommands: Player.Commands by mutableStateOf(player.availableCommands)
-        private set
-
-    override var trackSelectionParameters: TrackSelectionParameters by mutableStateOf(player.trackSelectionParameters)
-        private set
-
     @get:Player.State
     override var playbackState: Int by mutableIntStateOf(player.playbackState)
         private set
 
-    override var playWhenReady: Boolean by mutableStateOf(player.playWhenReady)
-        private set
-
     @get:Player.PlaybackSuppressionReason
     override var playbackSuppressionReason: Int by mutableIntStateOf(player.playbackSuppressionReason)
-        private set
-
-    override var isPlaying: Boolean by mutableStateOf(player.isPlaying)
-        private set
-
-    @get:Player.RepeatMode
-    override var repeatMode: Int by mutableIntStateOf(player.repeatMode)
-        private set
-
-    override var shuffleModeEnabled: Boolean by mutableStateOf(player.shuffleModeEnabled)
         private set
 
     override var playerError: PlaybackException? by mutableStateOf(player.playerError)
@@ -150,22 +104,11 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     override var playbackParameters: PlaybackParameters by mutableStateOf(player.playbackParameters)
         private set
 
-    override var seekBackIncrement: Long by mutableLongStateOf(player.seekBackIncrement)
-        private set
-
-    override var seekForwardIncrement: Long by mutableLongStateOf(player.seekForwardIncrement)
-        private set
 
     override var maxSeekToPreviousPosition: Long by mutableLongStateOf(player.maxSeekToPreviousPosition)
         private set
 
-    override var audioAttributes: AudioAttributes by mutableStateOf(player.audioAttributes)
-        private set
-
     override var volume: Float by mutableFloatStateOf(player.volume)
-        private set
-
-    override var deviceInfo: DeviceInfo by mutableStateOf(player.deviceInfo)
         private set
 
     override var deviceVolume: Int by mutableIntStateOf(player.deviceVolume)
@@ -174,20 +117,16 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     override var isDeviceMuted: Boolean by mutableStateOf(player.isDeviceMuted)
         private set
 
-    override var videoSize: VideoSize by mutableStateOf(player.videoSize)
-        private set
-
-    override var cues: CueGroup by mutableStateOf(player.currentCues)
+    override var deviceInfo: DeviceInfo by mutableStateOf(player.deviceInfo)
         private set
 
     private val listener = object : Player.Listener {
+        var active = true
+
         private val state = this@PlayerStateImpl
 
-        private var active = true
         private val positionFlow = flow {
             while (active) {
-                //format
-
                 emit(player.currentPosition)
                 delay(300)
             }
@@ -198,7 +137,7 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
                 val initialDelay = 1000 - (player.currentPosition % 1000)
                 delay(initialDelay)
 
-                while (true) {
+                while (active) {
                     val str = if (
                         !player.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) ||
                         player.contentDuration == TIME_UNSET
@@ -238,39 +177,12 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
             state.isLoading = isLoading
         }
 
-        override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
-            state.availableCommands = availableCommands
-        }
-
-        override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) {
-            state.trackSelectionParameters = parameters
-        }
-
         override fun onPlaybackStateChanged(@Player.State playbackState: Int) {
             state.playbackState = playbackState
         }
 
-        override fun onPlayWhenReadyChanged(
-            playWhenReady: Boolean,
-            @Player.PlayWhenReadyChangeReason reason: Int
-        ) {
-            state.playWhenReady = playWhenReady
-        }
-
         override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {
             state.playbackSuppressionReason = playbackSuppressionReason
-        }
-
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            state.isPlaying = isPlaying
-        }
-
-        override fun onRepeatModeChanged(repeatMode: Int) {
-            state.repeatMode = repeatMode
-        }
-
-        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-            state.shuffleModeEnabled = shuffleModeEnabled
         }
 
         override fun onPlayerErrorChanged(error: PlaybackException?) {
@@ -289,20 +201,8 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
             state.playbackParameters = playbackParameters
         }
 
-        override fun onSeekBackIncrementChanged(seekBackIncrementMs: Long) {
-            state.seekBackIncrement = seekBackIncrementMs
-        }
-
-        override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) {
-            state.seekForwardIncrement = seekForwardIncrementMs
-        }
-
         override fun onMaxSeekToPreviousPositionChanged(maxSeekToPreviousPositionMs: Long) {
             state.maxSeekToPreviousPosition = maxSeekToPreviousPositionMs
-        }
-
-        override fun onAudioAttributesChanged(audioAttributes: AudioAttributes) {
-            state.audioAttributes = audioAttributes
         }
 
         override fun onVolumeChanged(volume: Float) {
@@ -317,21 +217,15 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
             state.deviceVolume = volume
             state.isDeviceMuted = muted
         }
-
-        override fun onVideoSizeChanged(videoSize: VideoSize) {
-            state.videoSize = videoSize
-        }
-
-        override fun onCues(cues: CueGroup) {
-            state.cues = cues
-        }
     }
 
     init {
+        listener.active = true
         player.addListener(listener)
     }
 
     override fun dispose() {
+        listener.active = false
         player.removeListener(listener)
     }
 }
@@ -347,16 +241,10 @@ private fun formatPosition(current: Long, total: Long): String {
 
     return when {
         tHours > 0 -> String.format(
-            Locale.getDefault(),
-            "%02d:%02d:%02d / %02d:%02d:%02d",
-            cHours,
-            cMins,
-            cSecs,
-            tHours,
-            tMins,
-            tSecs
-        )
-
-        else -> String.format(Locale.getDefault(), "%02d:%02d / %02d:%02d", cMins, cSecs, tMins, tSecs)
+            Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
+            cHours, cMins, cSecs,
+            tHours, tMins, tSecs)
+        else -> String.format(Locale.getDefault(), "%02d:%02d / %02d:%02d",
+            cMins, cSecs, tMins, tSecs)
     }
 }
