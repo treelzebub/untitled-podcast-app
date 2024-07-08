@@ -17,8 +17,6 @@ import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.flow
-import java.util.Locale
 
 
 fun Player.state(): PlayerState = PlayerStateImpl(this)
@@ -60,7 +58,7 @@ interface PlayerState {
 
     val deviceInfo: DeviceInfo
 
-    suspend fun listenPosition(collector: FlowCollector<String>)
+    suspend fun listenPosition(collector: FlowCollector<Long>)
 
     fun dispose()
 }
@@ -118,7 +116,7 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     override var deviceInfo: DeviceInfo by mutableStateOf(player.deviceInfo)
         private set
 
-    override suspend fun listenPosition(collector: FlowCollector<String>) = listener.listenPosition(collector)
+    override suspend fun listenPosition(collector: FlowCollector<Long>) = listener.listenPosition(collector)
 
     override fun dispose() {
         listener.active = false
@@ -126,33 +124,22 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     }
 
     private val listener = object : Player.Listener {
-        private val POLLING_MILLIS = 1000L
-
+        private val interval = 1000L
         private val state = this@PlayerStateImpl
-        private val positionFlow = flow {
-            while (active) {
-                emit(player.currentPosition)
-                delay(POLLING_MILLIS)
-            }
-        }
-
         var active = true
 
-        suspend fun listenPosition(collector: FlowCollector<String>) {
-            positionFlow.collect {
-                val initialDelay = POLLING_MILLIS - (player.currentPosition % POLLING_MILLIS)
-                delay(initialDelay)
+        suspend fun listenPosition(collector: FlowCollector<Long>) {
+            val initialDelay = interval - (player.currentPosition % interval)
+            delay(initialDelay)
 
-                while (active) {
-                    val str = if (
-                        player.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
-                        player.contentDuration != TIME_UNSET
-                    ) {
-                        formatPosition(player.currentPosition, player.contentDuration)
-                    } else ""
-                    collector.emit(str)
-                    delay(POLLING_MILLIS) // Update every second
+            while (active) {
+                if (
+                    player.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
+                    player.contentDuration != TIME_UNSET
+                ) {
+                    collector.emit(player.currentPosition)
                 }
+                delay(interval) // Update every second
             }
         }
 
@@ -226,24 +213,5 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
     init {
         listener.active = true
         player.addListener(listener)
-    }
-}
-
-private fun formatPosition(current: Long, total: Long): String {
-    val cHours = (current / (1000 * 60 * 60)) % 24
-    val cMins = (current / (1000 * 60)) % 60
-    val cSecs = (current / 1000) % 60
-
-    val tHours = (total / (1000 * 60 * 60)) % 24
-    val tMins = (total / (1000 * 60)) % 60
-    val tSecs = (total / 1000) % 60
-
-    return when {
-        tHours > 0 -> String.format(
-            Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
-            cHours, cMins, cSecs,
-            tHours, tMins, tSecs)
-        else -> String.format(Locale.getDefault(), "%02d:%02d / %02d:%02d",
-            cMins, cSecs, tMins, tSecs)
     }
 }

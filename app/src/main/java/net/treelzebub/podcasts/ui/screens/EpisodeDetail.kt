@@ -47,6 +47,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleHasPlayed
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
 import net.treelzebub.podcasts.util.DeviceApi
+import java.util.Locale
 
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -65,7 +66,12 @@ fun EpisodeDetail(episodeId: String) {
     if (uiState.loading) {
         LoadingBox()
     } else if (episodeState.isPopulated && playerState != null) {
-        EpisodeContent(uiState = uiState, episodeState = episodeState, playerState = playerState!!, actionHandler = vm.actionHandler)
+        EpisodeContent(
+            uiState = uiState,
+            episodeState = episodeState,
+            playerState = playerState!!,
+            actionHandler = vm.actionHandler
+        )
     }
 }
 
@@ -89,7 +95,7 @@ fun EpisodeContent(
     LaunchedEffect("position") {
         coroutineScope.launch {
             playerState.listenPosition {
-                position = it
+                position = formatPosition(it, playerState.player.contentDuration)
             }
         }
     }
@@ -103,7 +109,16 @@ fun EpisodeContent(
             modifier = Modifier.padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AsyncImage(modifier = Modifier.padding(buttonPadding).size(256.dp).clip(RoundedCornerShape(8.dp)), model = episodeState.imageUrl, contentDescription = "")
+            AsyncImage(
+                modifier = Modifier
+                    .padding(buttonPadding)
+                    .size(256.dp)
+                    .clip(
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                model = episodeState.imageUrl,
+                contentDescription = ""
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -160,11 +175,43 @@ fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDe
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.Right
     ) {
-        Text(fontSize = 24.sp, text = "♥", modifier = Modifier.padding(16.dp).clickable { actionHandler(ToggleBookmarked) })
         Text(
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable { actionHandler(ToggleBookmarked) },
             fontSize = 24.sp,
-            text = "\uD83D\uDCE4",
-            modifier = Modifier.padding(16.dp).clickable { actionHandler(EpisodeDetailAction.Share) })
+            text = "♥"
+        )
+        Text(
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable { actionHandler(EpisodeDetailAction.Share) },
+            fontSize = 24.sp,
+            text = "\uD83D\uDCE4"
+        )
+    }
+}
+
+private fun formatPosition(current: Long, total: Long): String {
+    val cHours = (current / (1000 * 60 * 60)) % 24
+    val cMins = (current / (1000 * 60)) % 60
+    val cSecs = (current / 1000) % 60
+
+    val tHours = (total / (1000 * 60 * 60)) % 24
+    val tMins = (total / (1000 * 60)) % 60
+    val tSecs = (total / 1000) % 60
+
+    return when {
+        tHours > 0 -> String.format(
+            Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
+            cHours, cMins, cSecs,
+            tHours, tMins, tSecs
+        )
+
+        else -> String.format(
+            Locale.getDefault(), "%02d:%02d / %02d:%02d",
+            cMins, cSecs, tMins, tSecs
+        )
     }
 }
 
