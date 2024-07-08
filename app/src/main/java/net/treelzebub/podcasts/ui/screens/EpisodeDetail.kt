@@ -58,14 +58,28 @@ fun EpisodeDetail(episodeId: String) {
     )
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
+<<<<<<< Updated upstream
     val playerState by remember { vm.playerState }.collectAsStateWithLifecycle()
+=======
+    val player by remember { vm.player }
+>>>>>>> Stashed changes
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
     if (uiState.loading) {
         LoadingBox()
+<<<<<<< Updated upstream
     } else if (episodeState.isPopulated && playerState != null) {
         EpisodeContent(uiState = uiState, episodeState = episodeState, playerState = playerState!!, actionHandler = vm.actionHandler)
+=======
+    } else if (episodeState.isPopulated && player != null) {
+        EpisodeContent(
+            uiState = uiState,
+            episodeState = episodeState,
+            player = player!!,
+            actionHandler = vm.actionHandler
+        )
+>>>>>>> Stashed changes
     }
 }
 

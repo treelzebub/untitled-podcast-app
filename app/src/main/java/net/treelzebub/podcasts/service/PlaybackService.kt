@@ -15,6 +15,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+<<<<<<< Updated upstream
+=======
+import dagger.hilt.android.AndroidEntryPoint
+import net.treelzebub.podcasts.data.PodcastsRepo
+>>>>>>> Stashed changes
 import net.treelzebub.podcasts.util.DeviceApi
 import timber.log.Timber
 
@@ -28,6 +33,12 @@ class PlaybackService : MediaSessionService() {
         const val SESSION_INTENT_REQUEST_CODE = 0xf00d
     }
 
+<<<<<<< Updated upstream
+=======
+    @Inject
+    lateinit var repo: PodcastsRepo
+
+>>>>>>> Stashed changes
     private var _session: MediaSession? = null
     private val session: MediaSession
         get() = _session!!
@@ -58,6 +69,10 @@ class PlaybackService : MediaSessionService() {
             _session = null
         }
         clearListener()
+<<<<<<< Updated upstream
+=======
+        repo.cancelScope()
+>>>>>>> Stashed changes
         super.onDestroy()
     }
 
