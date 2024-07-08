@@ -18,6 +18,9 @@ import javax.inject.Inject
 
 
 data class PodcastQueue(val list: List<EpisodeUi> = emptyList()) {
+
+    operator fun get(i: Int) = list[i]
+
     fun asMediaItems(): List<MediaItem> {
         return list.map { item ->
             val mediaMetaData = MediaMetadata.Builder()

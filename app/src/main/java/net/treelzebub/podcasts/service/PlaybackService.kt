@@ -35,10 +35,11 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
 
-    private companion object {
-        const val NOTIF_ID = 0xd00d
-        const val NOTIF_CHANNEL = "media.podspispops"
-        const val SESSION_INTENT_REQUEST_CODE = 0xf00d
+    companion object {
+        const val KEY_EPISODE_ID = "episode-id"
+        private const val NOTIF_ID = 0xd00d
+        private const val NOTIF_CHANNEL = "media.podspispops"
+        private const val SESSION_INTENT_REQUEST_CODE = 0xf00d
     }
 
     @Inject
@@ -125,7 +126,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun persistPosition() {
-        val episodeId = session.sessionExtras.getString("episodeId")
+        val episodeId = session.sessionExtras.getString(KEY_EPISODE_ID)
             ?: throw IllegalStateException("Session has no episodeId in extras")
         repo.updatePosition(episodeId, playbackPosition.longValue)
     }

@@ -136,20 +136,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                 }
             }, MoreExecutors.directExecutor())
         }
-        viewModelScope.launch(ioDispatcher) {
-            queueStore.stateFlow.collect { queue ->
-                if (controller == null) return@collect
-                val mediaItems = queue.asMediaItems()
-                withContext(mainDispatcher) {
-                    with(controller!!) {
-                        addListener(listener)
-                        setMediaItems(mediaItems, 0, queue.list.first().positionMillis) // TODO!
-                        playWhenReady = true
-                        prepare()
-                    }
-                }
-            }
-        }
+        prepare(episodeId)
     }
 
     private fun loadEpisode(episodeId: String) {
@@ -167,19 +154,17 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                         streamingLink = streamingLink
                     )
                 }
-                prepareQueue(this)
+
+                queueStore.add(episode) { Timber.e("Error adding to queue") }
+
                 _uiState.update {
                     it.copy(
                         loading = false,
                         queueIndex = queueStore.indexFor(id),
-                        // durationMillis = ,
                         progressMillis = positionMillis,
                         isBookmarked = isBookmarked,
                         isArchived = isArchived
                     )
-                }
-                withContext(mainDispatcher) {
-                    controller!!.sessionExtras.putString("episodeId", episodeId)
                 }
             }
         }.invokeOnCompletion { error ->
@@ -187,10 +172,21 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         }
     }
 
-    @UnstableApi
-    private fun prepareQueue(episode: EpisodeUi) {
+    private fun prepare(episodeId: String) {
         viewModelScope.launch(ioDispatcher) {
-            queueStore.add(episode) { Timber.e("Error preparing queue, adding to queue") }
+            queueStore.stateFlow.collect { queue ->
+                if (controller == null) return@collect
+                val mediaItems = queue.asMediaItems()
+                withContext(mainDispatcher) {
+                    with(controller!!) {
+                        addListener(listener)
+                        sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeId)
+                        setMediaItems(mediaItems, 0, queue[0].positionMillis) // TODO!
+                        playWhenReady = true
+                        prepare()
+                    }
+                }
+            }
         }
     }
 
