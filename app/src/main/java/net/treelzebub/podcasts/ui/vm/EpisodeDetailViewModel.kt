@@ -110,7 +110,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private val sessionToken =
-        SessionToken(getApplication(), ComponentName(getApplication(), PlaybackService::class.java)).also { it.extras }
+        SessionToken(getApplication(), ComponentName(getApplication(), PlaybackService::class.java))
     private val controllerFuture = MediaController.Builder(getApplication(), sessionToken).buildAsync()
     private val controller: MediaController?
         get() = controllerFuture.let { if (it.isDone) it.get() else null }

@@ -13,6 +13,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Player.COMMAND_GET_CURRENT_MEDIA_ITEM
 import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import kotlinx.coroutines.delay
@@ -133,10 +134,7 @@ private class PlayerStateImpl(override val player: Player) : PlayerState {
             delay(initialDelay)
 
             while (active) {
-                if (
-                    player.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
-                    player.contentDuration != TIME_UNSET
-                ) {
+                if (player.isCommandAvailable(COMMAND_GET_CURRENT_MEDIA_ITEM) && player.contentDuration != TIME_UNSET) {
                     collector.emit(player.currentPosition)
                 }
                 delay(interval) // Update every second
