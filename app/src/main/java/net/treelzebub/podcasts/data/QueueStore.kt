@@ -18,6 +18,9 @@ import javax.inject.Inject
 
 
 data class PodcastQueue(val list: List<EpisodeUi> = emptyList()) {
+
+    operator fun get(i: Int) = list[i]
+
     fun asMediaItems(): List<MediaItem> {
         return list.map { item ->
             val mediaMetaData = MediaMetadata.Builder()
@@ -26,11 +29,16 @@ data class PodcastQueue(val list: List<EpisodeUi> = emptyList()) {
                 .setAlbumArtist(item.podcastTitle)
                 .build()
             val trackUri = Uri.parse(item.streamingLink)
-            MediaItem.Builder()
+            val builder = MediaItem.Builder()
                 .setUri(trackUri)
                 .setMediaId(item.id)
                 .setMediaMetadata(mediaMetaData)
-                .build()
+            if (item.positionMillis > 0) {
+                builder.setClippingConfiguration(
+                    MediaItem.ClippingConfiguration.Builder().setStartPositionMs(item.positionMillis).build()
+                )
+            }
+            builder.build()
         }
     }
 }

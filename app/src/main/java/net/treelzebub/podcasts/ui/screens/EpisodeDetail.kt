@@ -32,11 +32,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
-import net.treelzebub.podcasts.service.PlayerState
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
@@ -47,6 +48,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleHasPlayed
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
 import net.treelzebub.podcasts.util.DeviceApi
+import java.util.Locale
 
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -58,14 +60,19 @@ fun EpisodeDetail(episodeId: String) {
     )
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
-    val playerState by remember { vm.playerState }.collectAsStateWithLifecycle()
+    val playerState by remember { vm.player }
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
     if (uiState.loading) {
         LoadingBox()
     } else if (episodeState.isPopulated && playerState != null) {
-        EpisodeContent(uiState = uiState, episodeState = episodeState, playerState = playerState!!, actionHandler = vm.actionHandler)
+        EpisodeContent(
+            uiState = uiState,
+            episodeState = episodeState,
+            player = playerState!!,
+            actionHandler = vm.actionHandler
+        )
     }
 }
 
@@ -75,7 +82,7 @@ fun EpisodeContent(
     modifier: Modifier = Modifier,
     uiState: EpisodeDetailViewModel.UiState,
     episodeState: EpisodeDetailViewModel.EpisodeState,
-    playerState: PlayerState,
+    player: Player,
     actionHandler: (EpisodeDetailAction) -> Unit
 ) {
     // TODO move all to reusable theme values
@@ -88,8 +95,16 @@ fun EpisodeContent(
 
     LaunchedEffect("position") {
         coroutineScope.launch {
-            playerState.listenPosition {
-                position = it
+            val interval = 1000L
+            val player = player
+            val initialDelay = interval - (player.currentPosition % interval)
+            delay(initialDelay)
+
+            while (true) {
+                if (player.isPlaying) {
+                    position = formatPosition(player.currentPosition, player.contentDuration)
+                }
+                delay(interval)
             }
         }
     }
@@ -103,7 +118,16 @@ fun EpisodeContent(
             modifier = Modifier.padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AsyncImage(modifier = Modifier.padding(buttonPadding).size(256.dp).clip(RoundedCornerShape(8.dp)), model = episodeState.imageUrl, contentDescription = "")
+            AsyncImage(
+                modifier = Modifier
+                    .padding(buttonPadding)
+                    .size(256.dp)
+                    .clip(
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                model = episodeState.imageUrl,
+                contentDescription = ""
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -160,11 +184,43 @@ fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDe
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.Right
     ) {
-        Text(fontSize = 24.sp, text = "♥", modifier = Modifier.padding(16.dp).clickable { actionHandler(ToggleBookmarked) })
         Text(
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable { actionHandler(ToggleBookmarked) },
             fontSize = 24.sp,
-            text = "\uD83D\uDCE4",
-            modifier = Modifier.padding(16.dp).clickable { actionHandler(EpisodeDetailAction.Share) })
+            text = "♥"
+        )
+        Text(
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable { actionHandler(EpisodeDetailAction.Share) },
+            fontSize = 24.sp,
+            text = "\uD83D\uDCE4"
+        )
+    }
+}
+
+private fun formatPosition(current: Long, total: Long): String {
+    val cHours = (current / (1000 * 60 * 60)) % 24
+    val cMins = (current / (1000 * 60)) % 60
+    val cSecs = (current / 1000) % 60
+
+    val tHours = (total / (1000 * 60 * 60)) % 24
+    val tMins = (total / (1000 * 60)) % 60
+    val tSecs = (total / 1000) % 60
+
+    return when {
+        tHours > 0 -> String.format(
+            Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
+            cHours, cMins, cSecs,
+            tHours, tMins, tSecs
+        )
+
+        else -> String.format(
+            Locale.getDefault(), "%02d:%02d / %02d:%02d",
+            cMins, cSecs, tMins, tSecs
+        )
     }
 }
 

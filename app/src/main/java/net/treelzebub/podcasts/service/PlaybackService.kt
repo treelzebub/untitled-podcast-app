@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.os.bundleOf
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
@@ -15,31 +16,66 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.di.IoDispatcher
+import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.util.DeviceApi
 import timber.log.Timber
+import javax.inject.Inject
 
 
 @UnstableApi
+@AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
 
-    private companion object {
-        const val NOTIF_ID = 0xd00d
-        const val NOTIF_CHANNEL = "media.podspispops"
-        const val SESSION_INTENT_REQUEST_CODE = 0xf00d
+    companion object {
+        const val KEY_EPISODE_ID = "episode-id"
+        private const val NOTIF_ID = 0xd00d
+        private const val NOTIF_CHANNEL = "media.podspispops"
+        private const val SESSION_INTENT_REQUEST_CODE = 0xf00d
     }
 
+    @Inject
+    @IoDispatcher
+    lateinit var ioDispatcher: CoroutineDispatcher
+
+    @Inject
+    @MainDispatcher
+    lateinit var mainDispatcher: CoroutineDispatcher
+
+    @Inject
+    lateinit var repo: PodcastsRepo
+
+    private val scope by lazy { CoroutineScope(SupervisorJob() + ioDispatcher) }
     private var _session: MediaSession? = null
     private val session: MediaSession
         get() = _session!!
+    private val isPlayingListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (!isPlaying) persistPosition()
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
+        val player = buildPlayer()
         val intent = packageManager!!.getLaunchIntentForPackage(packageName)!!
             .let { sessionIntent ->
-                PendingIntent.getActivity(this, SESSION_INTENT_REQUEST_CODE, sessionIntent, PendingIntent.FLAG_IMMUTABLE)
+                PendingIntent.getActivity(
+                    this,
+                    SESSION_INTENT_REQUEST_CODE,
+                    sessionIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
             }
-        _session = MediaSession.Builder(this, buildPlayer())
+        _session = MediaSession.Builder(this, player)
             .setSessionActivity(intent)
+            .setSessionExtras(bundleOf())
             .build()
         setListener(PlaybackServiceListener())
     }
@@ -54,10 +90,13 @@ class PlaybackService : MediaSessionService() {
     override fun onDestroy() {
         session.run {
             player.release()
+            player.removeListener(isPlayingListener)
             release()
             _session = null
         }
         clearListener()
+        scope.cancel()
+        repo.cancelScope()
         super.onDestroy()
     }
 
@@ -67,10 +106,18 @@ class PlaybackService : MediaSessionService() {
                 AudioAttributes.Builder()
                     .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
                     .setUsage(C.USAGE_MEDIA)
-                    .build(), true)
+                    .build(), true
+            )
             .setSeekBackIncrementMs(10L)
             .setSeekForwardIncrementMs(5L)
             .build()
+            .also { it.addListener(isPlayingListener) }
+    }
+
+    private fun persistPosition() {
+        val episodeId = session.sessionExtras.getString(KEY_EPISODE_ID)
+            ?: throw IllegalStateException("Session has no episodeId in extras")
+        repo.updatePosition(episodeId, session.player.currentPosition)
     }
 
     private inner class PlaybackServiceListener : Listener {
