@@ -116,6 +116,7 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(platform(libs.compose.bom))
     implementation(libs.work)
+    implementation(libs.datastore.prefs)
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
