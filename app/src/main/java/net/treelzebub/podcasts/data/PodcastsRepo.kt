@@ -12,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -37,8 +38,8 @@ class PodcastsRepo @Inject constructor(
     fun cancelScope() = scope.cancel()
 
     /** RSS Feeds **/
-    suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) {
-        await {
+    fun fetchRssFeed(rssLink: String, onError: ErrorHandler) {
+        scope.launch {
             try {
                 Timber.d("Fetching RSS Feed: $rssLink")
                 val feed = rssHandler.fetch(rssLink)
@@ -60,8 +61,8 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Podcasts **/
-    suspend fun upsertPodcast(rssLink: String, channel: RssChannel) {
-        await {
+    fun upsertPodcast(rssLink: String, channel: RssChannel) {
+        scope.launch {
             db.transaction {
                 val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
                 val latestEpisodeTimestamp = channel.items
@@ -149,40 +150,47 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun setIsBookmarked(episodeId: String, isBookmarked: Boolean) {
-        await {
+    fun updatePosition(id: String, millis: Long) {
+        Timber.d("Persisting episode id: $id at position: $millis")
+        scope.launch {
+            db.episodesQueries.set_position_millis(millis, id)
+        }
+    }
+
+    fun setIsBookmarked(episodeId: String, isBookmarked: Boolean) {
+        scope.launch {
             db.episodesQueries.set_is_bookmarked(id = episodeId, is_bookmarked = isBookmarked)
         }
     }
 
-    suspend fun setHasPlayed(episodeId: String, hasPlayed: Boolean) {
-        await {
+    fun setHasPlayed(episodeId: String, hasPlayed: Boolean) {
+        scope.launch {
             db.episodesQueries.set_has_played(id = episodeId, has_played = hasPlayed)
         }
     }
 
-    suspend fun setIsArchived(episodeId: String, isArchived: Boolean) {
-        await {
+    fun setIsArchived(episodeId: String, isArchived: Boolean) {
+        scope.launch {
             db.episodesQueries.set_is_archived(id = episodeId, is_archived = isArchived)
         }
     }
 
 
     /** Queue **/
-    suspend fun addToQueue(episode: EpisodeUi, errorHandler: ErrorHandler) {
-        await {
+    fun addToQueue(episode: EpisodeUi, errorHandler: ErrorHandler) {
+        scope.launch {
             queueStore.add(episode, errorHandler)
         }
     }
 
     suspend fun removeFromQueue(episodeId: String, errorHandler: ErrorHandler) {
-        await {
+        scope.launch {
             queueStore.remove(episodeId, errorHandler)
         }
     }
 
     suspend fun reorderQueue(from: Int, to: Int, errorHandler: ErrorHandler) {
-        await {
+        scope.launch {
             queueStore.reorder(from, to, errorHandler)
         }
     }
@@ -248,7 +256,7 @@ class PodcastsRepo @Inject constructor(
                 imageUrl = image_url.orEmpty(),
                 duration = duration.orEmpty(),
                 hasPlayed = has_played,
-                progressMillis = progress_seconds,
+                positionMillis = progress_seconds,
                 isBookmarked = is_bookmarked,
                 isArchived = is_archived
             )

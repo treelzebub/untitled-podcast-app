@@ -17,7 +17,7 @@ data class EpisodeUi(
     val imageUrl: String,
     val duration: String,
     val hasPlayed: Boolean,
-    val progressMillis: Long,
+    val positionMillis: Long,
     val isBookmarked: Boolean,
     val isArchived: Boolean
 ) {

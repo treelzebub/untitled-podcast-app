@@ -49,11 +49,9 @@ private class _DebugViewModel @Inject constructor(
 
     private fun fetch(file: String) {
         val scope = CoroutineScope(ioDispatcher)
-        scope.launch {
-            app.assets.open(file).bufferedReader().use {
-                it.forEachLine {
-                    scope.launch { repo.fetchRssFeed(it) {} }
-                }
+        app.assets.open(file).bufferedReader().use {
+            it.forEachLine {
+                scope.launch { repo.fetchRssFeed(it) {} }
             }
         }
     }

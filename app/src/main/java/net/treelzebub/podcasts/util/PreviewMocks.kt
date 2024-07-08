@@ -20,7 +20,7 @@ object PreviewMocks {
         imageUrl = "https://picsum.photos/200",
         duration = "5h 30m",
         hasPlayed = false,
-        progressMillis = 0,
+        positionMillis = 0,
         isBookmarked = false,
         isArchived = false
     )

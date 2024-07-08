@@ -43,12 +43,10 @@ class DiscoverViewModel @Inject constructor(
     }
 
     fun select(feed: Feed, onError: ErrorHandler) {
-        viewModelScope.launch {
-            loading()
-            podcastsRepo.fetchRssFeed(feed.url) {
-                onError(it)
-                error()
-            }
+        loading()
+        podcastsRepo.fetchRssFeed(feed.url) {
+            onError(it)
+            error()
         }
     }
 

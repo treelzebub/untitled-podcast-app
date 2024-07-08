@@ -4,16 +4,12 @@ import android.app.Application
 import android.content.ComponentName
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
@@ -32,8 +28,6 @@ import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
-import net.treelzebub.podcasts.service.PlayerState
-import net.treelzebub.podcasts.service.state
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Archive
@@ -100,6 +94,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     val uiState = _uiState.asStateFlow()
     val episodeState = _episodeState.asStateFlow()
+    val player = mutableStateOf<Player?>(null)
 
     val actionHandler: (EpisodeDetailAction) -> Unit = { action ->
         Timber.d("Received action: $action")
@@ -119,7 +114,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private val controllerFuture = MediaController.Builder(getApplication(), sessionToken).buildAsync()
     private val controller: MediaController?
         get() = controllerFuture.let { if (it.isDone) it.get() else null }
-    var playerState = MutableStateFlow<PlayerState?>(null)
 
     init {
         init(episodeId)
@@ -127,8 +121,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     override fun onCleared() {
         controller?.removeListener(listener)
-        playerState.value?.dispose()
-        playerState.value = null
+        player.value = null
         super.onCleared()
     }
 
@@ -136,25 +129,12 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         with(controllerFuture) {
             addListener({
                 if (isDone) {
+                    player.value = controller!!
                     loadEpisode(episodeId)
-                    playerState.update { controller!!.state() }
                 }
             }, MoreExecutors.directExecutor())
         }
-        viewModelScope.launch(ioDispatcher) {
-            queueStore.stateFlow.collect { queue ->
-                if (controller == null) return@collect
-                val mediaItems = queue.asMediaItems()
-                withContext(mainDispatcher) {
-                    with(controller!!) {
-                        addListener(listener)
-                        setMediaItems(mediaItems)
-                        playWhenReady = true
-                        prepare()
-                    }
-                }
-            }
-        }
+        prepare(episodeId)
     }
 
     private fun loadEpisode(episodeId: String) {
@@ -172,13 +152,14 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                         streamingLink = streamingLink
                     )
                 }
-                prepareQueue(this)
+
+                queueStore.add(episode) { Timber.e("Error adding to queue") }
+
                 _uiState.update {
                     it.copy(
                         loading = false,
                         queueIndex = queueStore.indexFor(id),
-                        // durationMillis = ,
-                        progressMillis = progressMillis,
+                        progressMillis = positionMillis,
                         isBookmarked = isBookmarked,
                         isArchived = isArchived
                     )
@@ -189,18 +170,27 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         }
     }
 
-    @UnstableApi
-    private fun prepareQueue(episode: EpisodeUi) {
+    private fun prepare(episodeId: String) {
         viewModelScope.launch(ioDispatcher) {
-            queueStore.add(episode) { Timber.e("Error preparing queue, adding to queue") }
+            queueStore.stateFlow.collect { queue ->
+                if (controller == null) return@collect
+                val mediaItems = queue.asMediaItems()
+                withContext(mainDispatcher) {
+                    with(controller!!) {
+                        addListener(listener)
+                        sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeId)
+                        setMediaItems(mediaItems, 0, queue[0].positionMillis) // TODO!
+                        playWhenReady = true
+                        prepare()
+                    }
+                }
+            }
         }
     }
 
     private fun toggleBookmarked() {
-        viewModelScope.launch(ioDispatcher) {
-            episodeHolder.value?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
-            _uiState.update { it.copy(isBookmarked = !it.isBookmarked) }
-        }
+        episodeHolder.value?.let { repo.setIsBookmarked(it.id, !it.isBookmarked) }
+        _uiState.update { it.copy(isBookmarked = !it.isBookmarked) }
     }
 
     private fun share() {
@@ -219,32 +209,24 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun addToQueue() {
-        viewModelScope.launch(ioDispatcher) {
-            // TODO UI State -> isInQueue
-            episodeHolder.value?.let { repo.addToQueue(it) { TODO() } }
-        }
+        // TODO UI State -> isInQueue
+        episodeHolder.value?.let { repo.addToQueue(it) { TODO() } }
     }
 
     private fun toggleHasPlayed() {
-        viewModelScope.launch(ioDispatcher) {
-            episodeHolder.value?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
-            _uiState.update { it.copy(hasPlayed = !it.hasPlayed) }
-        }
+        episodeHolder.value?.let { repo.setHasPlayed(it.id, !it.hasPlayed) }
+        _uiState.update { it.copy(hasPlayed = !it.hasPlayed) }
     }
 
     private fun toggleArchived() {
-        viewModelScope.launch(ioDispatcher) {
-            episodeHolder.value?.let { repo.setIsArchived(it.id, !it.isArchived) }
-            _uiState.update { it.copy(isArchived = !it.isArchived) }
-        }
+        episodeHolder.value?.let { repo.setIsArchived(it.id, !it.isArchived) }
+        _uiState.update { it.copy(isArchived = !it.isArchived) }
     }
 
     private inner class PodcastPlayerListener : Player.Listener {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            viewModelScope.launch(ioDispatcher) {
-                _uiState.update { it.copy(isPlaying = isPlaying) }
-            }
+            _uiState.update { it.copy(isPlaying = isPlaying) }
         }
 
         override fun onPlayerError(error: PlaybackException) {

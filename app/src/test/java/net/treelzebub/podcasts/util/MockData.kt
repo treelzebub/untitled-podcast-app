@@ -36,7 +36,7 @@ val Pod01_Ep01 = EpisodeUi(
     imageUrl = "https://picsum.photos/200",
     duration = "5h 30m",
     hasPlayed = false,
-    progressMillis = 0,
+    positionMillis = 0,
     isBookmarked = false,
     isArchived = false
 )
@@ -57,7 +57,7 @@ val Pod01_Ep02 = EpisodeUi(
     imageUrl = "https://picsum.photos/200",
     duration = "5h 30m",
     hasPlayed = false,
-    progressMillis = 0,
+    positionMillis = 0,
     isBookmarked = false,
     isArchived = false
 )
@@ -78,7 +78,7 @@ val Pod01_Ep03 = EpisodeUi(
     imageUrl = "https://picsum.photos/200",
     duration = "5h 30m",
     hasPlayed = false,
-    progressMillis = 0,
+    positionMillis = 0,
     isBookmarked = false,
     isArchived = false
 )
@@ -113,7 +113,7 @@ val Pod02_Ep01 = EpisodeUi(
     imageUrl = "https://picsum.photos/200",
     duration = "5h 30m",
     hasPlayed = false,
-    progressMillis = 0,
+    positionMillis = 0,
     isBookmarked = false,
     isArchived = false
 )
@@ -134,7 +134,7 @@ val Pod02_Ep02 = EpisodeUi(
     imageUrl = "https://picsum.photos/200",
     duration = "5h 30m",
     hasPlayed = false,
-    progressMillis = 0,
+    positionMillis = 0,
     isBookmarked = false,
     isArchived = false
 )
@@ -155,7 +155,7 @@ val Pod02_Ep03 = EpisodeUi(
     imageUrl = "https://picsum.photos/200",
     duration = "5h 30m",
     hasPlayed = false,
-    progressMillis = 0,
+    positionMillis = 0,
     isBookmarked = false,
     isArchived = false
 )
