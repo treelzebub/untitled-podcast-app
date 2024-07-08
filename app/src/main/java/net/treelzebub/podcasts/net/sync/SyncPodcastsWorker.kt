@@ -1,8 +1,6 @@
 package net.treelzebub.podcasts.net.sync
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.PeriodicWorkRequestBuilder
@@ -12,8 +10,9 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import net.treelzebub.podcasts.data.PodcastPref
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.data.dataStore
+import net.treelzebub.podcasts.data.Prefs
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.util.Time
 import okhttp3.Call
@@ -27,7 +26,7 @@ import java.time.Duration
 class SyncPodcastsWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    // TODO private val prefs: UserPreferences,
+    private val prefs: Prefs,
     private val podcastsRepo: PodcastsRepo,
     private val updater: SubscriptionUpdater,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
@@ -37,16 +36,12 @@ class SyncPodcastsWorker @AssistedInject constructor(
         fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(1L)).build()
     }
 
-    private val dataStore = appContext.dataStore
-    private val prefLastSync = longPreferencesKey("last-sync-timestamp")
     private var shouldSync = false
 
     init {
-        CoroutineScope(coroutineContext).launch {
-            dataStore.data.collect { prefs ->
-                val _15_minutes_ago = Time.nowSeconds() - (15 * 60)
-                shouldSync = (prefs[prefLastSync] ?: _15_minutes_ago) <= _15_minutes_ago
-            }
+        prefs.collect(PodcastPref.LastSyncTimestamp) {
+            val _15_minutes_ago = Time.nowSeconds() - (15 * 60)
+            shouldSync = it <= _15_minutes_ago
         }
     }
 
@@ -75,11 +70,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
             }
             updater.update(sub, onResponse, onFailure)
         }
-        dataStore.edit { prefs ->
-            prefs[prefLastSync] = Time.nowSeconds()
-            Timber.d("Pref time updated: ${Time.verboseFormat(Time.nowSeconds())}")
-        }
-        // TODO
+        prefs.edit(PodcastPref.LastSyncTimestamp, Time.nowSeconds())
         return Result.success()
     }
 }
