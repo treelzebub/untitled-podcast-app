@@ -10,8 +10,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import net.treelzebub.podcasts.data.PodcastPref
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.data.Prefs
 import net.treelzebub.podcasts.di.IoDispatcher
+import net.treelzebub.podcasts.util.Time
 import okhttp3.Call
 import okhttp3.Response
 import timber.log.Timber
@@ -23,7 +26,7 @@ import java.time.Duration
 class SyncPodcastsWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    // TODO private val prefs: UserPreferences,
+    private val prefs: Prefs,
     private val podcastsRepo: PodcastsRepo,
     private val updater: SubscriptionUpdater,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
@@ -33,8 +36,19 @@ class SyncPodcastsWorker @AssistedInject constructor(
         fun request() = PeriodicWorkRequestBuilder<SyncPodcastsWorker>(Duration.ofHours(1L)).build()
     }
 
+    private var shouldSync = false
+
+    init {
+        prefs.collect(PodcastPref.LastSyncTimestamp) {
+            val _15_minutes_ago = Time.nowSeconds() - (15 * 60)
+            shouldSync = it <= _15_minutes_ago
+        }
+    }
+
     // TODO: Improve by defining freshness. Pull all pods, only update when stale.
     override suspend fun doWork(): Result {
+        if (!shouldSync) return Result.success()
+
         Timber.d("Starting sync...")
         val subs = podcastsRepo.getAllRssLinks()
         Timber.d("Processing updates for ${subs.size} podcasts...")
@@ -56,8 +70,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
             }
             updater.update(sub, onResponse, onFailure)
         }
-
-        // TODO
+        prefs.edit(PodcastPref.LastSyncTimestamp, Time.nowSeconds())
         return Result.success()
     }
 }
