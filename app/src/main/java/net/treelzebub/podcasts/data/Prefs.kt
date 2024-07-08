@@ -47,11 +47,11 @@ class Prefs @Inject constructor(
     ): Job {
         return scope.launch {
             dataStore.data.collect { prefs ->
-                val currentValue = prefs[pref.key]
-                if (currentValue == null) {
+                val current = prefs[pref.key]
+                if (current == null) {
                     val editedPrefs = edit(pref, default).await()
                     collector.emit(editedPrefs[pref.key]!!)
-                } else collector.emit(currentValue)
+                } else collector.emit(current)
             }
         }
     }
