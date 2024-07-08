@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.util.Time
-import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -48,12 +47,11 @@ class Prefs @Inject constructor(
     ): Job {
         return scope.launch {
             dataStore.data.collect { prefs ->
-                val current = prefs[pref.key] ?: default
-                val edited = if (current != default) {
+                val currentValue = prefs[pref.key]
+                if (currentValue == null) {
                     val editedPrefs = edit(pref, default).await()
-                    editedPrefs[pref.key]!!
-                } else current
-                collector.emit(edited)
+                    collector.emit(editedPrefs[pref.key]!!)
+                } else collector.emit(currentValue)
             }
         }
     }
