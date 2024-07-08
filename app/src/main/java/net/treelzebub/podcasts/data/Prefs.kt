@@ -47,8 +47,7 @@ class Prefs @Inject constructor(
     ): Job {
         return scope.launch {
             dataStore.data.collect { prefs ->
-                if (prefs[pref.key] == null) edit(pref, default).await()
-                collector.emit(prefs[pref.key]!!)
+                collector.emit(prefs[pref.key] ?: default)
             }
         }
     }

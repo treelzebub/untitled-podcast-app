@@ -49,23 +49,17 @@ class SyncPodcastsWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         if (!shouldSync) return Result.success()
 
-        Timber.d("Starting sync...")
         val subs = podcastsRepo.getAllRssLinks()
-        Timber.d("Processing updates for ${subs.size} podcasts...")
         subs.forEach { sub ->
-            Timber.d("Fetching Feed for ${sub.rssLink}")
             val onFailure: (Call, IOException) -> Unit = { _, e ->
-                // TODO error propagation
-                Timber.e("Error Updating Feed with url: ${sub.rssLink}", e)
+                Timber.e("Error Updating Feed with url: ${sub.rssLink}", e) // TODO
             }
             val onResponse: (Call, Response) -> Unit = { call, response ->
                 if (response.isSuccessful && response.body != null) {
-                    Timber.d("Updated Feed with url: ${sub.rssLink}. Parsing...")
                     CoroutineScope(ioDispatcher).launch {
                         val parsed = podcastsRepo.parseRssFeed(response.body!!.string())
                         podcastsRepo.upsertPodcast(sub.rssLink, parsed)
                     }
-                    Timber.d("Parsed and persisted Feed with url: ${sub.rssLink}")
                 } else onFailure(call, IOException("Unknown Error"))
             }
             updater.update(sub, onResponse, onFailure)
