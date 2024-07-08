@@ -32,11 +32,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
-import net.treelzebub.podcasts.service.PlayerState
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
@@ -59,7 +60,7 @@ fun EpisodeDetail(episodeId: String) {
     )
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
-    val playerState by remember { vm.playerState }.collectAsStateWithLifecycle()
+    val playerState by remember { vm.player }
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
@@ -69,7 +70,7 @@ fun EpisodeDetail(episodeId: String) {
         EpisodeContent(
             uiState = uiState,
             episodeState = episodeState,
-            playerState = playerState!!,
+            player = playerState!!,
             actionHandler = vm.actionHandler
         )
     }
@@ -81,7 +82,7 @@ fun EpisodeContent(
     modifier: Modifier = Modifier,
     uiState: EpisodeDetailViewModel.UiState,
     episodeState: EpisodeDetailViewModel.EpisodeState,
-    playerState: PlayerState,
+    player: Player,
     actionHandler: (EpisodeDetailAction) -> Unit
 ) {
     // TODO move all to reusable theme values
@@ -94,8 +95,16 @@ fun EpisodeContent(
 
     LaunchedEffect("position") {
         coroutineScope.launch {
-            playerState.listenPosition {
-                position = formatPosition(it, playerState.player.contentDuration)
+            val interval = 1000L
+            val player = player
+            val initialDelay = interval - (player.currentPosition % interval)
+            delay(initialDelay)
+
+            while (true) {
+                if (player.isPlaying) {
+                    position = formatPosition(player.currentPosition, player.contentDuration)
+                }
+                delay(interval)
             }
         }
     }

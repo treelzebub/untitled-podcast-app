@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
@@ -22,7 +21,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
@@ -57,7 +55,6 @@ class PlaybackService : MediaSessionService() {
     private var _session: MediaSession? = null
     private val session: MediaSession
         get() = _session!!
-    private val playbackPosition = mutableLongStateOf(0L)
     private val isPlayingListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             if (!isPlaying) persistPosition()
@@ -81,14 +78,6 @@ class PlaybackService : MediaSessionService() {
             .setSessionExtras(bundleOf())
             .build()
         setListener(PlaybackServiceListener())
-
-        // Player must always be accessed from main thread
-        scope.launch(mainDispatcher) {
-            player.state().listenPosition {
-                Timber.d("PlaybackService updated playback position: $it")
-                playbackPosition.longValue = it
-            }
-        }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _session
@@ -128,7 +117,7 @@ class PlaybackService : MediaSessionService() {
     private fun persistPosition() {
         val episodeId = session.sessionExtras.getString(KEY_EPISODE_ID)
             ?: throw IllegalStateException("Session has no episodeId in extras")
-        repo.updatePosition(episodeId, playbackPosition.longValue)
+        repo.updatePosition(episodeId, session.player.currentPosition)
     }
 
     private inner class PlaybackServiceListener : Listener {

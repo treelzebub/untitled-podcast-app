@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ComponentName
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.PlaybackException
@@ -27,8 +28,6 @@ import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
-import net.treelzebub.podcasts.service.PlayerState
-import net.treelzebub.podcasts.service.state
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Archive
@@ -95,6 +94,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     val uiState = _uiState.asStateFlow()
     val episodeState = _episodeState.asStateFlow()
+    val player = mutableStateOf<Player?>(null)
 
     val actionHandler: (EpisodeDetailAction) -> Unit = { action ->
         Timber.d("Received action: $action")
@@ -114,7 +114,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private val controllerFuture = MediaController.Builder(getApplication(), sessionToken).buildAsync()
     private val controller: MediaController?
         get() = controllerFuture.let { if (it.isDone) it.get() else null }
-    var playerState = MutableStateFlow<PlayerState?>(null)
 
     init {
         init(episodeId)
@@ -122,8 +121,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     override fun onCleared() {
         controller?.removeListener(listener)
-        playerState.value?.dispose()
-        playerState.value = null
+        player.value = null
         super.onCleared()
     }
 
@@ -131,8 +129,8 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         with(controllerFuture) {
             addListener({
                 if (isDone) {
+                    player.value = controller!!
                     loadEpisode(episodeId)
-                    playerState.update { controller!!.state() }
                 }
             }, MoreExecutors.directExecutor())
         }
