@@ -9,7 +9,6 @@ import dagger.assisted.AssistedInject
 import net.treelzebub.podcasts.data.PodcastPref
 import net.treelzebub.podcasts.data.Prefs
 import net.treelzebub.podcasts.net.models.SubscriptionDto
-import net.treelzebub.podcasts.util.Time
 import okhttp3.Call
 import timber.log.Timber
 import java.io.IOException
@@ -28,7 +27,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
             Timber.e("Error Updating Feed with url: ${sub.rssLink}", e) // TODO
         }
         updater.updateAll(onFailure)
-        prefs.putLong(PodcastPref.LastSyncTimestamp, Time.nowSeconds())
+        prefs.putLong(PodcastPref.LastSyncTimestamp, System.currentTimeMillis())
         return Result.success()
     }
 }
