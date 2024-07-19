@@ -13,6 +13,11 @@ sealed interface PodcastPref<T : Any> {
         override val key = "last-sync-timestamp"
         override val default: Long = -1L
     }
+
+    class EpisodesFilterUnplayed(val podcastId: String) : PodcastPref<Boolean> {
+        override val key: String = "$podcastId-episodes-filter-unplayed"
+        override val default: Boolean = true
+    }
 }
 
 class Prefs @Inject constructor(app: Application) {
@@ -25,9 +30,9 @@ class Prefs @Inject constructor(app: Application) {
     fun getLong(pref: PodcastPref<Long>): Long = prefs.getLong(pref.key, pref.default)
     fun getString(pref: PodcastPref<String>): String = prefs.getString(pref.key, pref.default)!!
 
-    fun putBoolean(pref: PodcastPref<Boolean>, value: Boolean) = editor.putBoolean(pref.key, pref.default).apply()
-    fun putFloat(pref: PodcastPref<Float>, value: Float) = editor.putFloat(pref.key, pref.default).apply()
-    fun putInt(pref: PodcastPref<Int>, value: Int) = editor.putInt(pref.key, pref.default).apply()
-    fun putLong(pref: PodcastPref<Long>, value: Long) = editor.putLong(pref.key, pref.default).apply()
-    fun putString(pref: PodcastPref<String>, value: String) = editor.putString(pref.key, pref.default).apply()
+    fun putBoolean(pref: PodcastPref<Boolean>, value: Boolean) = editor.putBoolean(pref.key, value).apply()
+    fun putFloat(pref: PodcastPref<Float>, value: Float) = editor.putFloat(pref.key, value).apply()
+    fun putInt(pref: PodcastPref<Int>, value: Int) = editor.putInt(pref.key, value).apply()
+    fun putLong(pref: PodcastPref<Long>, value: Long) = editor.putLong(pref.key, value).apply()
+    fun putString(pref: PodcastPref<String>, value: String) = editor.putString(pref.key, value).apply()
 }

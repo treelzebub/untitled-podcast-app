@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.sharp.Check
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -24,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,9 +37,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.components.EpisodesList
 import net.treelzebub.podcasts.ui.components.LoadingBox
-import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel
@@ -54,29 +59,31 @@ fun PodcastDetailsScreen(
         vm.deletePodcast()
         navigator.popBackStack()
     }
+    val onToggleOnlyUnplayed: () -> Unit = { vm.toggleOnlyUnplayed() }
 
     if (!state.loading && state.podcast == null) {
         navigator.navigateUp()
     } else if (state.loading) {
         LoadingBox()
     } else {
-        PodcastDetails(navigator, state.podcast!!, state.episodes, onDelete)
+//        PodcastDetails(navigator, state.podcast!!, state.episodes, onDelete, onToggleOnlyUnplayed)
+        PodcastDetails(navigator, state, onToggleOnlyUnplayed, onDelete)
     }
 }
 
 @Composable
 private fun PodcastDetails(
     navigator: DestinationsNavigator,
-    podcast: PodcastUi,
-    episodes: List<EpisodeUi>,
+    state: PodcastDetailsViewModel.State,
+    onToggleOnlyUnplayed: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
-        PodcastHeader(podcast, onDelete)
+        PodcastHeader(state.podcast!!, state.onlyUnplayed, onToggleOnlyUnplayed, onDelete)
         EpisodesList(
             navigator = navigator,
             modifier = Modifier.weight(4f),
-            episodes = episodes
+            episodes = state.episodes
         )
     }
 }
@@ -84,6 +91,8 @@ private fun PodcastDetails(
 @Composable
 private fun PodcastHeader(
     podcast: PodcastUi,
+    onlyUnplayed: Boolean,
+    onToggleOnlyUnplayed: () -> Unit,
     onDelete: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -124,7 +133,16 @@ private fun PodcastHeader(
                 contentDescription = "More menu"
             )
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenuItem(
+                    text = { Text(text = "Only Show Unplayed") },
+                    leadingIcon = {
+                        val icon = if (onlyUnplayed) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle
+                        Icon(icon, contentDescription = "")
+                    },
+                    onClick = onToggleOnlyUnplayed
+                )
                 DropdownMenuItem(text = { Text(text = "Delete") }, onClick = onDelete)
+
             }
         }
     }

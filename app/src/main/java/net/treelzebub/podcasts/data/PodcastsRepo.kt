@@ -3,7 +3,7 @@ package net.treelzebub.podcasts.data
 import androidx.annotation.VisibleForTesting
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOneOrNull
+import app.cash.sqldelight.coroutines.mapToOne
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +11,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
@@ -107,16 +107,16 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getPodcastWithEpisodes(podcastId: String): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
+    suspend fun getPodcastWithEpisodes(podcastId: String, onlyUnplayed: Boolean = true): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
         return await {
             db.podcastsQueries.transactionWithResult {
-                db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
-                    .map { podcast ->
-                        podcast?.let {
-                            val episodes = db.episodesQueries.get_by_podcast_id(podcastId, episodeMapper).executeAsList()
-                            it to episodes
-                        }
-                    }
+                val podcastFlow = db.podcastsQueries.get_by_id(podcastId, podcastMapper)
+                    .asFlow().mapToOne(ioDispatcher)
+                val episodesFlow = db.episodesQueries.let {
+                    if (onlyUnplayed) it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
+                    else it.get_by_podcast_id(podcastId, episodeMapper)
+                }.asFlow().mapToList(ioDispatcher)
+                podcastFlow.combine(episodesFlow) { pod, eps -> pod to eps }
             }
         }
     }
@@ -134,12 +134,12 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Episodes **/
-    suspend fun getEpisodesByPodcastId(podcastId: String): Flow<List<EpisodeUi>> {
+    suspend fun getEpisodes(podcastId: String, onlyUnplayed: Boolean): List<EpisodeUi> {
         return await {
-            db.episodesQueries
-                .get_by_podcast_id(podcastId, episodeMapper)
-                .asFlow()
-                .mapToList(ioDispatcher)
+            db.episodesQueries.let {
+                if (onlyUnplayed) it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
+                else it.get_by_podcast_id(podcastId, episodeMapper)
+            }.executeAsList()
         }
     }
 
@@ -174,7 +174,6 @@ class PodcastsRepo @Inject constructor(
             db.episodesQueries.set_is_archived(id = episodeId, is_archived = isArchived)
         }
     }
-
 
     /** Queue **/
     fun addToQueue(episode: EpisodeUi, errorHandler: ErrorHandler) {

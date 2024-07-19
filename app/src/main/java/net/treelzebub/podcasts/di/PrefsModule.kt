@@ -5,7 +5,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineDispatcher
 import net.treelzebub.podcasts.data.Prefs
 
 
@@ -14,5 +13,5 @@ import net.treelzebub.podcasts.data.Prefs
 class PrefsModule {
 
     @Provides
-    fun prefs(app: Application, @IoDispatcher ioDispatcher: CoroutineDispatcher) = Prefs(app, ioDispatcher)
+    fun prefs(app: Application) = Prefs(app)
 }
