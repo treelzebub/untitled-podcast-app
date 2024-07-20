@@ -8,7 +8,6 @@ import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -174,8 +173,6 @@ class PodcastsRepo @Inject constructor(
             queueStore.reorder(from, to, errorHandler)
         }
     }
-
-    private suspend fun <T> await(block: suspend () -> T): T = scope.async { block() }.await()
 
     companion object {
 
