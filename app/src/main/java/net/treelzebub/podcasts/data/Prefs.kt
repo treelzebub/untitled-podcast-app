@@ -2,6 +2,13 @@ package net.treelzebub.podcasts.data
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -35,4 +42,16 @@ class Prefs @Inject constructor(app: Application) {
     fun putInt(pref: PodcastPref<Int>, value: Int) = editor.putInt(pref.key, value).apply()
     fun putLong(pref: PodcastPref<Long>, value: Long) = editor.putLong(pref.key, value).apply()
     fun putString(pref: PodcastPref<String>, value: String) = editor.putString(pref.key, value).apply()
+
+    fun booleanFlow(pref: PodcastPref<Boolean>): Flow<Boolean> {
+        return callbackFlow {
+            val listener = OnSharedPreferenceChangeListener { _, it ->
+                if (it == pref.key) trySend(getBoolean(pref)); Timber.d("${pref.key} changed to ${getBoolean(pref)}")
+            }
+            prefs.registerOnSharedPreferenceChangeListener(listener)
+            trySend(getBoolean(pref))
+
+            awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+        }.buffer(Channel.UNLIMITED)
+    }
 }

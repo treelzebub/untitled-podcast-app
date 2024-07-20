@@ -51,7 +51,7 @@ fun PodcastDetailsScreen(
     val vm = hiltViewModel<PodcastDetailsViewModel, PodcastDetailsViewModel.Factory>(
         creationCallback = { factory -> factory.create(podcastId = podcastId) }
     )
-    val state by remember { vm.state }.collectAsState()
+    val state by remember { vm.uiState }.collectAsState()
     val onDelete: () -> Unit = {
         vm.deletePodcast()
         navigator.popBackStack()

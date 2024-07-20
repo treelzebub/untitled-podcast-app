@@ -1,20 +1,25 @@
 package net.treelzebub.podcasts.ui.vm
 
 import androidx.compose.runtime.Stable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastPref.EpisodesShowPlayed
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.Prefs
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import timber.log.Timber
 
 
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
@@ -22,17 +27,11 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     @Assisted private val podcastId: String,
     private val repo: PodcastsRepo,
     private val prefs: Prefs
-) : StatefulViewModel<PodcastDetailsViewModel.State>(State()) {
+) : ViewModel() {
 
     @AssistedFactory
     interface Factory {
         fun create(podcastId: String): PodcastDetailsViewModel
-    }
-
-    private val showPlayed: Boolean get() = prefs.getBoolean(EpisodesShowPlayed(podcastId))
-
-    init {
-        getPodcastAndEpisodes()
     }
 
     @Stable
@@ -40,44 +39,29 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         val loading: Boolean = true,
         val podcast: PodcastUi? = null,
         val episodes: List<EpisodeUi> = listOf(),
-        val showPlayed: Boolean = true,
+        val showPlayed: Boolean = false,
         val queue: List<EpisodeUi> = listOf()
     )
 
-    private fun getPodcastAndEpisodes() {
-        if (!state.value.loading) loading()
-        viewModelScope.launch {
-            val showPlayed = showPlayed // anchor momentary value
-            val podcastFlow = repo.getPodcast(podcastId)
-            val episodesFlow = repo.getEpisodes(podcastId, showPlayed)
-            val pair = podcastFlow.combine(episodesFlow) { podcast, episodes ->
-                podcast to episodes
-            }
-            pair.collect {
-                _state.update { state ->
-                    state.copy(
-                        loading = false,
-                        podcast = it.first,
-                        episodes = it.second,
-                        showPlayed = showPlayed
-                    )
-                }
-            }
-        }
-    }
+    private val showPlayedFlow = prefs.booleanFlow(EpisodesShowPlayed(podcastId))
 
-    private fun refreshEpisodes() {
-        if (!state.value.loading) loading()
-        val showPlayed = showPlayed
-        val episodes = repo.getEpisodesList(podcastId, showPlayed)
-        _state.update {
-            it.copy(
-                loading = false,
-                episodes = episodes,
-                showPlayed = showPlayed
-            )
-        }
-    }
+    private val podcastFlow = repo.getPodcast(podcastId)
+        .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), replay = 1)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val episodesFlow = showPlayedFlow.flatMapLatest { showPlayed ->
+        repo.getEpisodes(podcastId, showPlayed)
+    }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), replay = 1)
+
+    val uiState: StateFlow<State> = combine(podcastFlow, episodesFlow, showPlayedFlow) {
+        podcast, episodes, showPlayed ->
+        State(
+            loading = false,
+            podcast = podcast,
+            episodes = episodes,
+            showPlayed = showPlayed
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), State(loading = true))
 
     fun addToQueue(episode: EpisodeUi) {
         TODO()
@@ -88,18 +72,16 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     }
 
     fun onToggleShowPlayed() {
-        Timber.d("onlyUnplayed: applying ${!showPlayed}")
-        prefs.putBoolean(EpisodesShowPlayed(podcastId), !showPlayed)
-        refreshEpisodes()
+        viewModelScope.launch {
+            val currentShowPlayed = prefs.getBoolean(EpisodesShowPlayed(podcastId))
+            val newShowPlayed = !currentShowPlayed
+            prefs.putBoolean(EpisodesShowPlayed(podcastId), newShowPlayed)
+        }
     }
 
     fun deletePodcast() {
         viewModelScope.launch {
             repo.deletePodcastById(podcastId)
         }
-    }
-
-    private fun loading() {
-        _state.update { it.copy(loading = true) }
     }
 }
