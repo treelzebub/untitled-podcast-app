@@ -52,7 +52,6 @@ get_all:
 SELECT * FROM episode
 ORDER BY date DESC;
 
-
 get_all_unsort:
 SELECT * FROM episode;
 

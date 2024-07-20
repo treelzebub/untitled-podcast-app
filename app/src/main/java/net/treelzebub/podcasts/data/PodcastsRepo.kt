@@ -107,23 +107,27 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getPodcastWithEpisodes(podcastId: String, onlyUnplayed: Boolean = true): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
+    suspend fun getPodcasts(): Flow<List<PodcastUi>> {
+        return await {
+            db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
+        }
+    }
+
+    fun getPodcast(podcastId: String): Flow<PodcastUi> {
+        return db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOne(ioDispatcher)
+    }
+
+    suspend fun getPodcastWithEpisodes(podcastId: String, showPlayed: Boolean = true): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
         return await {
             db.podcastsQueries.transactionWithResult {
                 val podcastFlow = db.podcastsQueries.get_by_id(podcastId, podcastMapper)
                     .asFlow().mapToOne(ioDispatcher)
                 val episodesFlow = db.episodesQueries.let {
-                    if (onlyUnplayed) it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
-                    else it.get_by_podcast_id(podcastId, episodeMapper)
+                    if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
+                    else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
                 }.asFlow().mapToList(ioDispatcher)
                 podcastFlow.combine(episodesFlow) { pod, eps -> pod to eps }
             }
-        }
-    }
-
-    suspend fun getPodcastsByLatestEpisode(): Flow<List<PodcastUi>> {
-        return await {
-            db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
         }
     }
 
@@ -134,13 +138,18 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Episodes **/
-    suspend fun getEpisodes(podcastId: String, onlyUnplayed: Boolean): List<EpisodeUi> {
-        return await {
-            db.episodesQueries.let {
-                if (onlyUnplayed) it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
-                else it.get_by_podcast_id(podcastId, episodeMapper)
-            }.executeAsList()
-        }
+    fun getEpisodes(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {
+        return db.episodesQueries.let {
+                if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
+                else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
+            }.asFlow().mapToList(ioDispatcher)
+    }
+
+    fun getEpisodesList(podcastId: String, showPlayed: Boolean): List<EpisodeUi> {
+        return db.episodesQueries.let {
+            if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
+            else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
+        }.executeAsList()
     }
 
     suspend fun getEpisodeById(id: String): EpisodeUi {

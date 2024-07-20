@@ -14,9 +14,9 @@ sealed interface PodcastPref<T : Any> {
         override val default: Long = -1L
     }
 
-    class EpisodesFilterUnplayed(val podcastId: String) : PodcastPref<Boolean> {
-        override val key: String = "$podcastId-episodes-filter-unplayed"
-        override val default: Boolean = true
+    class EpisodesShowPlayed(val podcastId: String) : PodcastPref<Boolean> {
+        override val key: String = "$podcastId-episodes-show-played"
+        override val default: Boolean = false
     }
 }
 

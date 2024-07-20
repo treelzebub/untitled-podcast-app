@@ -6,9 +6,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.treelzebub.podcasts.data.PodcastPref.EpisodesFilterUnplayed
+import net.treelzebub.podcasts.data.PodcastPref.EpisodesShowPlayed
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.Prefs
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -28,8 +29,7 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         fun create(podcastId: String): PodcastDetailsViewModel
     }
 
-    private val onlyUnplayed: Boolean
-        get() = prefs.getBoolean(EpisodesFilterUnplayed(podcastId))
+    private val showPlayed: Boolean get() = prefs.getBoolean(EpisodesShowPlayed(podcastId))
 
     init {
         getPodcastAndEpisodes()
@@ -40,20 +40,26 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         val loading: Boolean = true,
         val podcast: PodcastUi? = null,
         val episodes: List<EpisodeUi> = listOf(),
-        val onlyUnplayed: Boolean = true,
+        val showPlayed: Boolean = true,
         val queue: List<EpisodeUi> = listOf()
     )
 
     private fun getPodcastAndEpisodes() {
         if (!state.value.loading) loading()
         viewModelScope.launch {
-            repo.getPodcastWithEpisodes(podcastId, onlyUnplayed).collect { pair ->
-                _state.update {
-                    it.copy(
-                        loading = pair == null,
-                        podcast = pair?.first,
-                        episodes = pair?.second.orEmpty(),
-                        onlyUnplayed = onlyUnplayed
+            val showPlayed = showPlayed // anchor momentary value
+            val podcastFlow = repo.getPodcast(podcastId)
+            val episodesFlow = repo.getEpisodes(podcastId, showPlayed)
+            val pair = podcastFlow.combine(episodesFlow) { podcast, episodes ->
+                podcast to episodes
+            }
+            pair.collect {
+                _state.update { state ->
+                    state.copy(
+                        loading = false,
+                        podcast = it.first,
+                        episodes = it.second,
+                        showPlayed = showPlayed
                     )
                 }
             }
@@ -61,11 +67,15 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     }
 
     private fun refreshEpisodes() {
-        loading()
-        viewModelScope.launch {
-            val anchor = onlyUnplayed
-            Timber.d("onlyUnplayed: refreshing with value $anchor")
-            _state.update { it.copy(loading = false, episodes = repo.getEpisodes(podcastId, anchor)) }
+        if (!state.value.loading) loading()
+        val showPlayed = showPlayed
+        val episodes = repo.getEpisodesList(podcastId, showPlayed)
+        _state.update {
+            it.copy(
+                loading = false,
+                episodes = episodes,
+                showPlayed = showPlayed
+            )
         }
     }
 
@@ -77,9 +87,9 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         TODO()
     }
 
-    fun toggleOnlyUnplayed() {
-        Timber.d("onlyUnplayed: applying ${!onlyUnplayed}")
-        prefs.putBoolean(EpisodesFilterUnplayed(podcastId), !onlyUnplayed)
+    fun onToggleShowPlayed() {
+        Timber.d("onlyUnplayed: applying ${!showPlayed}")
+        prefs.putBoolean(EpisodesShowPlayed(podcastId), !showPlayed)
         refreshEpisodes()
     }
 
