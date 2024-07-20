@@ -20,7 +20,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -51,7 +51,7 @@ fun PodcastDetailsScreen(
     val vm = hiltViewModel<PodcastDetailsViewModel, PodcastDetailsViewModel.Factory>(
         creationCallback = { factory -> factory.create(podcastId = podcastId) }
     )
-    val state by remember { vm.uiState }.collectAsState()
+    val state by remember { vm.uiState }.collectAsStateWithLifecycle()
     val onDelete: () -> Unit = {
         vm.deletePodcast()
         navigator.popBackStack()

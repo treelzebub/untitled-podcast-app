@@ -45,8 +45,9 @@ class MediaBottomSheetState(
 
     val draggableState = AnchoredDraggableState(
         initialValue = initialValue,
-        animationSpec = animationSpec,
         positionalThreshold = MediaBottomSheetDefaults.PositionalThreshold,
+        snapAnimationSpec = MediaBottomSheetDefaults.AnimationSpec,
+        decayAnimationSpec = MediaBottomSheetDefaults.DecayAnimationSpec,
         velocityThreshold = MediaBottomSheetDefaults.VelocityThreshold,
         confirmValueChange = confirmValueChange
     )
@@ -111,7 +112,7 @@ class MediaBottomSheetState(
     suspend fun animateTo(
         targetValue: MediaBottomSheetAnchor,
         velocity: Float = draggableState.lastVelocity
-    ) = draggableState.animateTo(targetValue, velocity)
+    ) = draggableState.animateTo(targetValue)
 }
 
 @Composable

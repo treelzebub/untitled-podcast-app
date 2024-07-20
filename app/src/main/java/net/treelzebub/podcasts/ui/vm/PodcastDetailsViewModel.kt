@@ -8,10 +8,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -20,6 +22,7 @@ import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.Prefs
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import timber.log.Timber
 
 
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
@@ -44,14 +47,12 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     )
 
     private val showPlayedFlow = prefs.booleanFlow(EpisodesShowPlayed(podcastId))
-
     private val podcastFlow = repo.getPodcast(podcastId)
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), replay = 1)
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val episodesFlow = showPlayedFlow.flatMapLatest { showPlayed ->
-        repo.getEpisodes(podcastId, showPlayed)
-    }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), replay = 1)
+    private val episodesFlow: StateFlow<List<EpisodeUi>> = showPlayedFlow.flatMapLatest { showPlayed ->
+        flow { emit(repo.getEpisodesList(podcastId, showPlayed)) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
 
     val uiState: StateFlow<State> = combine(podcastFlow, episodesFlow, showPlayedFlow) {
         podcast, episodes, showPlayed ->
@@ -63,19 +64,11 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), State(loading = true))
 
-    fun addToQueue(episode: EpisodeUi) {
-        TODO()
-    }
-
-    fun addToQueue(index: Int, episode: EpisodeUi) {
-        TODO()
-    }
-
     fun onToggleShowPlayed() {
         viewModelScope.launch {
             val currentShowPlayed = prefs.getBoolean(EpisodesShowPlayed(podcastId))
-            val newShowPlayed = !currentShowPlayed
-            prefs.putBoolean(EpisodesShowPlayed(podcastId), newShowPlayed)
+            Timber.d("old showPlayed: $currentShowPlayed")
+            prefs.putBoolean(EpisodesShowPlayed(podcastId), !currentShowPlayed)
         }
     }
 

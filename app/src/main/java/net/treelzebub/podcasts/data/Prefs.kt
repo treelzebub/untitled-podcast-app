@@ -37,16 +37,20 @@ class Prefs @Inject constructor(app: Application) {
     fun getLong(pref: PodcastPref<Long>): Long = prefs.getLong(pref.key, pref.default)
     fun getString(pref: PodcastPref<String>): String = prefs.getString(pref.key, pref.default)!!
 
-    fun putBoolean(pref: PodcastPref<Boolean>, value: Boolean) = editor.putBoolean(pref.key, value).apply()
-    fun putFloat(pref: PodcastPref<Float>, value: Float) = editor.putFloat(pref.key, value).apply()
-    fun putInt(pref: PodcastPref<Int>, value: Int) = editor.putInt(pref.key, value).apply()
-    fun putLong(pref: PodcastPref<Long>, value: Long) = editor.putLong(pref.key, value).apply()
-    fun putString(pref: PodcastPref<String>, value: String) = editor.putString(pref.key, value).apply()
+    fun putBoolean(pref: PodcastPref<Boolean>, value: Boolean) = editor.putBoolean(pref.key, value).commit()
+    fun putFloat(pref: PodcastPref<Float>, value: Float) = editor.putFloat(pref.key, value).commit()
+    fun putInt(pref: PodcastPref<Int>, value: Int) = editor.putInt(pref.key, value).commit()
+    fun putLong(pref: PodcastPref<Long>, value: Long) = editor.putLong(pref.key, value).commit()
+    fun putString(pref: PodcastPref<String>, value: String) = editor.putString(pref.key, value).commit()
 
     fun booleanFlow(pref: PodcastPref<Boolean>): Flow<Boolean> {
         return callbackFlow {
             val listener = OnSharedPreferenceChangeListener { _, it ->
-                if (it == pref.key) trySend(getBoolean(pref)); Timber.d("${pref.key} changed to ${getBoolean(pref)}")
+                if (it == pref.key) {
+                    val changed = getBoolean(pref)
+                    trySend(changed)
+                    Timber.d("${pref.key} changed to $changed")
+                }
             }
             prefs.registerOnSharedPreferenceChangeListener(listener)
             trySend(getBoolean(pref))
