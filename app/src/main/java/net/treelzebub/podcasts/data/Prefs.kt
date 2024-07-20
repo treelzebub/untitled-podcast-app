@@ -46,11 +46,7 @@ class Prefs @Inject constructor(app: Application) {
     fun booleanFlow(pref: PodcastPref<Boolean>): Flow<Boolean> {
         return callbackFlow {
             val listener = OnSharedPreferenceChangeListener { _, it ->
-                if (it == pref.key) {
-                    val changed = getBoolean(pref)
-                    trySend(changed)
-                    Timber.d("${pref.key} changed to $changed")
-                }
+                if (it == pref.key) trySend(getBoolean(pref))
             }
             prefs.registerOnSharedPreferenceChangeListener(listener)
             trySend(getBoolean(pref))

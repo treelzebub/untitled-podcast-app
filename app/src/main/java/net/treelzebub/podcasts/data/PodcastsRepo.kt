@@ -11,7 +11,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.net.models.SubscriptionDto
@@ -53,11 +52,9 @@ class PodcastsRepo @Inject constructor(
 
     suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
 
-    suspend fun getAllRssLinks(): List<SubscriptionDto> {
-        return await {
-            db.podcastsQueries.get_all_rss_links().executeAsList()
-                .map { SubscriptionDto(it.id, it.rss_link) }
-        }
+    fun getAllRssLinks(): List<SubscriptionDto> {
+        val rssLinksMapper = { id: String, rss_link: String -> SubscriptionDto(id, rss_link) }
+        return db.podcastsQueries.get_all_rss_links(rssLinksMapper).executeAsList()
     }
 
     /** Podcasts **/
@@ -107,32 +104,16 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun getPodcasts(): Flow<List<PodcastUi>> {
-        return await {
-            db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
-        }
+    fun getPodcasts(): Flow<List<PodcastUi>> {
+        return db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
     }
 
     fun getPodcast(podcastId: String): Flow<PodcastUi> {
         return db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOne(ioDispatcher)
     }
 
-    suspend fun getPodcastWithEpisodes(podcastId: String, showPlayed: Boolean = true): Flow<Pair<PodcastUi, List<EpisodeUi>>?> {
-        return await {
-            db.podcastsQueries.transactionWithResult {
-                val podcastFlow = db.podcastsQueries.get_by_id(podcastId, podcastMapper)
-                    .asFlow().mapToOne(ioDispatcher)
-                val episodesFlow = db.episodesQueries.let {
-                    if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
-                    else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
-                }.asFlow().mapToList(ioDispatcher)
-                podcastFlow.combine(episodesFlow) { pod, eps -> pod to eps }
-            }
-        }
-    }
-
     // Cascading delete of episodes declared in episodes.sq
-    suspend fun deletePodcastById(podcastId: String) = await {
+    suspend fun deletePodcastById(podcastId: String) {
         queueStore.removeByPodcastId(podcastId) {}
         db.podcastsQueries.delete(podcastId)
     }
@@ -145,18 +126,9 @@ class PodcastsRepo @Inject constructor(
             }.asFlow().mapToList(ioDispatcher)
     }
 
-    fun getEpisodesList(podcastId: String, showPlayed: Boolean): List<EpisodeUi> {
-        return db.episodesQueries.let {
-            if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
-            else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
-        }.executeAsList()
-    }
-
-    suspend fun getEpisodeById(id: String): EpisodeUi {
-        return await {
-            db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
+    fun getEpisodeById(id: String): EpisodeUi {
+        return db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
                 ?: throw IllegalArgumentException("Episode is not in database!")
-        }
     }
 
     fun updatePosition(id: String, millis: Long) {
