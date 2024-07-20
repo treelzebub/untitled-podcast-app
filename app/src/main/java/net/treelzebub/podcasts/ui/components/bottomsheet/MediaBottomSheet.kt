@@ -1,7 +1,11 @@
 package net.treelzebub.podcasts.ui.components.bottomsheet
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.AnimationVector
+import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.TwoWayConverter
+import androidx.compose.animation.core.VectorizedDecayAnimationSpec
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -68,6 +72,12 @@ enum class MediaBottomSheetAnchor(val fraction: Float) {
 }
 
 object MediaBottomSheetDefaults {
+
+    val DecayAnimationSpec = object : DecayAnimationSpec<Float> {
+        override fun <V : AnimationVector> vectorize(typeConverter: TwoWayConverter<Float, V>): VectorizedDecayAnimationSpec<V> {
+            TODO("Not yet implemented")
+        }
+    }
     val AnimationSpec = SpringSpec<Float>()
     val PositionalThreshold = { distance: Float -> distance * 0.2f }
     val VelocityThreshold = { 125f }

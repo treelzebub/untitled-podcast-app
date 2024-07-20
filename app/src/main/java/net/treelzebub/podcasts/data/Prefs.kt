@@ -2,6 +2,13 @@ package net.treelzebub.podcasts.data
 
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -12,6 +19,11 @@ sealed interface PodcastPref<T : Any> {
     data object LastSyncTimestamp : PodcastPref<Long> {
         override val key = "last-sync-timestamp"
         override val default: Long = -1L
+    }
+
+    class EpisodesShowPlayed(val podcastId: String) : PodcastPref<Boolean> {
+        override val key: String = "$podcastId-episodes-show-played"
+        override val default: Boolean = false
     }
 }
 
@@ -25,9 +37,21 @@ class Prefs @Inject constructor(app: Application) {
     fun getLong(pref: PodcastPref<Long>): Long = prefs.getLong(pref.key, pref.default)
     fun getString(pref: PodcastPref<String>): String = prefs.getString(pref.key, pref.default)!!
 
-    fun putBoolean(pref: PodcastPref<Boolean>, value: Boolean) = editor.putBoolean(pref.key, pref.default).apply()
-    fun putFloat(pref: PodcastPref<Float>, value: Float) = editor.putFloat(pref.key, pref.default).apply()
-    fun putInt(pref: PodcastPref<Int>, value: Int) = editor.putInt(pref.key, pref.default).apply()
-    fun putLong(pref: PodcastPref<Long>, value: Long) = editor.putLong(pref.key, pref.default).apply()
-    fun putString(pref: PodcastPref<String>, value: String) = editor.putString(pref.key, pref.default).apply()
+    fun putBoolean(pref: PodcastPref<Boolean>, value: Boolean) = editor.putBoolean(pref.key, value).commit()
+    fun putFloat(pref: PodcastPref<Float>, value: Float) = editor.putFloat(pref.key, value).commit()
+    fun putInt(pref: PodcastPref<Int>, value: Int) = editor.putInt(pref.key, value).commit()
+    fun putLong(pref: PodcastPref<Long>, value: Long) = editor.putLong(pref.key, value).commit()
+    fun putString(pref: PodcastPref<String>, value: String) = editor.putString(pref.key, value).commit()
+
+    fun booleanFlow(pref: PodcastPref<Boolean>): Flow<Boolean> {
+        return callbackFlow {
+            val listener = OnSharedPreferenceChangeListener { _, it ->
+                if (it == pref.key) trySend(getBoolean(pref))
+            }
+            prefs.registerOnSharedPreferenceChangeListener(listener)
+            trySend(getBoolean(pref))
+
+            awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+        }.buffer(Channel.UNLIMITED)
+    }
 }

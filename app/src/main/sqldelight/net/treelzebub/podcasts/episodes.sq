@@ -68,9 +68,10 @@ SELECT * FROM episode
 WHERE podcast_id = :podcast_id
 ORDER BY date DESC;
 
--- get_latest_by_podcast_id:
--- SELECT MAX(date) AS latest FROM episode
--- WHERE podcast_id = :podcast_id;
+get_by_podcast_id_unplayed:
+SELECT * FROM episode
+WHERE podcast_id = :podcast_id AND has_played = 0
+ORDER BY date DESC;
 
 get_latest_for_each_podcast:
 SELECT podcast_id, MAX(date) AS latest

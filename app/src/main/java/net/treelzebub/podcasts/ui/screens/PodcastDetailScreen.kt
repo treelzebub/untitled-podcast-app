@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,15 +30,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.components.EpisodesList
 import net.treelzebub.podcasts.ui.components.LoadingBox
-import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel
+import timber.log.Timber
 
 
 @Destination
@@ -49,34 +51,46 @@ fun PodcastDetailsScreen(
     val vm = hiltViewModel<PodcastDetailsViewModel, PodcastDetailsViewModel.Factory>(
         creationCallback = { factory -> factory.create(podcastId = podcastId) }
     )
-    val state by remember { vm.state }.collectAsState()
+    val state by remember { vm.uiState }.collectAsStateWithLifecycle()
     val onDelete: () -> Unit = {
         vm.deletePodcast()
         navigator.popBackStack()
     }
+    val showPlayed: () -> Unit = { vm.onToggleShowPlayed() }
 
     if (!state.loading && state.podcast == null) {
+        Timber.e(IllegalStateException("PodcastDetailScreen State: not loading, null podcast."))
         navigator.navigateUp()
     } else if (state.loading) {
         LoadingBox()
     } else {
-        PodcastDetails(navigator, state.podcast!!, state.episodes, onDelete)
+        PodcastDetails(
+            navigator = navigator,
+            state = state,
+            onToggleShowPlayed = showPlayed,
+            onDelete = onDelete
+        )
     }
 }
 
 @Composable
 private fun PodcastDetails(
     navigator: DestinationsNavigator,
-    podcast: PodcastUi,
-    episodes: List<EpisodeUi>,
+    state: PodcastDetailsViewModel.State,
+    onToggleShowPlayed: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
-        PodcastHeader(podcast, onDelete)
+        PodcastHeader(
+            podcast = state.podcast!!,
+            showPlayed = state.showPlayed,
+            onToggleShowPlayed = onToggleShowPlayed,
+            onDelete = onDelete
+        )
         EpisodesList(
             navigator = navigator,
             modifier = Modifier.weight(4f),
-            episodes = episodes
+            episodes = state.episodes
         )
     }
 }
@@ -84,9 +98,12 @@ private fun PodcastDetails(
 @Composable
 private fun PodcastHeader(
     podcast: PodcastUi,
+    showPlayed: Boolean,
+    onToggleShowPlayed: () -> Unit,
     onDelete: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val toggle = { expanded = !expanded }
 
     Row(
         Modifier
@@ -119,12 +136,24 @@ private fun PodcastHeader(
         }
         Box(modifier = Modifier.padding(top = 12.dp)) {
             Icon(
-                modifier = Modifier.clickable { expanded = !expanded },
+                modifier = Modifier.clickable(onClick = toggle),
                 imageVector = Icons.Filled.MoreVert,
                 contentDescription = "More menu"
             )
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenuItem(
+                    text = { Text(text = "Show Played") },
+                    leadingIcon = {
+                        val icon = if (showPlayed) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle
+                        Icon(icon, contentDescription = "")
+                    },
+                    onClick = {
+                        toggle()
+                        onToggleShowPlayed()
+                    }
+                )
                 DropdownMenuItem(text = { Text(text = "Delete") }, onClick = onDelete)
+
             }
         }
     }

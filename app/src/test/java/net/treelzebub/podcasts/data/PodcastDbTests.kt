@@ -4,13 +4,9 @@ import app.cash.turbine.test
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo.Companion.podcastMapper
-import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.TestCoroutines
 import net.treelzebub.podcasts.util.injectMockData
 import net.treelzebub.podcasts.util.podcastRepo
@@ -79,7 +75,7 @@ class PodcastDbTests {
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
         injectMockData(db)
         val repo = podcastRepo()
-        repo.getPodcastsByLatestEpisode().test {
+        repo.getPodcasts().test {
             assertEquals("podcast_02", awaitItem().first().id)
         }
     }
