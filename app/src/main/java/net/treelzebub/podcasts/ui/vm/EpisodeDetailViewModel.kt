@@ -96,7 +96,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     val episodeState = _episodeState.asStateFlow()
     val player = mutableStateOf<Player?>(null)
 
-    val actionHandler: (EpisodeDetailAction) -> Unit = { action ->
+    val actionHandler: OnClick<EpisodeDetailAction> = { action ->
         Timber.d("Received action: $action")
         when (action) {
             ToggleBookmarked -> toggleBookmarked()

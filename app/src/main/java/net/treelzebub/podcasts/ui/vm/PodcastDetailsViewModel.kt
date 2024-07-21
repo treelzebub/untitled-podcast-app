@@ -24,6 +24,7 @@ import net.treelzebub.podcasts.ui.models.PodcastUi
 import timber.log.Timber
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel(assistedFactory = PodcastDetailsViewModel.Factory::class)
 class PodcastDetailsViewModel @AssistedInject constructor(
     @Assisted private val podcastId: String,
@@ -40,29 +41,39 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     data class State(
         val loading: Boolean = true,
         val podcast: PodcastUi? = null,
-        val episodes: List<EpisodeUi> = listOf(),
+        val episodes: List<EpisodeUi> = emptyList(),
         val showPlayed: Boolean = false,
-        val queue: List<EpisodeUi> = listOf()
+        val queue: List<EpisodeUi> = emptyList()
     )
+
+    enum class Action {
+        DeletePodcast, ToggleShowPlayed
+    }
 
     private val showPlayedFlow = prefs.booleanFlow(EpisodesShowPlayed(podcastId))
     private val podcastFlow = repo.getPodcast(podcastId)
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), replay = 1)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val episodesFlow: StateFlow<List<EpisodeUi>> = showPlayedFlow.flatMapLatest { showPlayed ->
         repo.getEpisodes(podcastId, showPlayed)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
     val uiState: StateFlow<State> = combine(podcastFlow, episodesFlow, showPlayedFlow) { podcast, episodes, showPlayed ->
         State(
-            loading = false,
+            loading = podcast == null,
             podcast = podcast,
             episodes = episodes,
             showPlayed = showPlayed
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), State(loading = true))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), State())
 
-    fun onToggleShowPlayed() {
+    val actionHandler: OnClick<Action> = { action ->
+        when (action) {
+            Action.DeletePodcast -> deletePodcast()
+            Action.ToggleShowPlayed -> toggleShowPlayed()
+        }
+    }
+
+    private fun toggleShowPlayed() {
         viewModelScope.launch {
             val currentShowPlayed = prefs.getBoolean(EpisodesShowPlayed(podcastId))
             Timber.d("old showPlayed: $currentShowPlayed")
@@ -70,7 +81,7 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         }
     }
 
-    fun deletePodcast() {
+    private fun deletePodcast() {
         viewModelScope.launch {
             repo.deletePodcastById(podcastId)
         }

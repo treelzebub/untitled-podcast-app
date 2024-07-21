@@ -1,5 +1,8 @@
 package net.treelzebub.podcasts.ui.screens
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,15 +45,19 @@ fun SubscriptionsScreenAlt(navigator: DestinationsNavigator) {
             horizontalArrangement = Arrangement.Center
         ) {
             items(state.podcasts) {
-                    AsyncImage(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(4.dp)
-                            .shadow(elevation = 4.dp)
-                            .clickable { navigator.navigate(PodcastDetailsScreenDestination(it.id)) },
-                        model = it.imageUrl,
-                        contentDescription = "Artwork for podcast ${it.title}"
-                    )
+                AsyncImage(
+                    modifier = Modifier.animateItem(
+                        placementSpec = spring(
+                            stiffness = Spring.StiffnessMediumLow,
+                            visibilityThreshold = IntOffset.VisibilityThreshold)
+                        )
+                        .fillMaxSize()
+                        .padding(4.dp)
+                        .shadow(elevation = 4.dp)
+                        .clickable { navigator.navigate(PodcastDetailsScreenDestination(it.id)) },
+                    model = it.imageUrl,
+                    contentDescription = "Artwork for podcast ${it.title}"
+                )
             }
         }
     }

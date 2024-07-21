@@ -54,7 +54,7 @@ import java.util.Locale
 @SuppressLint("UnsafeOptInUsageError")
 @Destination
 @Composable
-fun EpisodeDetail(episodeId: String) {
+fun EpisodeDetailsScreen(episodeId: String) {
     val vm = hiltViewModel<EpisodeDetailViewModel, EpisodeDetailViewModel.Factory>(
         creationCallback = { factory -> factory.create(episodeId) }
     )
