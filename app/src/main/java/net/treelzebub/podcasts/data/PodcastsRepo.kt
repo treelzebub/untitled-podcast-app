@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -107,8 +108,8 @@ class PodcastsRepo @Inject constructor(
         return db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
     }
 
-    fun getPodcast(podcastId: String): Flow<PodcastUi> {
-        return db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOne(ioDispatcher)
+    fun getPodcast(podcastId: String): Flow<PodcastUi?> {
+        return db.podcastsQueries.get_by_id(podcastId, podcastMapper).asFlow().mapToOneOrNull(ioDispatcher)
     }
 
     // Cascading delete of episodes declared in episodes.sq

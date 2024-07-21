@@ -1,7 +1,6 @@
 package net.treelzebub.podcasts.ui
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,14 +31,13 @@ import net.treelzebub.podcasts.ui.screens.NavGraphs
 import net.treelzebub.podcasts.ui.screens.appCurrentDestinationAsState
 import net.treelzebub.podcasts.ui.screens.destinations.Destination
 import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenAltDestination
-import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.screens.startAppDestination
 import net.treelzebub.podcasts.ui.theme.Purple40
 
 
 @UnstableApi
 @Composable
-@OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class)
 fun PodcastsApp() {
     val engine = rememberAnimatedNavHostEngine()
     val navController = engine.rememberNavController()
