@@ -57,6 +57,11 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
     val goToSubs = { navigator.navigate(SubscriptionsScreenDestination) }
     val onSearch = { query: String? -> vm.search(query, goToSubs) }
     val onSelect = { it: Feed -> vm.select(it, goToSubs) { TODO() } }
+    val clear = {
+        text = ""
+        active = false
+        vm.clearFeeds()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(
@@ -77,10 +82,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             trailingIcon = {
                 Icon(
-                    modifier = Modifier.clickable {
-                        text = ""
-                        active = false
-                    },
+                    modifier = Modifier.clickable { clear() },
                     imageVector = Icons.Default.Clear, contentDescription = null
                 )
             }
