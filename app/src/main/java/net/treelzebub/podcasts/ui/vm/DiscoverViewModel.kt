@@ -57,6 +57,10 @@ class DiscoverViewModel @Inject constructor(
         onAdd()
     }
 
+    fun clearFeeds() {
+        _state.update { it.copy(feeds = emptyList()) }
+    }
+
     fun deletePreviousSearch(query: String) = viewModelScope.launch {
         queriesRepo.delete(query)
     }
