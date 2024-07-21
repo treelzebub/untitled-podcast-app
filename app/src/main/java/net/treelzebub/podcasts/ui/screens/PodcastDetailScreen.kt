@@ -1,8 +1,13 @@
 package net.treelzebub.podcasts.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,16 +17,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -30,8 +37,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -114,57 +125,40 @@ private fun PodcastHeader(
     onToggleShowPlayed: () -> Unit,
     onDelete: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val toggle = { expanded = !expanded }
-
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
+    ExpandableSection(
+        title = podcast.title,
+        showPlayed = showPlayed,
+        onToggleShowPlayed = onToggleShowPlayed,
+        onDelete = onDelete
     ) {
-        AsyncImage(
-            modifier = Modifier
-                .wrapContentSize()
-                .weight(1.0f)
-                .padding(12.dp),
-            model = podcast.imageUrl,
-            contentDescription = "Podcast Logo"
-        )
-        Column(
-            modifier = Modifier.weight(3.0f).padding(vertical = 12.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            BasicText(
-                modifier = Modifier.padding(bottom = 2.dp),
-                style = TextStyles.CardTitle,
-                text = podcast.title
-            )
-            BasicText(
-                modifier = Modifier.wrapContentHeight(),
-                style = TextStyle(textAlign = TextAlign.Start),
-                overflow = TextOverflow.Ellipsis,
-                text = podcast.description
-            )
-        }
-        Box(modifier = Modifier.padding(top = 12.dp)) {
-            Icon(
-                modifier = Modifier.clickable(onClick = toggle),
-                imageVector = Icons.Filled.MoreVert,
-                contentDescription = "More menu"
-            )
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                DropdownMenuItem(
-                    text = { Text(text = "Show Played") },
-                    leadingIcon = {
-                        val icon = if (showPlayed) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle
-                        Icon(icon, contentDescription = "")
-                    },
-                    onClick = {
-                        toggle()
-                        onToggleShowPlayed()
-                    }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .animateContentSize(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = LinearOutSlowInEasing
+                    )
                 )
-                DropdownMenuItem(text = { Text(text = "Delete") }, onClick = onDelete)
+        ) {
+            AsyncImage(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .weight(1.0f)
+                    .padding(12.dp),
+                model = podcast.imageUrl,
+                contentDescription = "Podcast Logo"
+            )
+            Column(
+                modifier = Modifier.weight(3.0f).padding(vertical = 12.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                BasicText(
+                    modifier = Modifier.wrapContentHeight(),
+                    style = TextStyle(textAlign = TextAlign.Start),
+                    overflow = TextOverflow.Ellipsis,
+                    text = podcast.description
+                )
             }
         }
     }
@@ -192,11 +186,6 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
         ) {
             BasicText(
                 modifier = Modifier.padding(bottom = 2.dp),
-                style = TextStyles.CardSubtitle,
-                text = episode.title
-            )
-            BasicText(
-                modifier = Modifier.padding(bottom = 2.dp),
                 style = TextStyles.CardDate,
                 text = episode.displayDate
             )
@@ -206,6 +195,92 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
                 overflow = TextOverflow.Ellipsis,
                 text = episode.description
             )
+        }
+    }
+}
+
+@Composable
+fun ExpandableSection(
+    modifier: Modifier = Modifier,
+    title: String,
+    showPlayed: Boolean,
+    onToggleShowPlayed: () -> Unit,
+    onDelete: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { expanded = !expanded }
+    ) {
+        ExpandableSectionTitle(
+            expanded = expanded,
+            title = title,
+            showPlayed = showPlayed,
+            onToggleShowPlayed = onToggleShowPlayed,
+            onDelete = onDelete
+        )
+
+        AnimatedVisibility(
+            modifier = Modifier.fillMaxWidth(),
+            visible = expanded
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+fun ExpandableSectionTitle(
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    title: String,
+    showPlayed: Boolean,
+    onToggleShowPlayed: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    val toggleDropdown = { dropdownExpanded = !dropdownExpanded }
+    val icon = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown
+
+    Row(modifier = modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            modifier = Modifier
+                .size(32.dp),
+            imageVector = icon,
+            colorFilter = ColorFilter.tint(color = Color.Black),
+            contentDescription = "Expand or collapse. Currently it is ${if (expanded) "expanded." else "collapsed."}"
+        )
+        BasicText(
+            modifier = Modifier
+                .padding(start = 6.dp, bottom = 2.dp)
+                .weight(1f),
+            style = TextStyles.CardTitle,
+            text = title
+        )
+        Box(
+            modifier = Modifier
+                .wrapContentWidth()
+                .clickable { dropdownExpanded = !dropdownExpanded }
+        ) {
+            Icon(
+                modifier = Modifier
+                    .clickable(onClick = toggleDropdown),
+                imageVector = Icons.Filled.MoreVert,
+                contentDescription = "More menu"
+            )
+            DropdownMenu(expanded = dropdownExpanded, onDismissRequest = { dropdownExpanded = false }) {
+                DropdownMenuItem(
+                    text = { Text(text = if (showPlayed) "Hide Played" else "Show Played") },
+                    onClick = {
+                        toggleDropdown()
+                        onToggleShowPlayed()
+                    }
+                )
+                DropdownMenuItem(text = { Text(text = "Delete") }, onClick = onDelete)
+            }
         }
     }
 }
