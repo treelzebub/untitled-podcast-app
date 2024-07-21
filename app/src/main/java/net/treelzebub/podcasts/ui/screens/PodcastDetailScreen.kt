@@ -208,7 +208,7 @@ fun ExpandableSection(
     onDelete: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
+    var expanded by rememberSaveable { mutableStateOf(true) }
 
     Column(
         modifier = modifier

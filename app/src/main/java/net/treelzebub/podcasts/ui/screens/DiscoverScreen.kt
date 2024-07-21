@@ -1,14 +1,17 @@
 package net.treelzebub.podcasts.ui.screens
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +21,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,10 +40,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
-import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
+import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenAltDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
 
@@ -53,8 +55,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
     val state by remember { vm.state }.collectAsState()
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
-
-    val goToSubs = { navigator.navigate(SubscriptionsScreenDestination) }
+    val goToSubs = { navigator.navigate(SubscriptionsScreenAltDestination) }
     val onSearch = { query: String? -> vm.search(query, goToSubs) }
     val onSelect = { it: Feed -> vm.select(it, goToSubs) { TODO() } }
     val clear = {
@@ -63,11 +64,15 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
         vm.clearFeeds()
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier
+        .background(
+            if (active) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.background
+        ).fillMaxSize()
+    ) {
         SearchBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = 8.dp),
             query = text,
             onQueryChange = {
                 text = it.ifBlank { "" }
@@ -87,7 +92,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
                 )
             }
         ) {
-            LazyColumn(modifier = Modifier) {
+            LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
                 items(items = state.previousQueries, key = { it }) { query ->
                     PreviousSearch(
                         query = query,
@@ -101,6 +106,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
                 }
             }
         }
+        Spacer(Modifier.height(8.dp))
         ResultsList(state.feeds, onSelect)
     }
 }
@@ -114,41 +120,36 @@ fun PreviousSearch(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             modifier = Modifier
-                .padding(end = 4.dp),
-            painter = painterResource(id = R.drawable.previous_search),
+                .padding(start = 8.dp, end = 16.dp)
+                .size(18.dp)
+                .clickable { onDelete(query) },
+            imageVector = Icons.Default.Clear,
             contentDescription = ""
         )
         Text(
             modifier = Modifier.weight(2f).clickable { onClick(query) },
             text = query
         )
-        Icon(
-            modifier = Modifier
-                .padding(4.dp)
-                .clickable { onDelete(query) },
-            imageVector = Icons.Default.Clear,
-            contentDescription = ""
-        )
     }
 }
 
 @Composable
-@OptIn(ExperimentalFoundationApi::class)
 fun ResultsList(
     feeds: List<Feed>,
     onSelect: (Feed) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         items(feeds, key = { it.id }) {
             FeedItem(
-                Modifier.animateItemPlacement(tween(durationMillis = 250)),
+                Modifier.animateItem(tween(durationMillis = 250)),
                 it,
                 onSelect
             )

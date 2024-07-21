@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.PodcastUi
@@ -36,7 +36,7 @@ import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
 
 
-@RootNavGraph(start = true)
+//@RootNavGraph(start = true)
 @Destination
 @Composable
 fun SubscriptionsScreen(navigator: DestinationsNavigator) {
@@ -62,7 +62,7 @@ fun PodcastList(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(contentPadding)
+            .padding(horizontal = 8.dp)
     ) {
         items(podcasts, key = { it.id }) {
             PodcastItem(Modifier.animateItemPlacement(tween(durationMillis = 250)), navigator, it, contentPadding)
@@ -84,10 +84,11 @@ fun PodcastItem(
             .padding(contentPadding)
             .clickable { navigator.navigate(PodcastDetailsScreenDestination(podcast.id)) }
             .then(modifier),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         AsyncImage(
             modifier = Modifier
+                .padding(top = 16.dp)
                 .fillMaxSize()
                 .weight(1.0f),
             model = podcast.imageUrl,
@@ -99,15 +100,15 @@ fun PodcastItem(
                 .wrapContentHeight()
                 .padding(12.dp)
         ) {
-            BasicText(
+            Text(
                 modifier = Modifier.padding(bottom = 2.dp),
                 style = TextStyles.CardSubtitle,
                 text = podcast.title
             )
-            BasicText(
+            Text(
                 modifier = Modifier.padding(bottom = 2.dp),
                 style = TextStyles.CardDescription,
-                text = podcast.description
+                text = podcast.description,
             )
             BasicText(
                 style = TextStyles.CardDate,

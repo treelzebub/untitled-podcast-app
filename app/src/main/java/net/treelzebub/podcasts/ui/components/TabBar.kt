@@ -21,7 +21,7 @@ import net.treelzebub.podcasts.ui.screens.destinations.DirectionDestination
 import net.treelzebub.podcasts.ui.screens.destinations.DiscoverScreenDestination
 import net.treelzebub.podcasts.ui.screens.destinations.ProfileScreenDestination
 import net.treelzebub.podcasts.ui.screens.destinations.SettingsScreenDestination
-import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
+import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenAltDestination
 import net.treelzebub.podcasts.ui.screens.startAppDestination
 
 
@@ -31,7 +31,7 @@ sealed class TabItem(
     val direction: DirectionDestination
 ) {
     data object Subscriptions :
-        TabItem(R.string.tab_subscriptions, R.drawable.subscriptions, SubscriptionsScreenDestination)
+        TabItem(R.string.tab_subscriptions, R.drawable.subscriptions, SubscriptionsScreenAltDestination)
 
     data object Discover : TabItem(R.string.tab_discover, R.drawable.search, DiscoverScreenDestination)
     data object Profile : TabItem(R.string.tab_profile, R.drawable.account_circle, ProfileScreenDestination)
