@@ -43,7 +43,6 @@ import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
-import timber.log.Timber
 
 
 @OptIn(ExperimentalMaterial3Api::class)
