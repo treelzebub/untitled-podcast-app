@@ -42,7 +42,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import net.treelzebub.podcasts.net.models.Feed
 import net.treelzebub.podcasts.ui.components.ItemCard
-import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenAltDestination
+import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
 
@@ -55,7 +55,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
     val state by remember { vm.state }.collectAsState()
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
-    val goToSubs = { navigator.navigate(SubscriptionsScreenAltDestination) }
+    val goToSubs = { navigator.navigate(SubscriptionsScreenDestination) }
     val onSearch = { query: String? -> vm.search(query, goToSubs) }
     val onSelect = { it: Feed -> vm.select(it, goToSubs) { TODO() } }
     val clear = {

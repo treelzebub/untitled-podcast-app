@@ -57,9 +57,13 @@ import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
-import net.treelzebub.podcasts.ui.screens.destinations.EpisodeDetailDestination
+import net.treelzebub.podcasts.ui.screens.destinations.EpisodeDetailsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
+import net.treelzebub.podcasts.ui.vm.OnClick
 import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel
+import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel.Action
+import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel.Action.DeletePodcast
+import net.treelzebub.podcasts.ui.vm.PodcastDetailsViewModel.Action.ToggleShowPlayed
 import timber.log.Timber
 
 
@@ -73,23 +77,17 @@ fun PodcastDetailsScreen(
         creationCallback = { factory -> factory.create(podcastId = podcastId) }
     )
     val state by remember { vm.uiState }.collectAsStateWithLifecycle()
-    val onDelete: () -> Unit = {
-        vm.deletePodcast()
-        navigator.popBackStack()
-    }
-    val showPlayed: () -> Unit = { vm.onToggleShowPlayed() }
 
     if (!state.loading && state.podcast == null) {
         Timber.e(IllegalStateException("PodcastDetailScreen State: not loading, null podcast."))
-        navigator.navigateUp()
+        navigator.popBackStack()
     } else if (state.loading) {
         LoadingBox()
     } else {
         PodcastDetails(
             navigator = navigator,
             state = state,
-            onToggleShowPlayed = showPlayed,
-            onDelete = onDelete
+            actionHandler = vm.actionHandler
         )
     }
 }
@@ -98,18 +96,17 @@ fun PodcastDetailsScreen(
 private fun PodcastDetails(
     navigator: DestinationsNavigator,
     state: PodcastDetailsViewModel.State,
-    onToggleShowPlayed: () -> Unit,
-    onDelete: () -> Unit
+    actionHandler: OnClick<Action>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
         item {
             PodcastHeader(
+                navigator = navigator,
                 podcast = state.podcast!!,
                 showPlayed = state.showPlayed,
-                onToggleShowPlayed = onToggleShowPlayed,
-                onDelete = onDelete
+                actionHandler = actionHandler
             )
         }
         items(items = state.episodes, key = { it.id }) {
@@ -120,16 +117,16 @@ private fun PodcastDetails(
 
 @Composable
 private fun PodcastHeader(
+    navigator: DestinationsNavigator,
     podcast: PodcastUi,
     showPlayed: Boolean,
-    onToggleShowPlayed: () -> Unit,
-    onDelete: () -> Unit
+    actionHandler: OnClick<Action>
 ) {
     ExpandableSection(
         title = podcast.title,
+        navigator = navigator,
         showPlayed = showPlayed,
-        onToggleShowPlayed = onToggleShowPlayed,
-        onDelete = onDelete
+        actionHandler = actionHandler
     ) {
         Row(
             Modifier
@@ -174,7 +171,7 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
                 visibilityThreshold = IntOffset.VisibilityThreshold
             )
         ).clickable {
-            navigator.navigate(EpisodeDetailDestination(episode.id))
+            navigator.navigate(EpisodeDetailsScreenDestination(episode.id))
         }
     ) {
         Column(
@@ -203,9 +200,9 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
 fun ExpandableSection(
     modifier: Modifier = Modifier,
     title: String,
+    navigator: DestinationsNavigator,
     showPlayed: Boolean,
-    onToggleShowPlayed: () -> Unit,
-    onDelete: () -> Unit,
+    actionHandler: OnClick<Action>,
     content: @Composable () -> Unit
 ) {
     var expanded by rememberSaveable { mutableStateOf(true) }
@@ -217,10 +214,10 @@ fun ExpandableSection(
     ) {
         ExpandableSectionTitle(
             expanded = expanded,
+            navigator = navigator,
             title = title,
             showPlayed = showPlayed,
-            onToggleShowPlayed = onToggleShowPlayed,
-            onDelete = onDelete
+            actionHandler = actionHandler
         )
 
         AnimatedVisibility(
@@ -235,11 +232,11 @@ fun ExpandableSection(
 @Composable
 fun ExpandableSectionTitle(
     modifier: Modifier = Modifier,
+    navigator: DestinationsNavigator,
     expanded: Boolean,
     title: String,
     showPlayed: Boolean,
-    onToggleShowPlayed: () -> Unit,
-    onDelete: () -> Unit
+    actionHandler: (PodcastDetailsViewModel.Action) -> Unit
 ) {
     var dropdownExpanded by remember { mutableStateOf(false) }
     val toggleDropdown = { dropdownExpanded = !dropdownExpanded }
@@ -276,10 +273,16 @@ fun ExpandableSectionTitle(
                     text = { Text(text = if (showPlayed) "Hide Played" else "Show Played") },
                     onClick = {
                         toggleDropdown()
-                        onToggleShowPlayed()
+                        actionHandler(ToggleShowPlayed)
                     }
                 )
-                DropdownMenuItem(text = { Text(text = "Delete") }, onClick = onDelete)
+                DropdownMenuItem(
+                    text = { Text(text = "Delete") },
+                    onClick = {
+                        actionHandler(DeletePodcast)
+                        navigator.navigateUp()
+                    }
+                )
             }
         }
     }
