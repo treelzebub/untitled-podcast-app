@@ -86,7 +86,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
             }
         ) {
             LazyColumn(modifier = Modifier) {
-                items(items = state.previousSearches, key = { it }) { query ->
+                items(items = state.previousQueries, key = { it }) { query ->
                     PreviousSearch(
                         query = query,
                         onClick = {

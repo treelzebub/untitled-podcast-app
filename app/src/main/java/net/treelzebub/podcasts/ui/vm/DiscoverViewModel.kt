@@ -22,7 +22,7 @@ class DiscoverViewModel @Inject constructor(
     @Stable
     data class State(
         val loading: Boolean = true,
-        val previousSearches: List<String> = emptyList(),
+        val previousQueries: List<String> = emptyList(),
         val feeds: List<Feed> = emptyList(),
         val error: String? = null
     )
@@ -64,11 +64,11 @@ class DiscoverViewModel @Inject constructor(
     private fun getPreviousQueries() {
         viewModelScope.launch {
             loading()
-            queriesRepo.all().collect { searches ->
+            queriesRepo.all().collect { queries ->
                 _state.update {
                     it.copy(
                         loading = false,
-                        previousSearches = searches.reversed(),
+                        previousQueries = queries.reversed(),
                     )
                 }
             }
