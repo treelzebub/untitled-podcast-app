@@ -67,7 +67,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
         SearchBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = 8.dp),
             query = text,
             onQueryChange = {
                 text = it.ifBlank { "" }

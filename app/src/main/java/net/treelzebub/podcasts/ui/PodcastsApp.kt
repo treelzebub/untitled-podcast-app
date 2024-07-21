@@ -31,6 +31,7 @@ import net.treelzebub.podcasts.ui.components.TabItem
 import net.treelzebub.podcasts.ui.screens.NavGraphs
 import net.treelzebub.podcasts.ui.screens.appCurrentDestinationAsState
 import net.treelzebub.podcasts.ui.screens.destinations.Destination
+import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenAltDestination
 import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.screens.startAppDestination
 import net.treelzebub.podcasts.ui.theme.Purple40
@@ -42,7 +43,7 @@ import net.treelzebub.podcasts.ui.theme.Purple40
 fun PodcastsApp() {
     val engine = rememberAnimatedNavHostEngine()
     val navController = engine.rememberNavController()
-    val startRoute = SubscriptionsScreenDestination
+    val startRoute = SubscriptionsScreenAltDestination
     val tabs = listOf(
         TabItem.Subscriptions,
         TabItem.Discover,
