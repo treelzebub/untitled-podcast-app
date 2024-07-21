@@ -54,17 +54,15 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
 
-    val onSearch = { query: String? -> vm.search(query) }
-    val onSelect: (Feed) -> Unit = {
-        vm.select(it) { TODO() }
-        navigator.navigate(SubscriptionsScreenDestination)
-    }
+    val goToSubs = { navigator.navigate(SubscriptionsScreenDestination) }
+    val onSearch = { query: String? -> vm.search(query, goToSubs) }
+    val onSelect = { it: Feed -> vm.select(it, goToSubs) { TODO() } }
 
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp, 0.dp, 12.dp, 12.dp),
+                .padding(horizontal = 6.dp),
             query = text,
             onQueryChange = {
                 text = it.ifBlank { "" }
@@ -75,7 +73,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
             },
             active = active,
             onActiveChange = { active = it },
-            placeholder = { Text("Search Podcasts") },
+            placeholder = { Text("Search podcasts or add RSS url") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             trailingIcon = {
                 Icon(
@@ -88,7 +86,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
             }
         ) {
             LazyColumn(modifier = Modifier) {
-                items(state.previousQueries) { query ->
+                items(items = state.previousSearches, key = { it }) { query ->
                     PreviousSearch(
                         query = query,
                         onClick = {

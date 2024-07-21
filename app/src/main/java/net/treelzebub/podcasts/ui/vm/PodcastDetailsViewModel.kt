@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.vm
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,7 +36,7 @@ class PodcastDetailsViewModel @AssistedInject constructor(
         fun create(podcastId: String): PodcastDetailsViewModel
     }
 
-    @Stable
+    @Stable @Immutable
     data class State(
         val loading: Boolean = true,
         val podcast: PodcastUi? = null,
@@ -47,13 +48,12 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     private val showPlayedFlow = prefs.booleanFlow(EpisodesShowPlayed(podcastId))
     private val podcastFlow = repo.getPodcast(podcastId)
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), replay = 1)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val episodesFlow: StateFlow<List<EpisodeUi>> = showPlayedFlow.flatMapLatest { showPlayed ->
         repo.getEpisodes(podcastId, showPlayed)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
-
-    val uiState: StateFlow<State> = combine(podcastFlow, episodesFlow, showPlayedFlow) {
-        podcast, episodes, showPlayed ->
+    val uiState: StateFlow<State> = combine(podcastFlow, episodesFlow, showPlayedFlow) { podcast, episodes, showPlayed ->
         State(
             loading = false,
             podcast = podcast,

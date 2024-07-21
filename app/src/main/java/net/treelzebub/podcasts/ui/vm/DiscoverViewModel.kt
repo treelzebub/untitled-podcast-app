@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.vm
 
+import android.webkit.URLUtil
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +22,7 @@ class DiscoverViewModel @Inject constructor(
     @Stable
     data class State(
         val loading: Boolean = true,
-        val previousQueries: List<String> = emptyList(),
+        val previousSearches: List<String> = emptyList(),
         val feeds: List<Feed> = emptyList(),
         val error: String? = null
     )
@@ -30,24 +31,30 @@ class DiscoverViewModel @Inject constructor(
         getPreviousQueries()
     }
 
-    fun search(query: String?) {
+    fun search(query: String?, onAdd: () -> Unit) {
         val clean = query?.trim().orEmpty()
         if (clean.isBlank()) return
         viewModelScope.launch {
             loading()
-            val results = queriesRepo.searchPodcasts(clean)
-            _state.update {
-                it.copy(loading = false, feeds = results.feeds)
+            if (URLUtil.isValidUrl(clean)) {
+                podcastsRepo.fetchRssFeed(clean) { TODO("Error handling") }
+                onAdd()
+            } else {
+                val results = queriesRepo.searchPodcasts(clean)
+                _state.update {
+                    it.copy(loading = false, feeds = results.feeds)
+                }
             }
         }
     }
 
-    fun select(feed: Feed, onError: ErrorHandler) {
+    fun select(feed: Feed, onAdd: () -> Unit, onError: ErrorHandler) {
         loading()
         podcastsRepo.fetchRssFeed(feed.url) {
             onError(it)
             error()
         }
+        onAdd()
     }
 
     fun deletePreviousSearch(query: String) = viewModelScope.launch {
@@ -57,11 +64,11 @@ class DiscoverViewModel @Inject constructor(
     private fun getPreviousQueries() {
         viewModelScope.launch {
             loading()
-            queriesRepo.all().collect { queries ->
+            queriesRepo.all().collect { searches ->
                 _state.update {
                     it.copy(
                         loading = false,
-                        previousQueries = queries,
+                        previousSearches = searches.reversed(),
                     )
                 }
             }
