@@ -24,6 +24,11 @@ sealed interface PodcastPref<T : Any> {
         override val key: String = "$podcastId-episodes-show-played"
         override val default: Boolean = false
     }
+
+    class EmailAddress(val value: String) : PodcastPref<String> {
+        override val key: String = "user-email-address"
+        override val default: String = ""
+    }
 }
 
 class Prefs @Inject constructor(app: Application) {

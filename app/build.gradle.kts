@@ -4,6 +4,7 @@ plugins {
     kotlin("kapt")
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.sqldelight)
     id("com.google.devtools.ksp")
@@ -117,6 +118,12 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.work)
     implementation(libs.datastore.prefs)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.firestore)
+    implementation(libs.play.services.auth)
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
