@@ -170,9 +170,8 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
                 stiffness = Spring.StiffnessMediumLow,
                 visibilityThreshold = IntOffset.VisibilityThreshold
             )
-        ).clickable {
-            navigator.navigate(EpisodeDetailsScreenDestination(episode.id))
-        }
+        ),
+        onClick = { navigator.navigate(EpisodeDetailsScreenDestination(episode.id)) }
     ) {
         Column(
             Modifier

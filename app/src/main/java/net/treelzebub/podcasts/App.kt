@@ -4,7 +4,11 @@ import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import coil.Coil
+import coil.imageLoader
+import coil.util.DebugLogger
 import dagger.hilt.android.HiltAndroidApp
+import net.treelzebub.podcasts.net.models.PodcastsOkClient
 import net.treelzebub.podcasts.net.sync.Sync
 import timber.log.Timber
 import timber.log.Timber.DebugTree
@@ -27,5 +31,15 @@ class App : Application(), Configuration.Provider {
         super.onCreate()
         Timber.plant(DebugTree())
         Sync.initialize(this)
+        initCoil()
+    }
+
+    private fun initCoil() {
+        val builder = imageLoader.newBuilder()
+            .crossfade(true)
+            .crossfade(500)
+            .okHttpClient(PodcastsOkClient)
+        if (BuildConfig.DEBUG) builder.logger(DebugLogger())
+        Coil.setImageLoader(builder.build())
     }
 }

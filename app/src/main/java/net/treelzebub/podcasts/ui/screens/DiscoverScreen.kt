@@ -45,6 +45,7 @@ import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.screens.destinations.SubscriptionsScreenDestination
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.DiscoverViewModel
+import timber.log.Timber
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,7 +58,7 @@ fun DiscoverScreen(navigator: DestinationsNavigator) {
     var active by remember { mutableStateOf(false) }
     val goToSubs = { navigator.navigate(SubscriptionsScreenDestination) }
     val onSearch = { query: String? -> vm.search(query, goToSubs) }
-    val onSelect = { it: Feed -> vm.select(it, goToSubs) { TODO() } }
+    val onSelect = { it: Feed -> vm.select(it, goToSubs) { Timber.e(it) } }
     val clear = {
         text = ""
         active = false
@@ -164,7 +165,7 @@ fun FeedItem(
     onSelect: (Feed) -> Unit
 ) {
     ItemCard(
-        modifier = Modifier.clickable { onSelect(feed) }
+        onClick = { onSelect(feed) }
     ) {
         Row(
             modifier = Modifier
@@ -175,7 +176,7 @@ fun FeedItem(
         ) {
             AsyncImage(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .weight(1.0f),
                 model = feed.image,
                 contentDescription = "Podcast Logo"
