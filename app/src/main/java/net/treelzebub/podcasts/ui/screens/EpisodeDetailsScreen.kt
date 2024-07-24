@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -85,7 +86,7 @@ fun EpisodeDetailsScreen(episodeId: String) {
 fun EpisodeContent(
     modifier: Modifier = Modifier,
     uiState: EpisodeDetailViewModel.UiState,
-    episodeState: EpisodeDetailViewModel.EpisodeState,
+    episodeState: EpisodeDetailViewModel.EpisodeDisplay,
     player: Player,
     actionHandler: (Action) -> Unit
 ) {
@@ -168,16 +169,23 @@ fun EpisodeContent(
                     fontSize = fontSize + 2.sp
                 )
             }
-            Spacer(modifier = Modifier.padding(vertical = 4.dp))
+
+            Text(
+                modifier = Modifier.wrapContentWidth().padding(vertical = 4.dp),
+                style = TextStyles.CardTitle,
+                text = episodeState.title.orEmpty()
+            )
 
             Row(modifier = Modifier.padding(horizontal = outerPadding)) {
                 Text(
+                    modifier = Modifier.wrapContentWidth(),
                     style = TextStyles.CardDate,
                     text = episodeState.displayDate.orEmpty()
                 )
                 Spacer(modifier = Modifier.weight(1.0f))
                 Text(
-                    style = TextStyles.CardDate,
+                    modifier = Modifier.wrapContentWidth(),
+                    style = TextStyles.CardSubtitle,
                     text = position
                 )
             }
