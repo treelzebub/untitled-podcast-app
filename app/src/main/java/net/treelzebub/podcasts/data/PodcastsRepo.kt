@@ -91,7 +91,7 @@ class PodcastsRepo @Inject constructor(
                             streaming_link = audio.orEmpty(),
                             local_file_uri = null,
                             image_url = image?.sanitizeUrl() ?: safeImage,
-                            duration = itunesItemData?.duration,
+                            duration = formatDuration(itunesItemData?.duration?.toLong() ?: 0L),
                             has_played = false,
                             progress_millis = 0L,
                             is_bookmarked = false,
@@ -238,5 +238,12 @@ class PodcastsRepo @Inject constructor(
                 isArchived = is_archived
             )
         }
+    }
+
+    private fun formatDuration(seconds: Long): String {
+        val minutes = seconds / 60
+        val hours = minutes / 60
+        val s = minutes % 60
+        return "$hours:$minutes:$s"
     }
 }

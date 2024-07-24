@@ -20,6 +20,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,8 +58,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     @Stable
     @Immutable
-    data class EpisodeState(
+    data class EpisodeDisplay(
         val id: String? = null,
+        val title: String? = null,
         val imageUrl: String? = null,
         val displayDate: String? = null,
         val duration: String? = null,
@@ -88,7 +90,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private val _uiState = MutableStateFlow(UiState())
-    private val _episodeState = MutableStateFlow(EpisodeState())
+    private val _episodeState = MutableStateFlow(EpisodeDisplay())
     private val episodeHolder = MutableStateFlow<EpisodeUi?>(null)
     private val listener = PodcastPlayerListener()
 
@@ -145,6 +147,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                 _episodeState.update {
                     it.copy(
                         id = id,
+                        title = title,
                         imageUrl = imageUrl,
                         displayDate = displayDate,
                         duration = duration,
