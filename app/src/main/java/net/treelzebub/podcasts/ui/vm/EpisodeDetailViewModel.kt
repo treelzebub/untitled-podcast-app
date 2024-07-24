@@ -29,19 +29,15 @@ import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
 import net.treelzebub.podcasts.ui.models.EpisodeUi
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Archive
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.PlayPause
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Share
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleBookmarked
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleHasPlayed
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.AddToQueue
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Archive
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Download
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.PlayPause
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Share
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
 import timber.log.Timber
 
-
-enum class EpisodeDetailAction {
-    ToggleBookmarked, Share, Download, AddToQueue, PlayPause, ToggleHasPlayed, Archive
-}
 
 @UnstableApi
 @HiltViewModel(assistedFactory = EpisodeDetailViewModel.Factory::class)
@@ -87,6 +83,10 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         val isArchived: Boolean = false
     )
 
+    enum class Action {
+        ToggleBookmarked, Share, Download, AddToQueue, PlayPause, ToggleHasPlayed, Archive
+    }
+
     private val _uiState = MutableStateFlow(UiState())
     private val _episodeState = MutableStateFlow(EpisodeState())
     private val episodeHolder = MutableStateFlow<EpisodeUi?>(null)
@@ -96,7 +96,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     val episodeState = _episodeState.asStateFlow()
     val player = mutableStateOf<Player?>(null)
 
-    val actionHandler: OnClick<EpisodeDetailAction> = { action ->
+    val actionHandler: OnClick<Action> = { action ->
         Timber.d("Received action: $action")
         when (action) {
             ToggleBookmarked -> toggleBookmarked()

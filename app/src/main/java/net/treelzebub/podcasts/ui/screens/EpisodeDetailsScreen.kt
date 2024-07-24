@@ -1,6 +1,7 @@
 package net.treelzebub.podcasts.ui.screens
 
 import android.annotation.SuppressLint
+import androidx.annotation.OptIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,20 +34,23 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.AddToQueue
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Archive
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.PlayPause
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleBookmarked
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailAction.ToggleHasPlayed
+import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.AddToQueue
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Archive
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Download
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.PlayPause
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
 import net.treelzebub.podcasts.util.DeviceApi
 import java.util.Locale
 
@@ -83,7 +87,7 @@ fun EpisodeContent(
     uiState: EpisodeDetailViewModel.UiState,
     episodeState: EpisodeDetailViewModel.EpisodeState,
     player: Player,
-    actionHandler: (EpisodeDetailAction) -> Unit
+    actionHandler: (Action) -> Unit
 ) {
     // TODO move all to reusable theme values
     val buttonPadding = 18.dp
@@ -93,12 +97,14 @@ fun EpisodeContent(
     val coroutineScope = rememberCoroutineScope()
     var position by remember { mutableStateOf("") }
 
-    LaunchedEffect("position") {
-        coroutineScope.launch {
-            val interval = 1000L
+    @Suppress("NAME_SHADOWING")
+    LaunchedEffect("update-position") {
+        coroutineScope.launch(Dispatchers.Main) {
+            // Scoped reference so we make calls from the main thread
             val player = player
-            val initialDelay = interval - (player.currentPosition % interval)
-            delay(initialDelay)
+            val interval = 1000L
+            val offset = interval - (player.currentPosition % interval)
+            delay(offset)
 
             while (true) {
                 if (player.isPlaying) {
@@ -120,10 +126,10 @@ fun EpisodeContent(
         ) {
             AsyncImage(
                 modifier = Modifier
-                    .padding(buttonPadding)
-                    .size(256.dp)
+                    .padding(vertical = 16.dp)
+                    .size(192.dp)
                     .clip(
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(6.dp)
                     ),
                 model = episodeState.imageUrl,
                 contentDescription = ""
@@ -165,20 +171,31 @@ fun EpisodeContent(
             Spacer(modifier = Modifier.padding(vertical = 4.dp))
 
             Row(modifier = Modifier.padding(horizontal = outerPadding)) {
-                Text(text = episodeState.displayDate.orEmpty())
+                Text(
+                    style = TextStyles.CardDate,
+                    text = episodeState.displayDate.orEmpty()
+                )
                 Spacer(modifier = Modifier.weight(1.0f))
-                Text(text = position)
+                Text(
+                    style = TextStyles.CardDate,
+                    text = position
+                )
             }
             Spacer(modifier = Modifier.padding(vertical = 2.dp))
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                Text(modifier = Modifier.padding(horizontal = outerPadding), text = episodeState.description.orEmpty())
+                Text(
+                    modifier = Modifier.padding(horizontal = outerPadding),
+                    style = TextStyles.CardDescription,
+                    text = episodeState.description.orEmpty()
+                )
             }
         }
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
-fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDetailAction) -> Unit) {
+fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (Action) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().then(modifier),
         verticalAlignment = Alignment.CenterVertically,
@@ -194,7 +211,7 @@ fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (EpisodeDe
         Text(
             modifier = Modifier
                 .padding(16.dp)
-                .clickable { actionHandler(EpisodeDetailAction.Share) },
+                .clickable { actionHandler(Action.Share) },
             fontSize = 24.sp,
             text = "\uD83D\uDCE4"
         )
