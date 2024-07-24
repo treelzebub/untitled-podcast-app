@@ -182,6 +182,11 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
         ) {
             BasicText(
                 modifier = Modifier.padding(bottom = 2.dp),
+                style = TextStyles.CardTitle,
+                text = episode.title
+            )
+            BasicText(
+                modifier = Modifier.padding(bottom = 2.dp),
                 style = TextStyles.CardDate,
                 text = episode.displayDate
             )

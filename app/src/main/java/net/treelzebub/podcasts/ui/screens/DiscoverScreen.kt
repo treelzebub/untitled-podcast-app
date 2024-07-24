@@ -189,12 +189,12 @@ fun FeedItem(
             ) {
                 BasicText(
                     modifier = Modifier.padding(bottom = 2.dp),
-                    style = TextStyles.CardSubtitle,
+                    style = TextStyles.CardTitle,
                     text = feed.title
                 )
                 BasicText(
                     modifier = Modifier.padding(bottom = 2.dp),
-                    style = TextStyles.CardDate,
+                    style = TextStyles.CardDescription,
                     text = feed.description
                 )
                 BasicText(

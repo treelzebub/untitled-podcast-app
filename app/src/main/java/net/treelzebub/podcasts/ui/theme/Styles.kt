@@ -10,8 +10,8 @@ import androidx.compose.ui.unit.sp
 
 object TextStyles {
 
-    val CardTitle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
-    val CardSubtitle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+    val CardTitle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    val CardSubtitle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     val CardDescription = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.Gray, lineBreak = LineBreak.Paragraph.copy(strategy = Balanced), hyphens = Hyphens.Auto)
     val CardDate = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
 }
