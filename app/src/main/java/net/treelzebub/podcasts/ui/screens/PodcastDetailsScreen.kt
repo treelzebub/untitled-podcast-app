@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -175,26 +175,38 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
     ) {
         Column(
             Modifier
-                .weight(3.0f)
-                .wrapContentHeight()
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(start = 12.dp, top = 6.dp, end = 12.dp, bottom = 6.dp)
         ) {
             BasicText(
-                modifier = Modifier.padding(bottom = 2.dp),
+                modifier = Modifier,
                 style = TextStyles.CardTitle,
+                overflow = TextOverflow.Ellipsis,
                 text = episode.title
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(vertical = 2.dp)
+            ) {
+                BasicText(
+                    modifier = Modifier.padding(bottom = 2.dp),
+                    style = TextStyles.CardDate,
+                    text = episode.displayDate.uppercase()
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                BasicText(
+                    modifier = Modifier.wrapContentHeight(),
+                    style = TextStyles.CardDescription,
+                    text = episode.duration
+                )
+            }
             BasicText(
-                modifier = Modifier.padding(bottom = 2.dp),
-                style = TextStyles.CardDate,
-                text = episode.displayDate
-            )
-            BasicText(
-                modifier = Modifier.height(72.dp),
-                style = TextStyle(textAlign = TextAlign.Start),
-                overflow = TextOverflow.Ellipsis,
-                text = episode.description
+                modifier = Modifier
+                    .align(Alignment.End),
+                style = TextStyles.CardTitle,
+                text = if (episode.hasPlayed) "✅" else ""
             )
         }
     }
