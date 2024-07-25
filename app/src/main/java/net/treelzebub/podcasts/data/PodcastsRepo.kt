@@ -1,6 +1,7 @@
 package net.treelzebub.podcasts.data
 
 import androidx.annotation.VisibleForTesting
+import androidx.core.text.isDigitsOnly
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -120,14 +121,14 @@ class PodcastsRepo @Inject constructor(
     /** Episodes **/
     fun getEpisodes(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {
         return db.episodesQueries.let {
-                if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
-                else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
-            }.asFlow().mapToList(ioDispatcher)
+            if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
+            else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
+        }.asFlow().mapToList(ioDispatcher)
     }
 
     fun getEpisodeById(id: String): EpisodeUi {
         return db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
-                ?: throw IllegalArgumentException("Episode is not in database!")
+            ?: throw IllegalArgumentException("Episode is not in database!")
     }
 
     fun getEpisodeFlowById(id: String): Flow<EpisodeUi?> {
@@ -245,16 +246,28 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    // TODO validation
     private fun formatDuration(seconds: String?): String {
-        return try {
-            val long = seconds!!.toLong()
+        val timecodePattern = Regex("""^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$""")
+
+        if (seconds?.matches(timecodePattern) == true) {
+            val parts = seconds.split(":")
+            val hours = parts[0].toInt()
+            val minutes = parts[1].toInt()
+
+            return if (hours == 0) "${minutes}m" else "${hours}h ${minutes}m"
+        }
+
+        if (seconds?.isDigitsOnly() == true) {
+            val long = seconds.toLong()
             val mins = long / 60
             val hours = mins / 60
             val secs = mins % 60
-            return "$hours:$mins:$secs"
-        } catch (e: Exception) {
-            seconds.orEmpty()
+            return "" +
+                if (hours > 0) "${hours}h" else "" +
+                    if (mins > 0) "${mins}m" else "" +
+                        "${secs}s"
         }
+
+        return ""
     }
 }
