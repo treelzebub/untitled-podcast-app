@@ -41,6 +41,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -95,7 +96,6 @@ fun EpisodeContent(
     val buttonPadding = 18.dp
     val outerPadding = 16.dp
     val fontSize = 24.sp
-
     val coroutineScope = rememberCoroutineScope()
     var position by remember { mutableStateOf("") }
 
@@ -110,9 +110,13 @@ fun EpisodeContent(
 
             while (true) {
                 if (player.isPlaying) {
-                    position = formatPosition(player.currentPosition, player.contentDuration)
+                    val currentPosition = player.currentPosition
+                    val duration = player.contentDuration
+                    withContext(Dispatchers.Default) {
+                        position = formatPosition(currentPosition, duration)
+                        delay(interval)
+                    }
                 }
-                delay(interval)
             }
         }
     }
@@ -231,7 +235,6 @@ private fun formatPosition(current: Long, total: Long): String {
     val cHours = (current / (1000 * 60 * 60)) % 24
     val cMins = (current / (1000 * 60)) % 60
     val cSecs = (current / 1000) % 60
-
     val tHours = (total / (1000 * 60 * 60)) % 24
     val tMins = (total / (1000 * 60)) % 60
     val tSecs = (total / 1000) % 60

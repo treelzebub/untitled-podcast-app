@@ -17,4 +17,9 @@ abstract class StatefulViewModel<T : Any>(initialState: T) : ViewModel() {
     protected val _state = MutableStateFlow(initialState)
     val state = _state.asStateFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TIMEOUT), initialState)
+
+//    val state: StateFlow<String>
+//        field = MutableStateFlow("")
+//        get() = field.asStateFlow()
+//            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TIMEOUT), initialState)
 }
