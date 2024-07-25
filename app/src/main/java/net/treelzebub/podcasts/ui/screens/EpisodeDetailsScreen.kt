@@ -41,7 +41,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -99,11 +98,8 @@ fun EpisodeContent(
     val coroutineScope = rememberCoroutineScope()
     var position by remember { mutableStateOf("") }
 
-    @Suppress("NAME_SHADOWING")
     LaunchedEffect("update-position") {
         coroutineScope.launch(Dispatchers.Main) {
-            // Scoped reference so we make calls from the main thread
-            val player = player
             val interval = 1000L
             val offset = interval - (player.currentPosition % interval)
             delay(offset)
@@ -112,10 +108,8 @@ fun EpisodeContent(
                 if (player.isPlaying) {
                     val currentPosition = player.currentPosition
                     val duration = player.contentDuration
-                    withContext(Dispatchers.Default) {
-                        position = formatPosition(currentPosition, duration)
-                        delay(interval)
-                    }
+                    position = formatPosition(currentPosition, duration)
+                    delay(interval)
                 }
             }
         }
