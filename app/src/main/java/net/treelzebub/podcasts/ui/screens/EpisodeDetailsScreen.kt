@@ -43,6 +43,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
+import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action
@@ -63,18 +64,18 @@ fun EpisodeDetailsScreen(episodeId: String) {
     val vm = hiltViewModel<EpisodeDetailViewModel, EpisodeDetailViewModel.Factory>(
         creationCallback = { factory -> factory.create(episodeId) }
     )
+    val episode by remember { vm.episode }.collectAsStateWithLifecycle(null)
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
-    val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
     val player by remember { vm.player }
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
-    if (uiState.loading) {
+    if (uiState.loading || episode == null || player == null) {
         LoadingBox()
-    } else if (episodeState.isPopulated && player != null) {
+    } else {
         EpisodeContent(
+            episode = episode!!,
             uiState = uiState,
-            episodeState = episodeState,
             player = player!!,
             actionHandler = vm.actionHandler
         )
@@ -85,8 +86,8 @@ fun EpisodeDetailsScreen(episodeId: String) {
 @Composable
 fun EpisodeContent(
     modifier: Modifier = Modifier,
+    episode: EpisodeUi,
     uiState: EpisodeDetailViewModel.UiState,
-    episodeState: EpisodeDetailViewModel.EpisodeDisplay,
     player: Player,
     actionHandler: (Action) -> Unit
 ) {
@@ -132,7 +133,7 @@ fun EpisodeContent(
                     .clip(
                         shape = RoundedCornerShape(6.dp)
                     ),
-                model = episodeState.imageUrl,
+                model = episode.imageUrl,
                 contentDescription = ""
             )
             Row(
@@ -173,14 +174,14 @@ fun EpisodeContent(
             Text(
                 modifier = Modifier.wrapContentWidth().padding(vertical = 4.dp),
                 style = TextStyles.CardTitle,
-                text = episodeState.title.orEmpty()
+                text = episode.title
             )
 
             Row(modifier = Modifier.padding(horizontal = outerPadding)) {
                 Text(
                     modifier = Modifier.wrapContentWidth(),
                     style = TextStyles.CardDate,
-                    text = episodeState.displayDate.orEmpty()
+                    text = episode.displayDate
                 )
                 Spacer(modifier = Modifier.weight(1.0f))
                 Text(
@@ -194,7 +195,7 @@ fun EpisodeContent(
                 Text(
                     modifier = Modifier.padding(horizontal = outerPadding),
                     style = TextStyles.CardDescription,
-                    text = episodeState.description.orEmpty()
+                    text = episode.description
                 )
             }
         }

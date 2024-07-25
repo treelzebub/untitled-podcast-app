@@ -91,7 +91,7 @@ class PodcastsRepo @Inject constructor(
                             streaming_link = audio.orEmpty(),
                             local_file_uri = null,
                             image_url = image?.sanitizeUrl() ?: safeImage,
-                            duration = formatDuration(itunesItemData?.duration?.toLong() ?: 0L),
+                            duration = formatDuration(itunesItemData?.duration),
                             has_played = false,
                             progress_millis = 0L,
                             is_bookmarked = false,
@@ -130,6 +130,11 @@ class PodcastsRepo @Inject constructor(
                 ?: throw IllegalArgumentException("Episode is not in database!")
     }
 
+    fun getEpisodeFlowById(id: String): Flow<EpisodeUi?> {
+        return db.episodesQueries.get_by_id(id, episodeMapper).asFlow().mapToOneOrNull(ioDispatcher)
+    }
+
+
     fun updatePosition(id: String, millis: Long) {
         Timber.d("Persisting episode id: $id at position: $millis")
         scope.launch {
@@ -137,28 +142,28 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    fun setIsBookmarked(episodeId: String, isBookmarked: Boolean) {
+    fun toggleIsBookmarked(episodeId: String) {
         scope.launch {
-            db.episodesQueries.set_is_bookmarked(id = episodeId, is_bookmarked = isBookmarked)
+            db.episodesQueries.toggle_is_bookmarked(episodeId)
         }
     }
 
-    fun setHasPlayed(episodeId: String, hasPlayed: Boolean) {
+    fun toggleHasPlayed(episodeId: String) {
         scope.launch {
-            db.episodesQueries.set_has_played(id = episodeId, has_played = hasPlayed)
+            db.episodesQueries.toggle_has_played(episodeId)
         }
     }
 
-    fun setIsArchived(episodeId: String, isArchived: Boolean) {
+    fun toggleIsArchived(episodeId: String) {
         scope.launch {
-            db.episodesQueries.set_is_archived(id = episodeId, is_archived = isArchived)
+            db.episodesQueries.toggle_is_archived(episodeId)
         }
     }
 
     /** Queue **/
-    fun addToQueue(episode: EpisodeUi, errorHandler: ErrorHandler) {
+    fun addToQueue(id: String, errorHandler: ErrorHandler) {
         scope.launch {
-            queueStore.add(episode, errorHandler)
+            queueStore.add(getEpisodeById(id), errorHandler)
         }
     }
 
@@ -240,10 +245,16 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    private fun formatDuration(seconds: Long): String {
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        val s = minutes % 60
-        return "$hours:$minutes:$s"
+    // TODO validation
+    private fun formatDuration(seconds: String?): String {
+        return try {
+            val long = seconds!!.toLong()
+            val mins = long / 60
+            val hours = mins / 60
+            val secs = mins % 60
+            return "$hours:$mins:$secs"
+        } catch (e: Exception) {
+            seconds.orEmpty()
+        }
     }
 }
