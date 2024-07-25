@@ -1,6 +1,7 @@
 package net.treelzebub.podcasts.data
 
 import androidx.annotation.VisibleForTesting
+import androidx.core.text.isDigitsOnly
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -91,7 +92,7 @@ class PodcastsRepo @Inject constructor(
                             streaming_link = audio.orEmpty(),
                             local_file_uri = null,
                             image_url = image?.sanitizeUrl() ?: safeImage,
-                            duration = itunesItemData?.duration,
+                            duration = formatDuration(itunesItemData?.duration),
                             has_played = false,
                             progress_millis = 0L,
                             is_bookmarked = false,
@@ -120,15 +121,20 @@ class PodcastsRepo @Inject constructor(
     /** Episodes **/
     fun getEpisodes(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {
         return db.episodesQueries.let {
-                if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
-                else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
-            }.asFlow().mapToList(ioDispatcher)
+            if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
+            else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
+        }.asFlow().mapToList(ioDispatcher)
     }
 
     fun getEpisodeById(id: String): EpisodeUi {
         return db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
-                ?: throw IllegalArgumentException("Episode is not in database!")
+            ?: throw IllegalArgumentException("Episode is not in database!")
     }
+
+    fun getEpisodeFlowById(id: String): Flow<EpisodeUi?> {
+        return db.episodesQueries.get_by_id(id, episodeMapper).asFlow().mapToOneOrNull(ioDispatcher)
+    }
+
 
     fun updatePosition(id: String, millis: Long) {
         Timber.d("Persisting episode id: $id at position: $millis")
@@ -137,28 +143,28 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    fun setIsBookmarked(episodeId: String, isBookmarked: Boolean) {
+    fun toggleIsBookmarked(episodeId: String) {
         scope.launch {
-            db.episodesQueries.set_is_bookmarked(id = episodeId, is_bookmarked = isBookmarked)
+            db.episodesQueries.toggle_is_bookmarked(episodeId)
         }
     }
 
-    fun setHasPlayed(episodeId: String, hasPlayed: Boolean) {
+    fun toggleHasPlayed(episodeId: String) {
         scope.launch {
-            db.episodesQueries.set_has_played(id = episodeId, has_played = hasPlayed)
+            db.episodesQueries.toggle_has_played(episodeId)
         }
     }
 
-    fun setIsArchived(episodeId: String, isArchived: Boolean) {
+    fun toggleIsArchived(episodeId: String) {
         scope.launch {
-            db.episodesQueries.set_is_archived(id = episodeId, is_archived = isArchived)
+            db.episodesQueries.toggle_is_archived(episodeId)
         }
     }
 
     /** Queue **/
-    fun addToQueue(episode: EpisodeUi, errorHandler: ErrorHandler) {
+    fun addToQueue(id: String, errorHandler: ErrorHandler) {
         scope.launch {
-            queueStore.add(episode, errorHandler)
+            queueStore.add(getEpisodeById(id), errorHandler)
         }
     }
 
@@ -238,5 +244,30 @@ class PodcastsRepo @Inject constructor(
                 isArchived = is_archived
             )
         }
+    }
+
+    private fun formatDuration(seconds: String?): String {
+        val timecodePattern = Regex("""^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$""")
+
+        if (seconds?.matches(timecodePattern) == true) {
+            val parts = seconds.split(":")
+            val hours = parts[0].toInt()
+            val minutes = parts[1].toInt()
+
+            return if (hours == 0) "${minutes}m" else "${hours}h ${minutes}m"
+        }
+
+        if (seconds?.isDigitsOnly() == true) {
+            val long = seconds.toLong()
+            val mins = long / 60
+            val hours = mins / 60
+            val secs = mins % 60
+            return "" +
+                if (hours > 0) "${hours}h" else "" +
+                    if (mins > 0) "${mins}m" else "" +
+                        "${secs}s"
+        }
+
+        return ""
     }
 }

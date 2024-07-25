@@ -103,17 +103,17 @@ UPDATE episode
 SET position_millis = :position_millis
 WHERE episode.id = :id;
 
-set_is_bookmarked:
+toggle_has_played:
 UPDATE episode
-SET is_bookmarked = :is_bookmarked
-WHERE episode.id = :id;
+SET has_played = CASE WHEN has_played = 0 THEN 1 ELSE 0 END
+WHERE id = ?;
 
-set_has_played:
+toggle_is_bookmarked:
 UPDATE episode
-SET has_played = :has_played
-WHERE episode.id = :id;
+SET is_bookmarked = CASE WHEN is_bookmarked = 0 THEN 1 ELSE 0 END
+WHERE id = ?;
 
-set_is_archived:
+toggle_is_archived:
 UPDATE episode
-SET is_archived = :is_archived
-WHERE episode.id = :id;
+SET is_archived = CASE WHEN is_archived = 0 THEN 1 ELSE 0 END
+WHERE id = ?;
