@@ -7,7 +7,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.sqldelight)
     id("com.google.devtools.ksp")
-    //alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.compiler)
 }
 
 sqldelight {
@@ -25,9 +25,9 @@ kapt {
 
 kotlin {
     jvmToolchain(17)
-//    sourceSets.all {
-//        languageSettings.enableLanguageFeature("ExplicitBackingFields")
-//    }
+    sourceSets.all {
+        languageSettings.enableLanguageFeature("ExplicitBackingFields")
+    }
 }
 
 android {
@@ -110,7 +110,7 @@ android {
 }
 
 // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-compiler.html#compose-compiler-options-dsl
-//composeCompiler {}
+composeCompiler {}
 
 dependencies {
     implementation(libs.coroutines.android)
