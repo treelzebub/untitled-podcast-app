@@ -176,8 +176,23 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(start = 12.dp, top = 6.dp, end = 12.dp, bottom = 6.dp)
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 8.dp
+                )
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(vertical = 4.dp)
+            ) {
+                BasicText(
+                    modifier = Modifier,
+                    style = TextStyles.CardDate,
+                    text = episode.displayDate.uppercase()
+                )
+            }
             BasicText(
                 modifier = Modifier,
                 style = TextStyles.CardTitle,
@@ -188,14 +203,8 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .padding(vertical = 2.dp)
+                    .padding(vertical = 4.dp)
             ) {
-                BasicText(
-                    modifier = Modifier.padding(bottom = 2.dp),
-                    style = TextStyles.CardDate,
-                    text = episode.displayDate.uppercase()
-                )
-                Spacer(modifier = Modifier.weight(1f))
                 BasicText(
                     modifier = Modifier.wrapContentHeight(),
                     style = TextStyles.CardDescription,
