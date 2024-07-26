@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Episode
 import net.treelzebub.podcasts.Podcast
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -22,6 +23,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 
+// TODO everything is suspend fun in repo too
+//      and add logging to sync to report how many were updated and ignored,.
 @Singleton
 class SubscriptionUpdater @Inject constructor(
     private val client: OkHttpClient,
@@ -45,10 +48,12 @@ class SubscriptionUpdater @Inject constructor(
             val diff = parsed.keys.subtract(old.keys.toSet())
             val map = diff.map { it to parsed[it]!! }
             map.forEach { repo.upsertPodcast(it) }
+
+            Timber.d("Updated ${map.size} of ${subs.size} podcasts.")
         }
     }
 
-    private fun update(
+    private suspend fun update(
         sub: SubscriptionDto,
         onFailure: (SubscriptionDto, Call, IOException) -> Unit
     ) {
@@ -75,7 +80,5 @@ class SubscriptionUpdater @Inject constructor(
         client.newCall(request).enqueue(callback)
     }
 
-    fun cancelAll() {
-        client.dispatcher.cancelAll()
-    }
+    fun cancelAll() = client.dispatcher.cancelAll()
 }

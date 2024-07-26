@@ -3,16 +3,18 @@ package net.treelzebub.podcasts.data
 import androidx.annotation.VisibleForTesting
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.Episode
 import net.treelzebub.podcasts.Podcast
+import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
@@ -22,33 +24,29 @@ import timber.log.Timber
 import javax.inject.Inject
 
 
-// TODO revisit this dependency graph, this class is outta hand
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
     private val queueStore: QueueStore,
-    private val ioDispatcher: CoroutineDispatcher
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
-    fun cancelScope() = scope.cancel()
-
     /** RSS Feeds **/
-    fun fetchRssFeed(rssLink: String, onError: ErrorHandler) {
-        scope.launch {
-            try {
-                Timber.d("Fetching RSS Feed: $rssLink")
-                val pair = rssHandler.fetch(rssLink).podcastEpisodesPair(rssLink)
-                upsertPodcast(pair)
-            } catch (e: Exception) {
-                Timber.e("Error parsing RSS Feed", e)
-                onError(e)
-            }
+    suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) = withIoContext {
+        try {
+            Timber.d("Fetching RSS Feed: $rssLink")
+            val pair = rssHandler.fetch(rssLink).podcastEpisodesPair(rssLink)
+            upsertPodcast(pair)
+        } catch (e: Exception) {
+            Timber.e("Error parsing RSS Feed", e)
+            onError(e)
         }
     }
 
-    suspend fun parseRssFeed(rssLink: String, raw: String): Pair<Podcast, List<Episode>> = rssHandler.parse(raw).podcastEpisodesPair(rssLink)
+    suspend fun parseRssFeed(rssLink: String, raw: String): Pair<Podcast, List<Episode>> =
+        rssHandler.parse(raw).podcastEpisodesPair(rssLink)
 
     fun getAllRssLinks(): List<SubscriptionDto> {
         val rssLinksMapper = { id: String, rss_link: String -> SubscriptionDto(id, rss_link) }
@@ -56,56 +54,21 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Podcasts **/
-    fun upsertPodcast(pair: Pair<Podcast, List<Episode>>) {
+    suspend fun upsertPodcast(pair: Pair<Podcast, List<Episode>>) = withIoContext {
         scope.launch {
             db.transaction {
-                val podcast = pair.first
-                val episodes = pair.second
-                with(podcast) {
-                    db.podcastsQueries.upsert(
-                        id = id,
-                        link = link,
-                        title = title,
-                        description = description,
-                        email = email,
-                        image_url = image_url,
-                        last_build_date = last_build_date,
-                        rss_link = rss_link,
-                        last_local_update = last_local_update,
-                        latest_episode_timestamp = latest_episode_timestamp,
-                    )
-                }
-                episodes.forEach {
-                    with(it) {
-                        db.episodesQueries.upsert(
-                            id = id,
-                            podcast_id = podcast_id,
-                            podcast_title = podcast_title,
-                            title = title,
-                            description = description,
-                            date = date,
-                            link = link,
-                            streaming_link = streaming_link,
-                            local_file_uri = local_file_uri,
-                            image_url = image_url,
-                            duration = duration,
-                            has_played = has_played,
-                            position_millis = position_millis,
-                            is_bookmarked = is_bookmarked,
-                            is_archived = is_archived
-                        )
-                    }
-                }
+                db.podcastsQueries.upsert(pair.first)
+                db.episodesQueries.upsert(pair.second)
             }
         }
     }
 
-    fun getPodcasts(): List<Podcast> {
-        return db.podcastsQueries.get_all().executeAsList()
+    suspend fun getPodcasts(): List<Podcast> = withIoContext {
+        db.podcastsQueries.get_all().executeAsList()
     }
 
-    fun getPodcastUis(): Flow<List<PodcastUi>> {
-        return db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
+    suspend fun getPodcastUis(): Flow<List<PodcastUi>> = withIoContext {
+        db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
     }
 
     fun getPodcast(podcastId: String): Flow<PodcastUi?> {
@@ -113,14 +76,14 @@ class PodcastsRepo @Inject constructor(
     }
 
     // Cascading delete of episodes declared in episodes.sq
-    suspend fun deletePodcastById(podcastId: String) {
+    suspend fun deletePodcastById(podcastId: String) = withIoContext {
         queueStore.removeByPodcastId(podcastId) {}
         db.podcastsQueries.delete(podcastId)
     }
 
     /** Episodes **/
-    fun getAllEpisodesList(podcastId: String): List<Episode> {
-        return db.episodesQueries.get_by_podcast_id(podcastId).executeAsList()
+    suspend fun getAllEpisodesList(podcastId: String): List<Episode> = withIoContext {
+        db.episodesQueries.get_by_podcast_id(podcastId).executeAsList()
     }
 
     fun getEpisodesFlow(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {
@@ -130,59 +93,46 @@ class PodcastsRepo @Inject constructor(
         }.asFlow().mapToList(ioDispatcher)
     }
 
-    fun getEpisodeById(id: String): EpisodeUi {
-        return db.episodesQueries.get_by_id(id, episodeMapper).executeAsOneOrNull()
-            ?: throw IllegalArgumentException("Episode is not in database!")
+    suspend fun getEpisodeById(id: String): EpisodeUi = withIoContext {
+        db.episodesQueries.get_by_id(id, episodeMapper).executeAsOne()
     }
 
-    fun getEpisodeFlowById(id: String): Flow<EpisodeUi?> {
-        return db.episodesQueries.get_by_id(id, episodeMapper).asFlow().mapToOneOrNull(ioDispatcher)
+    fun getEpisodeFlowById(id: String): Flow<EpisodeUi> {
+        return db.episodesQueries.get_by_id(id, episodeMapper).asFlow().mapToOne(ioDispatcher)
     }
 
 
-    fun updatePosition(id: String, millis: Long) {
+    suspend fun updatePosition(id: String, millis: Long) = withIoContext {
         Timber.d("Persisting episode id: $id at position: $millis")
-        scope.launch {
-            db.episodesQueries.set_position_millis(millis, id)
-        }
+        db.episodesQueries.set_position_millis(millis, id)
     }
 
-    fun toggleIsBookmarked(episodeId: String) {
-        scope.launch {
-            db.episodesQueries.toggle_is_bookmarked(episodeId)
-        }
+    suspend fun toggleIsBookmarked(episodeId: String) = withIoContext {
+        db.episodesQueries.toggle_is_bookmarked(episodeId)
     }
 
-    fun toggleHasPlayed(episodeId: String) {
-        scope.launch {
-            db.episodesQueries.toggle_has_played(episodeId)
-        }
+    suspend fun toggleHasPlayed(episodeId: String) = withIoContext {
+        db.episodesQueries.toggle_has_played(episodeId)
     }
 
-    fun toggleIsArchived(episodeId: String) {
-        scope.launch {
-            db.episodesQueries.toggle_is_archived(episodeId)
-        }
+    suspend fun toggleIsArchived(episodeId: String) = withIoContext {
+        db.episodesQueries.toggle_is_archived(episodeId)
     }
 
     /** Queue **/
-    fun addToQueue(id: String, errorHandler: ErrorHandler) {
-        scope.launch {
-            queueStore.add(getEpisodeById(id), errorHandler)
-        }
+    suspend fun addToQueue(id: String, errorHandler: ErrorHandler) = withIoContext {
+        queueStore.add(getEpisodeById(id), errorHandler)
     }
 
-    suspend fun removeFromQueue(episodeId: String, errorHandler: ErrorHandler) {
-        scope.launch {
-            queueStore.remove(episodeId, errorHandler)
-        }
+    suspend fun removeFromQueue(episodeId: String, errorHandler: ErrorHandler) = withIoContext {
+        queueStore.remove(episodeId, errorHandler)
     }
 
-    suspend fun reorderQueue(from: Int, to: Int, errorHandler: ErrorHandler) {
-        scope.launch {
-            queueStore.reorder(from, to, errorHandler)
-        }
+    suspend fun reorderQueue(from: Int, to: Int, errorHandler: ErrorHandler) = withIoContext {
+        queueStore.reorder(from, to, errorHandler)
     }
+
+    private suspend fun <T> withIoContext(block: suspend CoroutineScope.() -> T): T = withContext(ioDispatcher, block)
 
     companion object {
 

@@ -130,7 +130,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private fun loadEpisode(episodeId: String) {
         viewModelScope.launch(ioDispatcher) {
             repo.getEpisodeFlowById(episodeId).collect { updated ->
-                updated ?: return@collect
                 _uiState.update {
                     it.copy(
                         loading = false,
@@ -164,8 +163,16 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         }
     }
 
-    private fun toggleBookmarked() {
+    private fun toggleBookmarked() = viewModelScope.launch {
         repo.toggleIsBookmarked(episodeId)
+    }
+
+    private fun toggleHasPlayed() = viewModelScope.launch {
+        repo.toggleHasPlayed(episodeId)
+    }
+
+    private fun toggleArchived() = viewModelScope.launch {
+        repo.toggleIsArchived(episodeId)
     }
 
     private fun share() {
@@ -182,17 +189,9 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         Timber.d("TODO: Download")
     }
 
-    private fun addToQueue(id: String) {
+    private fun addToQueue(id: String) = viewModelScope.launch {
         // TODO UI State -> isInQueue
         repo.addToQueue(id) { TODO() }
-    }
-
-    private fun toggleHasPlayed() {
-        repo.toggleHasPlayed(episodeId)
-    }
-
-    private fun toggleArchived() {
-        repo.toggleIsArchived(episodeId)
     }
 
     private inner class PodcastPlayerListener : Player.Listener {

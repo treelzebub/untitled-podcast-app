@@ -17,7 +17,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.util.DeviceApi
 import timber.log.Timber
 import javax.inject.Inject
@@ -35,14 +40,20 @@ class PlaybackService : MediaSessionService() {
     }
 
     @Inject
+    @IoDispatcher
+    lateinit var ioDispatcher: CoroutineDispatcher
+
+    @Inject
     lateinit var repo: PodcastsRepo
+
+    private val scope by lazy { CoroutineScope(SupervisorJob() + ioDispatcher) }
 
     private var _session: MediaSession? = null
     private val session: MediaSession
         get() = _session!!
     private val isPlayingListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (!isPlaying) persistPosition()
+            if (!isPlaying) scope.launch { persistPosition() }
         }
     }
 
@@ -80,7 +91,6 @@ class PlaybackService : MediaSessionService() {
             _session = null
         }
         clearListener()
-        repo.cancelScope()
         super.onDestroy()
     }
 
@@ -98,7 +108,7 @@ class PlaybackService : MediaSessionService() {
             .also { it.addListener(isPlayingListener) }
     }
 
-    private fun persistPosition() {
+    private suspend fun persistPosition() {
         val episodeId = session.sessionExtras.getString(KEY_EPISODE_ID)
             ?: throw IllegalStateException("Session has no episodeId in extras")
         repo.updatePosition(episodeId, session.player.currentPosition)
