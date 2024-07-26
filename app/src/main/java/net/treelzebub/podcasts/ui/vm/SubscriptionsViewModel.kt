@@ -28,7 +28,7 @@ class SubscriptionsViewModel @Inject constructor(
 
     private fun getAllPodcasts() {
         viewModelScope.launch {
-            repo.getPodcasts().collect { currentState ->
+            repo.getPodcastUis().collect { currentState ->
                 _state.update { it.copy(loading = false, podcasts = currentState) }
             }
         }

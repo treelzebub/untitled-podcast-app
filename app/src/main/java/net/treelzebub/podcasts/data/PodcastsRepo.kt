@@ -1,11 +1,9 @@
 package net.treelzebub.podcasts.data
 
 import androidx.annotation.VisibleForTesting
-import androidx.core.text.isDigitsOnly
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.prof18.rssparser.model.RssChannel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -13,18 +11,18 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.Database
+import net.treelzebub.podcasts.Episode
+import net.treelzebub.podcasts.Podcast
 import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import net.treelzebub.podcasts.util.ErrorHandler
 import net.treelzebub.podcasts.util.Time
-import net.treelzebub.podcasts.util.sanitizeHtml
-import net.treelzebub.podcasts.util.sanitizeUrl
 import timber.log.Timber
 import javax.inject.Inject
 
 
-/** TODO revisit this dependency graph, this class is outta hand **/
+// TODO revisit this dependency graph, this class is outta hand
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
@@ -41,8 +39,8 @@ class PodcastsRepo @Inject constructor(
         scope.launch {
             try {
                 Timber.d("Fetching RSS Feed: $rssLink")
-                val feed = rssHandler.fetch(rssLink)
-                upsertPodcast(rssLink, feed)
+                val pair = rssHandler.fetch(rssLink).podcastEpisodesPair(rssLink)
+                upsertPodcast(pair)
             } catch (e: Exception) {
                 Timber.e("Error parsing RSS Feed", e)
                 onError(e)
@@ -50,7 +48,7 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun parseRssFeed(raw: String): RssChannel = rssHandler.parse(raw)
+    suspend fun parseRssFeed(rssLink: String, raw: String): Pair<Podcast, List<Episode>> = rssHandler.parse(raw).podcastEpisodesPair(rssLink)
 
     fun getAllRssLinks(): List<SubscriptionDto> {
         val rssLinksMapper = { id: String, rss_link: String -> SubscriptionDto(id, rss_link) }
@@ -58,45 +56,43 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Podcasts **/
-    fun upsertPodcast(rssLink: String, channel: RssChannel) {
+    fun upsertPodcast(pair: Pair<Podcast, List<Episode>>) {
         scope.launch {
             db.transaction {
-                val safeImage = channel.image?.url ?: channel.itunesChannelData?.image
-                val latestEpisodeTimestamp = channel.items
-                    .maxOfOrNull { Time.zonedEpochSeconds(it.pubDate) } ?: -1L
-                with(channel) {
+                val podcast = pair.first
+                val episodes = pair.second
+                with(podcast) {
                     db.podcastsQueries.upsert(
-                        id = link!!, // Public link to Podcast will be unique, so it's our ID.
-                        link = link!!,
-                        title = title!!,
-                        description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml()
-                            .orEmpty(),
-                        email = itunesChannelData?.owner?.email.orEmpty(),
-                        image_url = safeImage,
-                        last_build_date = Time.zonedEpochSeconds(lastBuildDate),
-                        rss_link = rssLink,
-                        last_local_update = Time.nowSeconds(),
-                        latest_episode_timestamp = latestEpisodeTimestamp
+                        id = id,
+                        link = link,
+                        title = title,
+                        description = description,
+                        email = email,
+                        image_url = image_url,
+                        last_build_date = last_build_date,
+                        rss_link = rss_link,
+                        last_local_update = last_local_update,
+                        latest_episode_timestamp = latest_episode_timestamp,
                     )
                 }
-                channel.items.forEach {
+                episodes.forEach {
                     with(it) {
                         db.episodesQueries.upsert(
-                            id = guid!!,
-                            podcast_id = channel.link!!,
-                            podcast_title = channel.title!!,
-                            title = title.sanitizeHtml() ?: "[No Title]",
-                            description = description?.sanitizeHtml() ?: "[No Description]",
-                            date = Time.zonedEpochSeconds(pubDate),
-                            link = link?.sanitizeUrl().orEmpty(),
-                            streaming_link = audio.orEmpty(),
-                            local_file_uri = null,
-                            image_url = image?.sanitizeUrl() ?: safeImage,
-                            duration = formatDuration(itunesItemData?.duration),
-                            has_played = false,
-                            progress_millis = 0L,
-                            is_bookmarked = false,
-                            is_archived = false
+                            id = id,
+                            podcast_id = podcast_id,
+                            podcast_title = podcast_title,
+                            title = title,
+                            description = description,
+                            date = date,
+                            link = link,
+                            streaming_link = streaming_link,
+                            local_file_uri = local_file_uri,
+                            image_url = image_url,
+                            duration = duration,
+                            has_played = has_played,
+                            position_millis = position_millis,
+                            is_bookmarked = is_bookmarked,
+                            is_archived = is_archived
                         )
                     }
                 }
@@ -104,7 +100,11 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    fun getPodcasts(): Flow<List<PodcastUi>> {
+    fun getPodcasts(): List<Podcast> {
+        return db.podcastsQueries.get_all().executeAsList()
+    }
+
+    fun getPodcastUis(): Flow<List<PodcastUi>> {
         return db.podcastsQueries.get_all(podcastMapper).asFlow().mapToList(ioDispatcher)
     }
 
@@ -119,7 +119,11 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Episodes **/
-    fun getEpisodes(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {
+    fun getAllEpisodesList(podcastId: String): List<Episode> {
+        return db.episodesQueries.get_by_podcast_id(podcastId).executeAsList()
+    }
+
+    fun getEpisodesFlow(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {
         return db.episodesQueries.let {
             if (showPlayed) it.get_by_podcast_id(podcastId, episodeMapper)
             else it.get_by_podcast_id_unplayed(podcastId, episodeMapper)
@@ -246,28 +250,5 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    private fun formatDuration(seconds: String?): String {
-        val timecodePattern = Regex("""^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$""")
 
-        if (seconds?.matches(timecodePattern) == true) {
-            val parts = seconds.split(":")
-            val hours = parts[0].toInt()
-            val minutes = parts[1].toInt()
-
-            return if (hours == 0) "${minutes}m" else "${hours}h ${minutes}m"
-        }
-
-        if (seconds?.isDigitsOnly() == true) {
-            val long = seconds.toLong()
-            val mins = long / 60
-            val hours = mins / 60
-            val secs = mins % 60
-            return "" +
-                if (hours > 0) "${hours}h" else "" +
-                    if (mins > 0) "${mins}m" else "" +
-                        "${secs}s"
-        }
-
-        return ""
-    }
 }

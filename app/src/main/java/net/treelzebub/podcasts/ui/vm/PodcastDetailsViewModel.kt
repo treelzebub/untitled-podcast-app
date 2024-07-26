@@ -54,7 +54,7 @@ class PodcastDetailsViewModel @AssistedInject constructor(
     private val podcastFlow = repo.getPodcast(podcastId)
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), replay = 1)
     private val episodesFlow: StateFlow<List<EpisodeUi>> = showPlayedFlow.flatMapLatest { showPlayed ->
-        repo.getEpisodes(podcastId, showPlayed)
+        repo.getEpisodesFlow(podcastId, showPlayed)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
 
     val uiState: StateFlow<State> = combine(podcastFlow, episodesFlow, showPlayedFlow) { podcast, episodes, showPlayed ->

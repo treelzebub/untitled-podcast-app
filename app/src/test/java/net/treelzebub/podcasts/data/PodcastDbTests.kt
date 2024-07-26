@@ -75,19 +75,30 @@ class PodcastDbTests {
     @Test fun `Sort podcasts by latest episode date`() = withDatabase { db ->
         injectMockData(db)
         val repo = podcastRepo()
-        repo.getPodcasts().test {
+        repo.getPodcastUis().test {
             assertEquals("podcast_02", awaitItem().first().id)
         }
     }
 
-    @Test fun upsert() = withDatabase { db ->
+    @Test fun update() = withDatabase { db ->
         injectMockData(db)
         val podcast = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
-        val other = podcast.copy(link = "otherLink", title = "otherTitle", description = "otherDescription", lastLocalUpdate = 43562436L)
+        val other = podcast.copy(link = "otherLink", title = "otherTitle", description = "otherDescription", latestEpisodeTimestamp = 43562436L)
 
         db.podcastsQueries.upsert(other)
 
         val updated = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
         assertEquals(other, updated)
+    }
+
+    @Test fun dontUpdate() = withDatabase { db ->
+        injectMockData(db)
+        val podcast = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
+        val other = podcast.copy(link = "otherLink", title = "otherTitle", description = "otherDescription", /* identical latestEpisodeTimestamp */)
+
+        db.podcastsQueries.upsert(other)
+
+        val updated = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
+        assertEquals(podcast, updated)
     }
 }

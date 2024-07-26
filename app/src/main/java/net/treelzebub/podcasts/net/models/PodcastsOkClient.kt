@@ -10,7 +10,7 @@ import okhttp3.logging.HttpLoggingInterceptor.Level
 import java.util.concurrent.TimeUnit
 
 
-private const val TIMEOUT = 90L
+private const val TIMEOUT = 30L
 private const val MAX_IDLE_CONNECTIONS = 5
 
 val PodcastsOkClient = okHttpClient {
@@ -25,7 +25,7 @@ val PodcastsOkClient = okHttpClient {
             .build()
         chain.proceed(request)
     })
-    addInterceptor(HttpLoggingInterceptor().also {
-        it.setLevel(if (BuildConfig.DEBUG) Level.HEADERS else Level.NONE)
-    })
+    if (BuildConfig.DEBUG) {
+       addInterceptor(HttpLoggingInterceptor().apply { setLevel(Level.HEADERS) })
+    }
 }
