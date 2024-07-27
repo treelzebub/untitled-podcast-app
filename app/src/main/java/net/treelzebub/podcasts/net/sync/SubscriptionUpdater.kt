@@ -22,8 +22,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 
-// TODO everything is suspend fun in repo too
-//      and add logging to sync to report how many were updated and ignored,.
 @Singleton
 class SubscriptionUpdater @Inject constructor(
     private val client: OkHttpClient,
@@ -32,7 +30,7 @@ class SubscriptionUpdater @Inject constructor(
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
-    private val fetchedPodcasts = ConcurrentHashMap<String, List<Episode>>()
+    private val fetchedPodcasts = ConcurrentHashMap<String, Pair<Podcast, List<Episode>>>()
     private lateinit var latch: CountDownLatch
 
     fun updateAll(onComplete: () -> Unit = {}, onFailure: (SubscriptionDto, Call, IOException) -> Unit) {
@@ -41,31 +39,24 @@ class SubscriptionUpdater @Inject constructor(
             latch = CountDownLatch(subs.size)
             subs.forEach { update(it, onFailure) }
             latch.await()
-            /**
-             * 1. Fetch all feeds, parse.
-             * 2. Compare Podcast objects: if timestamp of existing is less than timestamp of new, update pod and its episodes.
-             */
 
             val old = repo.getPodcasts().associateBy { it.id }.toMap()
             val new = fetchedPodcasts.toMap()
-            val updateIds = updateIds(old, new)
-            val diff = updateIds.map {
-                val podcast = new[it]!!
-                podcast to fetchedPodcasts[podcast]
-            }
+            val podcastsForUpdate = idsForUpdate(old, new).mapNotNull { new[it] }
+            podcastsForUpdate.forEach { repo.upsertPodcast(it) }
 
-            diff.forEach { repo.upsertPodcast(it) }
-
-            Timber.d("Updated ${diff.size} of ${subs.size} podcasts.")
+            Timber.d("Updated ${podcastsForUpdate.size} of ${subs.size} podcasts.")
             fetchedPodcasts.clear()
             onComplete()
         }
     }
 
-    private fun updateIds(old: Map<String, Podcast>, new: Map<String, Podcast>): List<String> {
-        return new.mapNotNull {
-            val existing = old[it.key]
-            if (existing == null || existing.latest_episode_timestamp < it.value.latest_episode_timestamp) {
+    private fun idsForUpdate(old: Map<String, Podcast>, new: Map<String, Pair<Podcast, List<Episode>>>): List<String> {
+        val podcastIdToLatestTimestamp = new.map {
+            it.key to it.value.second.maxOfOrNull { episode -> episode.date }
+        }.toMap()
+        return podcastIdToLatestTimestamp.mapNotNull {
+            if (old[it.key]!!.latest_episode_timestamp < (it.value ?: -1L)) {
                 it.key
             } else null
         }
@@ -84,8 +75,9 @@ class SubscriptionUpdater @Inject constructor(
                 scope.launch {
                     response.body?.let {
                         val pair = repo.parseRssFeed(sub.rssLink, it.string())
-                        fetchedPodcasts += pair
+                        fetchedPodcasts += pair.first.id to pair
                     }
+                    response.close()
                     latch.countDown()
                 }
             }

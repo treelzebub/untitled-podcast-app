@@ -11,29 +11,20 @@ CREATE TABLE podcast (
     latest_episode_timestamp INTEGER NOT NULL
 );
 
--- Update iff the new row's `latest_episode_timestamp` differs from the stored value.
 upsert:
 INSERT INTO podcast (id, link, title, description, email, image_url, last_build_date, rss_link, last_local_update, latest_episode_timestamp)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(id) DO UPDATE SET
-    link = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                THEN excluded.link ELSE podcast.link END,
-    title = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                 THEN excluded.title ELSE podcast.title END,
-    description = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                       THEN excluded.description ELSE podcast.description END,
-    email = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                 THEN excluded.email ELSE podcast.email END,
-    image_url = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                     THEN excluded.image_url ELSE podcast.image_url END,
-    last_build_date = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                           THEN excluded.last_build_date ELSE podcast.last_build_date END,
-    rss_link = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                    THEN excluded.rss_link ELSE podcast.rss_link END,
-    last_local_update = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                             THEN excluded.last_local_update ELSE podcast.last_local_update END,
-    latest_episode_timestamp = CASE WHEN podcast.latest_episode_timestamp <> excluded.latest_episode_timestamp
-                                    THEN excluded.latest_episode_timestamp ELSE podcast.latest_episode_timestamp END;
+    id = id,
+    link = excluded.link,
+    title = excluded.title,
+    description = excluded.description,
+    email = excluded.email,
+    image_url = excluded.image_url,
+    last_build_date = excluded.last_build_date,
+    rss_link = excluded.rss_link,
+    last_local_update = excluded.last_local_update,
+    latest_episode_timestamp = excluded.latest_episode_timestamp;
 
 delete:
 DELETE FROM podcast

@@ -32,7 +32,7 @@ class SubscriptionsViewModel @Inject constructor(
 
     fun refresh() = subscriptionUpdater.updateAll({ loading(false) }, { _, _, _ -> TODO() })
 
-    private fun loading(loading: Boolean) = _state.update { State(loading = loading) }
+    private fun loading(loading: Boolean) = _state.update { it.copy(loading = loading) }
 
     private fun getAllPodcasts() {
         viewModelScope.launch {
