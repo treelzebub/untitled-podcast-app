@@ -4,7 +4,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Episode
 import net.treelzebub.podcasts.Podcast
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -33,23 +32,42 @@ class SubscriptionUpdater @Inject constructor(
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
-    private val podcastsWithEpisodes = ConcurrentHashMap<Podcast, List<Episode>>()
+    private val fetchedPodcasts = ConcurrentHashMap<String, List<Episode>>()
     private lateinit var latch: CountDownLatch
 
-    fun updateAll(onFailure: (SubscriptionDto, Call, IOException) -> Unit) {
+    fun updateAll(onComplete: () -> Unit = {}, onFailure: (SubscriptionDto, Call, IOException) -> Unit) {
         scope.launch {
             val subs = repo.getAllRssLinks()
             latch = CountDownLatch(subs.size)
             subs.forEach { update(it, onFailure) }
             latch.await()
+            /**
+             * 1. Fetch all feeds, parse.
+             * 2. Compare Podcast objects: if timestamp of existing is less than timestamp of new, update pod and its episodes.
+             */
 
-            val parsed = podcastsWithEpisodes.toMap()
-            val old = repo.getPodcasts().associateWith { repo.getAllEpisodesList(it.id) }
-            val diff = parsed.keys.subtract(old.keys.toSet())
-            val map = diff.map { it to parsed[it]!! }
-            map.forEach { repo.upsertPodcast(it) }
+            val old = repo.getPodcasts().associateBy { it.id }.toMap()
+            val new = fetchedPodcasts.toMap()
+            val updateIds = updateIds(old, new)
+            val diff = updateIds.map {
+                val podcast = new[it]!!
+                podcast to fetchedPodcasts[podcast]
+            }
 
-            Timber.d("Updated ${map.size} of ${subs.size} podcasts.")
+            diff.forEach { repo.upsertPodcast(it) }
+
+            Timber.d("Updated ${diff.size} of ${subs.size} podcasts.")
+            fetchedPodcasts.clear()
+            onComplete()
+        }
+    }
+
+    private fun updateIds(old: Map<String, Podcast>, new: Map<String, Podcast>): List<String> {
+        return new.mapNotNull {
+            val existing = old[it.key]
+            if (existing == null || existing.latest_episode_timestamp < it.value.latest_episode_timestamp) {
+                it.key
+            } else null
         }
     }
 
@@ -66,11 +84,12 @@ class SubscriptionUpdater @Inject constructor(
                 scope.launch {
                     response.body?.let {
                         val pair = repo.parseRssFeed(sub.rssLink, it.string())
-                        podcastsWithEpisodes += pair
+                        fetchedPodcasts += pair
                     }
                     latch.countDown()
                 }
             }
+
             override fun onFailure(call: Call, e: IOException) {
                 latch.countDown()
                 Timber.e(e)
