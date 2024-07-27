@@ -19,12 +19,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,13 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -54,7 +46,6 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
 import net.treelzebub.podcasts.util.DeviceApi
-import java.util.Locale
 
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -67,6 +58,7 @@ fun EpisodeDetailsScreen(episodeId: String) {
     val episode by remember { vm.episode }.collectAsStateWithLifecycle(null)
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val player by remember { vm.player }
+    val positionState by remember { vm.positionState }.collectAsStateWithLifecycle()
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
@@ -76,7 +68,7 @@ fun EpisodeDetailsScreen(episodeId: String) {
         EpisodeContent(
             episode = episode!!,
             uiState = uiState,
-            player = player!!,
+            positionState = positionState,
             actionHandler = vm.actionHandler
         )
     }
@@ -88,32 +80,13 @@ fun EpisodeContent(
     modifier: Modifier = Modifier,
     episode: EpisodeUi,
     uiState: EpisodeDetailViewModel.UiState,
-    player: Player,
+    positionState: String,
     actionHandler: (Action) -> Unit
 ) {
     // TODO move all to reusable theme values
     val buttonPadding = 18.dp
     val outerPadding = 16.dp
     val fontSize = 24.sp
-    val coroutineScope = rememberCoroutineScope()
-    var position by remember { mutableStateOf("") }
-
-    LaunchedEffect("update-position") {
-        coroutineScope.launch(Dispatchers.Main) {
-            val interval = 1000L
-            val offset = interval - (player.currentPosition % interval)
-            delay(offset)
-
-            while (true) {
-                if (player.isPlaying) {
-                    val currentPosition = player.currentPosition
-                    val duration = player.contentDuration
-                    position = formatPosition(currentPosition, duration)
-                    delay(interval)
-                }
-            }
-        }
-    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().then(modifier),
@@ -185,7 +158,7 @@ fun EpisodeContent(
                 Text(
                     modifier = Modifier.wrapContentWidth(),
                     style = TextStyles.CardSubtitle,
-                    text = position
+                    text = positionState
                 )
             }
             Spacer(modifier = Modifier.padding(vertical = 2.dp))
@@ -221,28 +194,6 @@ fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (Action) -
                 .clickable { actionHandler(Action.Share) },
             fontSize = 24.sp,
             text = "\uD83D\uDCE4"
-        )
-    }
-}
-
-private fun formatPosition(current: Long, total: Long): String {
-    val cHours = (current / (1000 * 60 * 60)) % 24
-    val cMins = (current / (1000 * 60)) % 60
-    val cSecs = (current / 1000) % 60
-    val tHours = (total / (1000 * 60 * 60)) % 24
-    val tMins = (total / (1000 * 60)) % 60
-    val tSecs = (total / 1000) % 60
-
-    return when {
-        tHours > 0 -> String.format(
-            Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
-            cHours, cMins, cSecs,
-            tHours, tMins, tSecs
-        )
-
-        else -> String.format(
-            Locale.getDefault(), "%02d:%02d / %02d:%02d",
-            cMins, cSecs, tMins, tSecs
         )
     }
 }

@@ -53,7 +53,7 @@ class PlaybackService : MediaSessionService() {
         get() = _session!!
     private val isPlayingListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (!isPlaying) scope.launch { persistPosition() }
+            if (!isPlaying) persistPosition()
         }
     }
 
@@ -108,10 +108,13 @@ class PlaybackService : MediaSessionService() {
             .also { it.addListener(isPlayingListener) }
     }
 
-    private suspend fun persistPosition() {
+    private fun persistPosition() {
         val episodeId = session.sessionExtras.getString(KEY_EPISODE_ID)
             ?: throw IllegalStateException("Session has no episodeId in extras")
-        repo.updatePosition(episodeId, session.player.currentPosition)
+        val position = session.player.currentPosition
+        scope.launch {
+            repo.updatePosition(episodeId, position)
+        }
     }
 
     private inner class PlaybackServiceListener : Listener {

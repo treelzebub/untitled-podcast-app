@@ -18,6 +18,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.QueueStore
+import net.treelzebub.podcasts.di.DefaultDispatcher
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
@@ -39,6 +41,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Share
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
 import timber.log.Timber
+import java.util.Locale
 
 
 @UnstableApi
@@ -46,6 +49,7 @@ import timber.log.Timber
 class EpisodeDetailViewModel @AssistedInject constructor(
     @Assisted private val episodeId: String,
     app: Application,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     private val repo: PodcastsRepo,
@@ -54,7 +58,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-
         fun create(episodeId: String): EpisodeDetailViewModel
     }
 
@@ -79,6 +82,10 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _positionState = MutableStateFlow("")
+    val positionState = _positionState.asStateFlow()
+
     val player = mutableStateOf<Player?>(null)
     val actionHandler: OnClick<Action> = { action ->
         when (action) {
@@ -194,10 +201,54 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         repo.addToQueue(id) { TODO() }
     }
 
+    private fun formatPosition(current: Long, total: Long): String {
+        val cHours = (current / (1000 * 60 * 60)) % 24
+        val cMins = (current / (1000 * 60)) % 60
+        val cSecs = (current / 1000) % 60
+        val tHours = (total / (1000 * 60 * 60)) % 24
+        val tMins = (total / (1000 * 60)) % 60
+        val tSecs = (total / 1000) % 60
+
+        return when {
+            tHours > 0 -> String.format(
+                Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
+                cHours, cMins, cSecs,
+                tHours, tMins, tSecs
+            )
+
+            else -> String.format(
+                Locale.getDefault(), "%02d:%02d / %02d:%02d",
+                cMins, cSecs, tMins, tSecs
+            )
+        }
+    }
+
     private inner class PodcastPlayerListener : Player.Listener {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.update { it.copy(isPlaying = isPlaying) }
+
+            if (isPlaying) {
+                viewModelScope.launch(defaultDispatcher) {
+                    val interval = 1000L
+                    val offset = withContext(mainDispatcher) {
+                        val player = player.value!!
+                        interval - (player.currentPosition % interval)
+                    }
+                    delay(offset)
+
+                    while (true) {
+                        val pair = withContext(mainDispatcher) {
+                            val player = player.value!!
+                            val currentPosition = player.currentPosition
+                            val duration = player.contentDuration
+                            currentPosition to duration
+                        }
+                        _positionState.emit(formatPosition(pair.first, pair.second))
+                        delay(interval)
+                    }
+                }
+            }
         }
 
         override fun onPlayerError(error: PlaybackException) {
