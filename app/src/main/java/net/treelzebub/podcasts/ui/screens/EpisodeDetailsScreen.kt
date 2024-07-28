@@ -2,9 +2,12 @@ package net.treelzebub.podcasts.ui.screens
 
 import android.annotation.SuppressLint
 import androidx.annotation.OptIn
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,9 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +31,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -33,7 +43,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
+import net.treelzebub.podcasts.ui.components.ButtonCircleBorderless
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
@@ -89,7 +101,9 @@ fun EpisodeContent(
     val fontSize = 24.sp
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().then(modifier),
+        modifier = Modifier
+            .fillMaxSize()
+            .then(modifier),
         topBar = { EpisodeDetailTopBar(modifier = Modifier, actionHandler = actionHandler) },
         bottomBar = {}
     ) { contentPadding ->
@@ -112,38 +126,43 @@ fun EpisodeContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "\uD83D\uDCBE",
-                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(Download) },
-                    fontSize = fontSize
+                ButtonCircleBorderless(
+                    res = R.drawable.notification_action_download,
+                    contentDescription = "Download episode button",
+                    onClick = { actionHandler(Download) }
                 )
-                Text(
-                    text = "➕",
-                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(AddToQueue) },
-                    fontSize = fontSize
+                ButtonCircleBorderless(
+                    res = R.drawable.discover_add,
+                    contentDescription = "Add episode to queue button",
+                    onClick = { actionHandler(AddToQueue) }
                 )
-                Button(
-                    modifier = Modifier.padding(buttonPadding),
+                ButtonCircleBorderless(
+                    res = if (uiState.isPlaying) R.drawable.notif_pause else R.drawable.notif_play,
+                    contentDescription = if (uiState.isPlaying) "Pause button" else "Play button",
                     onClick = { actionHandler(PlayPause) }
-                ) {
-                    Text(text = if (uiState.isPlaying) "⏸" else "▶", fontSize = fontSize)
-                }
+                )
                 Text(
                     text = "\u2714\uFE0F",
-                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(ToggleHasPlayed) },
+                    modifier = Modifier
+                        .padding(buttonPadding)
+                        .clickable { actionHandler(ToggleHasPlayed) },
                     fontStyle = if (uiState.hasPlayed) FontStyle.Italic else FontStyle.Normal,
                     fontSize = fontSize
                 )
                 Text(
                     text = "\uD83D\uDDC4\uFE0F",
                     fontStyle = if (uiState.isArchived) FontStyle.Italic else FontStyle.Normal,
-                    modifier = Modifier.padding(buttonPadding).clickable { actionHandler(Archive) },
+                    modifier = Modifier
+                        .padding(buttonPadding)
+                        .clickable { actionHandler(Archive) },
                     fontSize = fontSize + 2.sp
                 )
             }
 
             Text(
-                modifier = Modifier.wrapContentWidth().padding(vertical = 4.dp, horizontal = outerPadding),
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .padding(vertical = 4.dp, horizontal = outerPadding),
                 style = TextStyles.CardTitle,
                 text = episode.title
             )
@@ -162,7 +181,9 @@ fun EpisodeContent(
                 )
             }
             Spacer(modifier = Modifier.padding(vertical = 2.dp))
-            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())) {
                 Text(
                     modifier = Modifier.padding(horizontal = outerPadding),
                     style = TextStyles.CardDescription,
@@ -177,7 +198,9 @@ fun EpisodeContent(
 @Composable
 fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (Action) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().then(modifier),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.Right
     ) {
