@@ -27,7 +27,7 @@ object TextStyles {
     )
     val CardDate = TextStyle(
         fontSize = 12.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.Gray
+        fontWeight = FontWeight.Normal,
+        color = Color.Black
     )
 }

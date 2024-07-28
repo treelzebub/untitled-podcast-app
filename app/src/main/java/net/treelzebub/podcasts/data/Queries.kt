@@ -23,7 +23,7 @@ fun PodcastsQueries.upsert(podcast: Podcast) {
     }
 }
 
-fun EpisodesQueries.upsert(episode: Episode) {
+fun EpisodesQueries.upsert(episode: Episode, podImageUrl: String) {
     with(episode) {
         upsert(
             id = id,
@@ -35,7 +35,7 @@ fun EpisodesQueries.upsert(episode: Episode) {
             link = link,
             streaming_link = streaming_link,
             local_file_uri = local_file_uri,
-            image_url = image_url,
+            image_url = if (image_url.isNullOrBlank()) podImageUrl else image_url,
             duration = duration,
             has_played = has_played,
             position_millis = position_millis,
@@ -45,4 +45,4 @@ fun EpisodesQueries.upsert(episode: Episode) {
     }
 }
 
-fun EpisodesQueries.upsert(episodes: List<Episode>) = episodes.forEach(::upsert)
+fun EpisodesQueries.upsert(episodes: List<Episode>, podImageUrl: String) = episodes.forEach { upsert(it, podImageUrl) }

@@ -58,7 +58,7 @@ class PodcastsRepo @Inject constructor(
         scope.launch {
             db.transaction {
                 db.podcastsQueries.upsert(pair.first)
-                db.episodesQueries.upsert(pair.second)
+                db.episodesQueries.upsert(pair.second, pair.first.image_url.orEmpty())
             }
         }
     }

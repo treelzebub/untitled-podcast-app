@@ -53,10 +53,11 @@ class SubscriptionUpdater @Inject constructor(
 
     private fun idsForUpdate(old: Map<String, Podcast>, new: Map<String, Pair<Podcast, List<Episode>>>): List<String> {
         val podcastIdToLatestTimestamp = new.map {
-            it.key to it.value.second.maxOfOrNull { episode -> episode.date }
+            // Null maxOf means we have an empty episodes list, and should update db accordingly.
+            it.key to (it.value.second.maxOfOrNull { episode -> episode.date } ?: Long.MAX_VALUE)
         }.toMap()
         return podcastIdToLatestTimestamp.mapNotNull {
-            if (old[it.key]!!.latest_episode_timestamp < (it.value ?: -1L)) {
+            if (old[it.key]!!.latest_episode_timestamp < it.value) {
                 it.key
             } else null
         }

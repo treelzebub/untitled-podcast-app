@@ -143,7 +143,7 @@ fun EpisodeContent(
             }
 
             Text(
-                modifier = Modifier.wrapContentWidth().padding(vertical = 4.dp),
+                modifier = Modifier.wrapContentWidth().padding(vertical = 4.dp, horizontal = outerPadding),
                 style = TextStyles.CardTitle,
                 text = episode.title
             )
@@ -157,7 +157,7 @@ fun EpisodeContent(
                 Spacer(modifier = Modifier.weight(1.0f))
                 Text(
                     modifier = Modifier.wrapContentWidth(),
-                    style = TextStyles.CardSubtitle,
+                    style = TextStyles.CardDate,
                     text = position
                 )
             }
