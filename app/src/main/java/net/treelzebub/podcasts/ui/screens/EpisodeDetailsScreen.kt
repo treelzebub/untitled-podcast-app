@@ -58,7 +58,7 @@ fun EpisodeDetailsScreen(episodeId: String) {
     val episode by remember { vm.episode }.collectAsStateWithLifecycle(null)
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
     val player by remember { vm.player }
-    val positionState by remember { vm.positionState }.collectAsStateWithLifecycle()
+    val position by remember { vm.positionState }.collectAsStateWithLifecycle()
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
@@ -68,7 +68,7 @@ fun EpisodeDetailsScreen(episodeId: String) {
         EpisodeContent(
             episode = episode!!,
             uiState = uiState,
-            positionState = positionState,
+            position = position,
             actionHandler = vm.actionHandler
         )
     }
@@ -80,7 +80,7 @@ fun EpisodeContent(
     modifier: Modifier = Modifier,
     episode: EpisodeUi,
     uiState: EpisodeDetailViewModel.UiState,
-    positionState: String,
+    position: String,
     actionHandler: (Action) -> Unit
 ) {
     // TODO move all to reusable theme values
@@ -158,7 +158,7 @@ fun EpisodeContent(
                 Text(
                     modifier = Modifier.wrapContentWidth(),
                     style = TextStyles.CardSubtitle,
-                    text = positionState
+                    text = position
                 )
             }
             Spacer(modifier = Modifier.padding(vertical = 2.dp))

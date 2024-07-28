@@ -1,18 +1,19 @@
 package net.treelzebub.podcasts.util
 
 import androidx.core.text.isDigitsOnly
+import java.util.Locale
 
 object Strings {
 
     fun formatDuration(seconds: String?): String {
-        val timecodePattern = Regex("""^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$""")
+        val timecodePattern = Regex("""^\d+:[0-9]\d(?::[0-9]\d)?$""")
 
         if (seconds?.matches(timecodePattern) == true) {
             val parts = seconds.split(":")
             val hours = parts[0].toInt()
-            val minutes = parts[1].toInt()
+            val mins = parts[1].toInt()
 
-            return if (hours == 0) "${minutes}m" else "${hours}h ${minutes}m"
+            return if (hours == 0) "${mins}m" else "${hours}h ${mins}m"
         }
 
         if (seconds?.isDigitsOnly() == true) {
@@ -28,4 +29,27 @@ object Strings {
 
         return ""
     }
+
+    fun formatPosition(current: Long, total: Long): String {
+        val cHours = (current / (1000 * 60 * 60)) % 24
+        val cMins = (current / (1000 * 60)) % 60
+        val cSecs = (current / 1000) % 60
+        val tHours = (total / (1000 * 60 * 60)) % 24
+        val tMins = (total / (1000 * 60)) % 60
+        val tSecs = (total / 1000) % 60
+
+        return when {
+            tHours > 0 -> String.format(
+                Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
+                cHours, cMins, cSecs,
+                tHours, tMins, tSecs
+            )
+
+            else -> String.format(
+                Locale.getDefault(), "%02d:%02d / %02d:%02d",
+                cMins, cSecs, tMins, tSecs
+            )
+        }
+    }
+
 }

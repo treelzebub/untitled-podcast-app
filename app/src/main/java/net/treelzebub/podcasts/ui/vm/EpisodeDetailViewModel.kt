@@ -40,8 +40,8 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Share
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
+import net.treelzebub.podcasts.util.Strings
 import timber.log.Timber
-import java.util.Locale
 
 
 @UnstableApi
@@ -170,16 +170,16 @@ class EpisodeDetailViewModel @AssistedInject constructor(
         }
     }
 
-    private fun toggleBookmarked() = viewModelScope.launch {
-        repo.toggleIsBookmarked(episodeId)
+    private fun toggleBookmarked() {
+        viewModelScope.launch { repo.toggleIsBookmarked(episodeId) }
     }
 
-    private fun toggleHasPlayed() = viewModelScope.launch {
-        repo.toggleHasPlayed(episodeId)
+    private fun toggleHasPlayed() {
+        viewModelScope.launch { repo.toggleHasPlayed(episodeId) }
     }
 
-    private fun toggleArchived() = viewModelScope.launch {
-        repo.toggleIsArchived(episodeId)
+    private fun toggleArchived() {
+        viewModelScope.launch { repo.toggleIsArchived(episodeId) }
     }
 
     private fun share() {
@@ -187,9 +187,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun playPause() {
-        controller?.let {
-            if (it.isPlaying) it.pause() else it.play()
-        }
+        controller?.let { if (it.isPlaying) it.pause() else it.play() }
     }
 
     private fun download() {
@@ -199,28 +197,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private fun addToQueue(id: String) = viewModelScope.launch {
         // TODO UI State -> isInQueue
         repo.addToQueue(id) { TODO() }
-    }
-
-    private fun formatPosition(current: Long, total: Long): String {
-        val cHours = (current / (1000 * 60 * 60)) % 24
-        val cMins = (current / (1000 * 60)) % 60
-        val cSecs = (current / 1000) % 60
-        val tHours = (total / (1000 * 60 * 60)) % 24
-        val tMins = (total / (1000 * 60)) % 60
-        val tSecs = (total / 1000) % 60
-
-        return when {
-            tHours > 0 -> String.format(
-                Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
-                cHours, cMins, cSecs,
-                tHours, tMins, tSecs
-            )
-
-            else -> String.format(
-                Locale.getDefault(), "%02d:%02d / %02d:%02d",
-                cMins, cSecs, tMins, tSecs
-            )
-        }
     }
 
     private inner class PodcastPlayerListener : Player.Listener {
@@ -244,7 +220,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
                             val duration = player.contentDuration
                             currentPosition to duration
                         }
-                        _positionState.emit(formatPosition(pair.first, pair.second))
+                        _positionState.emit(Strings.formatPosition(pair.first, pair.second))
                         delay(interval)
                     }
                 }
