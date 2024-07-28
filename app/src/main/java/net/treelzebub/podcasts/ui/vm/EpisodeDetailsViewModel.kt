@@ -33,20 +33,20 @@ import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
 import net.treelzebub.podcasts.ui.models.EpisodeUi
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.AddToQueue
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Archive
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.PlayPause
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Share
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.AddToQueue
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Archive
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.PlayPause
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Share
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleHasPlayed
 import net.treelzebub.podcasts.util.Strings
 import timber.log.Timber
 
 
 @UnstableApi
-@HiltViewModel(assistedFactory = EpisodeDetailViewModel.Factory::class)
-class EpisodeDetailViewModel @AssistedInject constructor(
+@HiltViewModel(assistedFactory = EpisodeDetailsViewModel.Factory::class)
+class EpisodeDetailsViewModel @AssistedInject constructor(
     @Assisted private val episodeId: String,
     app: Application,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
@@ -58,7 +58,7 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(episodeId: String): EpisodeDetailViewModel
+        fun create(episodeId: String): EpisodeDetailsViewModel
     }
 
     @Stable

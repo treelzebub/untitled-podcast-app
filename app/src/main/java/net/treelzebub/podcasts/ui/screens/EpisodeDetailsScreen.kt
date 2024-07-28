@@ -37,14 +37,14 @@ import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.AddToQueue
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Archive
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Download
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.PlayPause
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.AddToQueue
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Archive
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.PlayPause
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleBookmarked
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleHasPlayed
 import net.treelzebub.podcasts.util.DeviceApi
 
 
@@ -52,7 +52,7 @@ import net.treelzebub.podcasts.util.DeviceApi
 @Destination
 @Composable
 fun EpisodeDetailsScreen(episodeId: String) {
-    val vm = hiltViewModel<EpisodeDetailViewModel, EpisodeDetailViewModel.Factory>(
+    val vm = hiltViewModel<EpisodeDetailsViewModel, EpisodeDetailsViewModel.Factory>(
         creationCallback = { factory -> factory.create(episodeId) }
     )
     val episode by remember { vm.episode }.collectAsStateWithLifecycle(null)
@@ -79,7 +79,7 @@ fun EpisodeDetailsScreen(episodeId: String) {
 fun EpisodeContent(
     modifier: Modifier = Modifier,
     episode: EpisodeUi,
-    uiState: EpisodeDetailViewModel.UiState,
+    uiState: EpisodeDetailsViewModel.UiState,
     position: String,
     actionHandler: (Action) -> Unit
 ) {
