@@ -25,9 +25,10 @@ kapt {
 
 kotlin {
     jvmToolchain(17)
-    sourceSets.all {
-        languageSettings.enableLanguageFeature("ExplicitBackingFields")
-    }
+// Pending K2 stability
+//    sourceSets.all {
+//        languageSettings.enableLanguageFeature("ExplicitBackingFields")
+//    }
 }
 
 android {
@@ -147,6 +148,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.material)
     implementation(libs.compose.material3)
 
     ksp(libs.compose.destinations)

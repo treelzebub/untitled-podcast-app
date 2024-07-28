@@ -148,7 +148,7 @@ class QueueStore @Inject constructor(
     private suspend fun update(onError: ErrorHandler, block: (PodcastQueue) -> PodcastQueue) {
         try {
             _stateFlow.update(block)
-            persist(onError)
+            withContext(ioDispatcher) { persist(onError) }
         } catch (e: Exception) {
             Timber.e(e)
             onError(e)

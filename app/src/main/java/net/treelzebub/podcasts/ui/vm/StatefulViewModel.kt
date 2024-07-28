@@ -18,6 +18,7 @@ abstract class StatefulViewModel<T : Any>(initialState: T) : ViewModel() {
     val state = _state.asStateFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TIMEOUT), initialState)
 
+// Pending K2 stability
 //    val state: StateFlow<String>
 //        field = MutableStateFlow("")
 //        get() = field.asStateFlow()

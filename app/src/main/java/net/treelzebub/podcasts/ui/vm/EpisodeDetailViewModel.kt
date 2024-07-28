@@ -18,6 +18,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.data.QueueStore
+import net.treelzebub.podcasts.di.DefaultDispatcher
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
@@ -38,6 +40,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.Share
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailViewModel.Action.ToggleHasPlayed
+import net.treelzebub.podcasts.util.Strings
 import timber.log.Timber
 
 
@@ -46,6 +49,7 @@ import timber.log.Timber
 class EpisodeDetailViewModel @AssistedInject constructor(
     @Assisted private val episodeId: String,
     app: Application,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     private val repo: PodcastsRepo,
@@ -54,7 +58,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-
         fun create(episodeId: String): EpisodeDetailViewModel
     }
 
@@ -79,6 +82,10 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _positionState = MutableStateFlow("")
+    val positionState = _positionState.asStateFlow()
+
     val player = mutableStateOf<Player?>(null)
     val actionHandler: OnClick<Action> = { action ->
         when (action) {
@@ -130,7 +137,6 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     private fun loadEpisode(episodeId: String) {
         viewModelScope.launch(ioDispatcher) {
             repo.getEpisodeFlowById(episodeId).collect { updated ->
-                updated ?: return@collect
                 _uiState.update {
                     it.copy(
                         loading = false,
@@ -165,7 +171,15 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun toggleBookmarked() {
-        repo.toggleIsBookmarked(episodeId)
+        viewModelScope.launch { repo.toggleIsBookmarked(episodeId) }
+    }
+
+    private fun toggleHasPlayed() {
+        viewModelScope.launch { repo.toggleHasPlayed(episodeId) }
+    }
+
+    private fun toggleArchived() {
+        viewModelScope.launch { repo.toggleIsArchived(episodeId) }
     }
 
     private fun share() {
@@ -173,32 +187,44 @@ class EpisodeDetailViewModel @AssistedInject constructor(
     }
 
     private fun playPause() {
-        controller?.let {
-            if (it.isPlaying) it.pause() else it.play()
-        }
+        controller?.let { if (it.isPlaying) it.pause() else it.play() }
     }
 
     private fun download() {
         Timber.d("TODO: Download")
     }
 
-    private fun addToQueue(id: String) {
+    private fun addToQueue(id: String) = viewModelScope.launch {
         // TODO UI State -> isInQueue
         repo.addToQueue(id) { TODO() }
-    }
-
-    private fun toggleHasPlayed() {
-        repo.toggleHasPlayed(episodeId)
-    }
-
-    private fun toggleArchived() {
-        repo.toggleIsArchived(episodeId)
     }
 
     private inner class PodcastPlayerListener : Player.Listener {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.update { it.copy(isPlaying = isPlaying) }
+
+            if (isPlaying) {
+                viewModelScope.launch(defaultDispatcher) {
+                    val interval = 1000L
+                    val offset = withContext(mainDispatcher) {
+                        val player = player.value!!
+                        interval - (player.currentPosition % interval)
+                    }
+                    delay(offset)
+
+                    while (true) {
+                        val pair = withContext(mainDispatcher) {
+                            val player = player.value!!
+                            val currentPosition = player.currentPosition
+                            val duration = player.contentDuration
+                            currentPosition to duration
+                        }
+                        _positionState.emit(Strings.formatPosition(pair.first, pair.second))
+                        delay(interval)
+                    }
+                }
+            }
         }
 
         override fun onPlayerError(error: PlaybackException) {

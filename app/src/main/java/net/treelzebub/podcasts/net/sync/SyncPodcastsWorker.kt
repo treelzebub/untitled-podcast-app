@@ -26,7 +26,7 @@ class SyncPodcastsWorker @AssistedInject constructor(
         val onFailure: (SubscriptionDto, Call, IOException) -> Unit = { sub, _, e ->
             Timber.e("Error Updating Feed with url: ${sub.rssLink}", e) // TODO
         }
-        updater.updateAll(onFailure)
+        updater.updateAll(onFailure = onFailure)
         prefs.putLong(PodcastPref.LastSyncTimestamp, System.currentTimeMillis())
         return Result.success()
     }
