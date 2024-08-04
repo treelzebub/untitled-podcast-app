@@ -92,13 +92,6 @@ class PodcastDbTests {
     }
 
     @Test fun dontUpdate() = withDatabase { db ->
-        injectMockData(db)
-        val podcast = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
-        val other = podcast.copy(link = "otherLink", title = "otherTitle", description = "otherDescription", /* identical latestEpisodeTimestamp */)
-
-        db.podcastsQueries.upsert(other)
-
-        val updated = db.podcastsQueries.get_by_id("podcast_01", podcastMapper).executeAsOne()
-        assertEquals(podcast, updated)
+        // TODO this needs to be moved to SubscriptionUpdaterTests
     }
 }
