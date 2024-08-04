@@ -35,18 +35,17 @@ import javax.inject.Inject
 class PlaybackService : MediaSessionService() {
 
     companion object {
-
         const val KEY_EPISODE_ID = "episode-id"
         private const val NOTIF_ID = 0xd00d
         private const val NOTIF_CHANNEL = "media.podspispops"
         private const val SESSION_INTENT_REQUEST_CODE = 0xf00d
 
-        const val ACTION_SEEK_BACK = "net.treelzebub.podcasts.seek_back"
-        const val ACTION_PREVIOUS = "net.treelzebub.podcasts.previous"
-        const val ACTION_NEXT = "net.treelzebub.podcasts.next"
-        const val ACTION_SEEK_FORWARD = "net.treelzebub.podcasts.seek_forward"
-        const val ACTION_PLAYBACK_SPEED = "net.treelzebub.podcasts.playback_speed"
-        const val ACTION_BOOKMARK = "net.treelzebub.podcasts.bookmark"
+        const val ACTION_SEEK_BACK = "net.treelzebub.podcasts.action.seek_back"
+        const val ACTION_PREVIOUS = "net.treelzebub.podcasts.action.previous"
+        const val ACTION_NEXT = "net.treelzebub.podcasts.action.next"
+        const val ACTION_SEEK_FORWARD = "net.treelzebub.podcasts.action.seek_forward"
+        const val ACTION_PLAYBACK_SPEED = "net.treelzebub.podcasts.action.playback_speed"
+        const val ACTION_BOOKMARK = "net.treelzebub.podcasts.action.bookmark"
     }
 
     @Inject
@@ -71,10 +70,8 @@ class PlaybackService : MediaSessionService() {
         val intent = packageManager!!.getLaunchIntentForPackage(packageName)!!
             .let { sessionIntent ->
                 PendingIntent.getActivity(
-                    this,
-                    SESSION_INTENT_REQUEST_CODE,
-                    sessionIntent,
-                    PendingIntent.FLAG_IMMUTABLE
+                    this, SESSION_INTENT_REQUEST_CODE, sessionIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
                 )
             }
         setListener(PlaybackServiceListener())
