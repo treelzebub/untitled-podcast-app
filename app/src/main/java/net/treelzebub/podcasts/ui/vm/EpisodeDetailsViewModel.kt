@@ -12,6 +12,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import androidx.media3.ui.PlayerNotificationManager
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -104,6 +105,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     private val controller: MediaController?
         get() = controllerFuture.let { if (it.isDone) it.get() else null }
     private val listener = PodcastPlayerListener()
+    private val notifListener = object : PlayerNotificationManager.NotificationListener {}
 
     init {
         init(episodeId)

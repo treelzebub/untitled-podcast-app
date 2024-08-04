@@ -2,13 +2,15 @@ package net.treelzebub.podcasts.media
 
 import android.app.Application
 import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.annotation.Px
+import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.media3.ui.PlayerNotificationManager
@@ -34,7 +36,6 @@ import net.treelzebub.podcasts.di.MainDispatcher
 @UnstableApi
 class PodcastNotificationManager @AssistedInject constructor(
     app: Application,
-    private val player: ExoPlayer,
     @Assisted sessionToken: SessionToken,
     @Assisted listener: NotificationListener,
     @MainDispatcher mainDispatcher: CoroutineDispatcher,
@@ -45,36 +46,60 @@ class PodcastNotificationManager @AssistedInject constructor(
 
         const val NOTIF_ID = 0xd00d
         const val NOTIF_CHANNEL = "media.podspispops"
-        @Px const val NOTIF_ICON_SIZE = 144
+
+        @Px
+        const val NOTIF_ICON_SIZE = 144
     }
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            sessionToken: SessionToken,
-            listener: NotificationListener
-        ): PodcastNotificationManager
+        fun create(sessionToken: SessionToken, listener: NotificationListener): PodcastNotificationManager
     }
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(mainDispatcher + job)
 
     // todo migration: https://developer.android.com/media/media3/session/control-playback#automatic-state
-//    private val playAction = NotificationCompat.Action(R.drawable.notif_play, app.getString(R.string.notif_play), MediaButtonReceiver.buildMediaButtonPendingIntent(app, ACTION_PLAY))
-//    private val pauseAction = NotificationCompat.Action(R.drawable.notif_pause, app.getString(R.string.notif_pause), MediaButtonReceiver.buildMediaButtonPendingIntent(app, ACTION_PAUSE))
-//    private val skipBackAction = NotificationCompat.Action(R.drawable.notif_seek_back, app.getString(R.string.notif_seek_back), MediaButtonReceiver.buildMediaButtonPendingIntent(app, ACTION_SKIP_TO_PREVIOUS))
-//    private val skipForwardAction = NotificationCompat.Action(R.drawable.notif_seek_forward, app.getString(R.string.notif_seek_forward), MediaButtonReceiver.buildMediaButtonPendingIntent(app, ACTION_SKIP_TO_NEXT))
+//    private val playAction = NotificationCompat.Action.Builder(
+//        R.drawable.notification_action_play,
+//        app.getString(R.string.notif_play),
+//        PendingIntent.getBroadcast(app, ACTION_PREVIOUS, )
+//    ).extend(CarExtender).build()
+//
+//        private val pauseAction = NotificationCompat.Action.Builder(R.drawable.notif_pause, app.getString(R.string.notif_pause), MediaButtonReceiver.buildMediaButtonPendingIntent(app, ACTION_PAUSE))
+//            .build()
+//    private val skipBackAction = NotificationCompat.Action.Builder(R.drawable.notif_seek_back, app.getString(R.string.notif_seek_back), MediaButtonReceiver)
+//    private val skipForwardAction = NotificationCompat.Action.Builder(R.drawable.notif_seek_forward, app.getString(R.string.notif_seek_forward), MediaButtonReceiver.buildMediaButtonPendingIntent(app, ACTION_SKIP_TO_NEXT))
 //    private val stopPendingIntent = MediaButtonReceiver.buildMediaButtonPendingIntent(app, ACTION_STOP)
+    private val customActionsReceiver = object : PlayerNotificationManager.CustomActionReceiver {
+        override fun createCustomActions(context: Context, instanceId: Int): MutableMap<String, NotificationCompat.Action> {
+            return mutableMapOf()
+        }
 
+        override fun getCustomActions(player: Player): MutableList<String> {
+            TODO("Not yet implemented")
+        }
+
+        override fun onCustomAction(player: Player, action: String, intent: Intent) {
+            TODO("Not yet implemented")
+        }
+    }
     private val controllerFuture = MediaController.Builder(app, sessionToken).buildAsync()
     private val manager = PlayerNotificationManager.Builder(app, NOTIF_ID, NOTIF_CHANNEL)
         .setChannelNameResourceId(R.string.media_notification_channel)
         .setChannelDescriptionResourceId(R.string.media_notification_channel_description)
+        .setCustomActionReceiver(customActionsReceiver)
+        .setPlayActionIconResourceId(R.drawable.notif_play)
+        .setPauseActionIconResourceId(R.drawable.notif_pause)
+        .setNextActionIconResourceId(R.drawable.notification_action_playnext_large) // TODO mdpi
+        .setPreviousActionIconResourceId(R.drawable.notification_action_playlast_large) // TODO mdpi
+        .setFastForwardActionIconResourceId(R.drawable.notif_seek_forward)
+        .setRewindActionIconResourceId(R.drawable.notif_seek_back)
         .setMediaDescriptionAdapter(DescriptionAdapter(app, controllerFuture, scope, ioDispatcher))
         .setNotificationListener(listener)
         .setSmallIconResourceId(R.drawable.notification_action_play)
         .build().apply {
-            setPlayer(player)
+            setUsePlayPauseActions(true)
             setUseRewindAction(true)
             setUseFastForwardAction(true)
             setUseRewindActionInCompactView(true)

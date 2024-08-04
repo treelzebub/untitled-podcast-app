@@ -7,12 +7,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import net.treelzebub.podcasts.data.RssHandler
-import net.treelzebub.podcasts.net.PodcastIndexHeadersInterceptor
 import net.treelzebub.podcasts.net.PodcastIndexService
 import net.treelzebub.podcasts.net.PodcastRssHandler
-import net.treelzebub.podcasts.net.models.PodcastsOkClient
+import net.treelzebub.podcasts.net.models.PodcastIndexOkClient
+import net.treelzebub.podcasts.net.models.RssFetchingOkClient
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
@@ -22,20 +21,17 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 class NetworkModule {
 
     @Provides
-    fun okHttpClient(): OkHttpClient = PodcastsOkClient
+    fun okHttpClient(): OkHttpClient = RssFetchingOkClient
 
     @Provides
     fun rssHandler(): RssHandler = PodcastRssHandler(okHttpClient())
 
     @Provides
     fun podcastIndexService(): PodcastIndexService {
-        val Timber = HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) }
-        val headers = PodcastIndexHeadersInterceptor()
-        val client = OkHttpClient.Builder().addInterceptor(Timber).addInterceptor(headers).build()
         val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         return Retrofit.Builder()
             .baseUrl("https://api.podcastindex.org/")
-            .client(client)
+            .client(PodcastIndexOkClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi).asLenient())
             .build()
             .create(PodcastIndexService::class.java)
