@@ -154,7 +154,6 @@ dependencies {
     ksp(libs.compose.destinations)
     implementation(libs.compose.destinations.animations.core)
 
-    runtimeOnly(libs.media.media.media.media) // media.
     implementation(libs.exoplayer)
 //    implementation(libs.exoplayer.hls)
 //    implementation(libs.media3.cast)

@@ -7,6 +7,15 @@
 
     <string name="notif_channel_name">Podcast Now Playing</string>
     <string name="notif_channel_description">Untitled Podcast App\'s media player.</string>
+    <string name="notif_play">Play</string>
+    <string name="notif_pause">Pause</string>
+    <string name="notif_prev">Previous</string>
+    <string name="notif_next">Next</string>
+    <string name="notif_seek_back">Seek Back</string>
+    <string name="notif_seek_forward">Seek Forward</string>
+    <string name="notif_stop">Stop</string>
+    <string name="notif_fave_off">Favorite (Toggled off)</string>
+    <string name="notif_fave_on">Favorite (Toggled on)</string>
 
     <string name="invalid_rss_url">Invalid RSS Feed URL.</string>
     <string name="error_fetch_parse">Error processing RSS Feed. Check the URL and try again.</string>
