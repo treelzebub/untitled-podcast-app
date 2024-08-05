@@ -11,9 +11,9 @@ import java.util.Locale
 class PodcastIndexHeadersInterceptor : Interceptor {
 
     companion object {
+        private const val USER_AGENT = BuildConfig.USER_AGENT
         private const val API_KEY = BuildConfig.API_KEY_PODCAST_INDEX
         private const val API_SECRET = BuildConfig.API_SECRET_PODCAST_INDEX
-        private const val USER_AGENT = BuildConfig.USER_AGENT_PODCAST_INDEX
 
         private val now: String
             get() = now().epochSecond.toString()

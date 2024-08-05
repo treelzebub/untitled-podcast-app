@@ -9,8 +9,8 @@ import dagger.hilt.components.SingletonComponent
 import net.treelzebub.podcasts.data.RssHandler
 import net.treelzebub.podcasts.net.PodcastIndexService
 import net.treelzebub.podcasts.net.PodcastRssHandler
-import net.treelzebub.podcasts.net.models.PodcastIndexOkClient
-import net.treelzebub.podcasts.net.models.RssFetchingOkClient
+import net.treelzebub.podcasts.net.PodcastIndexOkClient
+import net.treelzebub.podcasts.net.RssFetchingOkClient
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory

@@ -8,7 +8,7 @@ import coil.Coil
 import coil.imageLoader
 import coil.util.DebugLogger
 import dagger.hilt.android.HiltAndroidApp
-import net.treelzebub.podcasts.net.models.RssFetchingOkClient
+import net.treelzebub.podcasts.net.RssFetchingOkClient
 import net.treelzebub.podcasts.net.sync.Sync
 import timber.log.Timber
 import timber.log.Timber.DebugTree

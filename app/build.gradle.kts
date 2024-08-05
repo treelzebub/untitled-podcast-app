@@ -59,9 +59,9 @@ android {
 
         val apiKeyPodcastIndex: String = local("API_KEY_PODCAST_INDEX")
         val apiSecretPodcastIndex: String = local("API_SECRET_PODCAST_INDEX")
+        buildConfigField("String", "USER_AGENT", "\"UntitledPodcastApp/$versionName\"")
         buildConfigField("String", "API_KEY_PODCAST_INDEX", apiKeyPodcastIndex)
         buildConfigField("String", "API_SECRET_PODCAST_INDEX", apiSecretPodcastIndex)
-        buildConfigField("String", "USER_AGENT_PODCAST_INDEX", "\"UntitledPodcastApp/$versionName\"")
 
         buildConfigField("boolean", "TIMBER_LOGS", "$timberLogs")
         buildConfigField("boolean", "OK_LOGS", "$okLogs")
