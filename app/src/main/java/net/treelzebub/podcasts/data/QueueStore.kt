@@ -27,12 +27,14 @@ data class PodcastQueue(val list: List<EpisodeUi> = emptyList()) {
                 .setArtworkUri(Uri.parse(item.imageUrl))
                 .setTitle(item.title)
                 .setAlbumArtist(item.podcastTitle)
+                .setMediaType(MediaMetadata.MEDIA_TYPE_PODCAST)
                 .build()
             val trackUri = Uri.parse(item.streamingLink)
             val builder = MediaItem.Builder()
                 .setUri(trackUri)
                 .setMediaId(item.id)
                 .setMediaMetadata(mediaMetaData)
+                .setMimeType("audio/mpeg")
             if (item.positionMillis > 0) {
                 builder.setClippingConfiguration(
                     MediaItem.ClippingConfiguration.Builder().setStartPositionMs(item.positionMillis).build()

@@ -2,7 +2,7 @@
 android-application = "8.5.1"
 kotlin = "2.0.0"
 kotlinCompilerExtension = "1.5.11"
-ksp = "2.0.0-1.0.22"
+ksp = "2.0.0-1.0.23"
 hilt = "2.51.1"
 
 compileSdk = "34"
@@ -23,10 +23,10 @@ lifecycle = "2.8.4"
 compose-bom = "2024.06.00"
 compose-beta = "1.7.0-beta06"
 activity-compose = "1.9.1"
-material = "1.4.0"
+material = "1.6.8"
 material3 = "1.2.1"
 destinations = "1.10.2"
-exoplayer = "1.3.1"
+media3 = "1.4.0"
 androidx-graphics = "1.0.0"
 coil = "2.6.0"
 junit = "4.13.2"
@@ -76,10 +76,12 @@ compose-material3  = { group = "androidx.compose.material3", name = "material3",
 compose-destinations  = { group = "io.github.raamcosta.compose-destinations", name = "ksp", version.ref = "destinations" }
 compose-destinations-animations-core  = { group = "io.github.raamcosta.compose-destinations", name = "animations-core", version.ref = "destinations" }
 
-exoplayer  = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "exoplayer" }
-exoplayer-dash  = { group = "androidx.media3", name = "media3-exoplayer-dash", version.ref = "exoplayer" }
-media3-ui  = { group = "androidx.media3", name = "media3-ui", version.ref = "exoplayer" }
-media3-session  = { group = "androidx.media3", name = "media3-session", version.ref = "exoplayer" }
+exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+# TODO exoplayer-dash  = { group = "androidx.media3", name = "media3-exoplayer-dash", version.ref = "media3" }
+# TODO media3-something = { module = "androidx.media3:media3-exoplayer-smoothstreaming", version.ref = "media3" }
+media3-ui  = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
+media3-session  = { group = "androidx.media3", name = "media3-session", version.ref = "media3" }
+# TODO media3-cast = { module = "androidx.media3:media3-cast", version.ref = "media3" }
 
 androidx-graphics-core = { group = "androidx.graphics", name = "graphics-core", version.ref = "androidx-graphics" }
 coil  = { group = "io.coil-kt", name = "coil", version.ref = "coil" }

@@ -8,7 +8,7 @@ import coil.Coil
 import coil.imageLoader
 import coil.util.DebugLogger
 import dagger.hilt.android.HiltAndroidApp
-import net.treelzebub.podcasts.net.models.PodcastsOkClient
+import net.treelzebub.podcasts.net.RssFetchingOkClient
 import net.treelzebub.podcasts.net.sync.Sync
 import timber.log.Timber
 import timber.log.Timber.DebugTree
@@ -24,7 +24,7 @@ class App : Application(), Configuration.Provider {
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(hiltWorkerFactory)
-            .setMinimumLoggingLevel(if (BuildConfig.DEBUG) Log.DEBUG else Log.ASSERT)
+            .setMinimumLoggingLevel(if (BuildConfig.WORK_LOGS) Log.DEBUG else Log.ASSERT)
             .build()
 
     override fun onCreate() {
@@ -38,8 +38,8 @@ class App : Application(), Configuration.Provider {
         val builder = imageLoader.newBuilder()
             .crossfade(true)
             .crossfade(500)
-            .okHttpClient(PodcastsOkClient)
-        if (BuildConfig.DEBUG) builder.logger(DebugLogger())
+            .okHttpClient(RssFetchingOkClient)
+        if (BuildConfig.COIL_LOGS) builder.logger(DebugLogger())
         Coil.setImageLoader(builder.build())
     }
 }

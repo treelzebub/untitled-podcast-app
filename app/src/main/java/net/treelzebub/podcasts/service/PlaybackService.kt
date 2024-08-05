@@ -14,6 +14,7 @@ import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,6 +22,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.util.DeviceApi
@@ -37,6 +39,13 @@ class PlaybackService : MediaSessionService() {
         private const val NOTIF_ID = 0xd00d
         private const val NOTIF_CHANNEL = "media.podspispops"
         private const val SESSION_INTENT_REQUEST_CODE = 0xf00d
+
+        const val ACTION_SEEK_BACK = "net.treelzebub.podcasts.action.seek_back"
+        const val ACTION_PREVIOUS = "net.treelzebub.podcasts.action.previous"
+        const val ACTION_NEXT = "net.treelzebub.podcasts.action.next"
+        const val ACTION_SEEK_FORWARD = "net.treelzebub.podcasts.action.seek_forward"
+        const val ACTION_PLAYBACK_SPEED = "net.treelzebub.podcasts.action.playback_speed"
+        const val ACTION_BOOKMARK = "net.treelzebub.podcasts.action.bookmark"
     }
 
     @Inject
@@ -45,9 +54,7 @@ class PlaybackService : MediaSessionService() {
 
     @Inject
     lateinit var repo: PodcastsRepo
-
     private val scope by lazy { CoroutineScope(SupervisorJob() + ioDispatcher) }
-
     private var _session: MediaSession? = null
     private val session: MediaSession
         get() = _session!!
@@ -63,17 +70,15 @@ class PlaybackService : MediaSessionService() {
         val intent = packageManager!!.getLaunchIntentForPackage(packageName)!!
             .let { sessionIntent ->
                 PendingIntent.getActivity(
-                    this,
-                    SESSION_INTENT_REQUEST_CODE,
-                    sessionIntent,
-                    PendingIntent.FLAG_IMMUTABLE
+                    this, SESSION_INTENT_REQUEST_CODE, sessionIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
                 )
             }
+        setListener(PlaybackServiceListener())
         _session = MediaSession.Builder(this, player)
             .setSessionActivity(intent)
             .setSessionExtras(bundleOf())
-            .build()
-        setListener(PlaybackServiceListener())
+            .setCallback(PodcastSessionCallback()).build()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _session
@@ -102,8 +107,10 @@ class PlaybackService : MediaSessionService() {
                     .setUsage(C.USAGE_MEDIA)
                     .build(), true
             )
-            .setSeekBackIncrementMs(10L)
-            .setSeekForwardIncrementMs(5L)
+            .setSeekBackIncrementMs(10_000L)
+            .setSeekForwardIncrementMs(5_000L)
+            .setHandleAudioBecomingNoisy(true)
+            .setSeekParameters(SeekParameters.CLOSEST_SYNC)
             .build()
             .also { it.addListener(isPlayingListener) }
     }
@@ -130,7 +137,7 @@ class PlaybackService : MediaSessionService() {
             ensureNotificationChannel(notificationManagerCompat)
             val builder =
                 NotificationCompat.Builder(this@PlaybackService, NOTIF_CHANNEL)
-                    // .setSmallIcon(androidx.media3.session.R.drawable.media3_notification_small_icon)
+                    .setSmallIcon(R.drawable.ic_palette_white_24dp) // TODO logo
                     .setContentTitle("TEMP Notif Name")
                     .setStyle(NotificationCompat.BigTextStyle().bigText("TEMP Content Text"))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
