@@ -2,6 +2,7 @@ package net.treelzebub.podcasts.service
 
 import android.os.Bundle
 import androidx.annotation.OptIn
+import androidx.media3.common.Player
 import androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS
 import androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM
 import androidx.media3.common.util.UnstableApi
@@ -10,6 +11,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.ConnectionResult.AcceptedResultBuilder
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionCommand.COMMAND_CODE_SESSION_SET_RATING
+import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -30,7 +32,7 @@ class PodcastSessionCallback : MediaSession.Callback {
 
     override fun onConnect(session: MediaSession, controller: MediaSession.ControllerInfo): MediaSession.ConnectionResult {
         val connectionResult = super.onConnect(session, controller)
-        val (sessionCommands, customLayout) = buildLayout()
+        val (sessionCommands, customLayout) = buildLayout(session.player)
 
         val result = AcceptedResultBuilder(session)
             .setAvailablePlayerCommands(connectionResult.availablePlayerCommands
@@ -48,7 +50,12 @@ class PodcastSessionCallback : MediaSession.Callback {
         return result
     }
 
-    override fun onCustomCommand(session: MediaSession, controller: MediaSession.ControllerInfo, customCommand: SessionCommand, args: Bundle): ListenableFuture<SessionResult> {
+    override fun onCustomCommand(
+        session: MediaSession,
+        controller: MediaSession.ControllerInfo,
+        customCommand: SessionCommand,
+        args: Bundle
+    ): ListenableFuture<SessionResult> {
         val handled = when (customCommand.customAction) {
             ACTION_SEEK_BACK -> { session.player.seekBack(); true }
             ACTION_SEEK_FORWARD -> { session.player.seekForward(); true }
@@ -63,6 +70,7 @@ class PodcastSessionCallback : MediaSession.Callback {
                     else -> 0.5f
                 }
                 session.player.setPlaybackSpeed(newSpeed)
+                session.setCustomLayout(buildLayout(session.player).second)
                 true
             }
             ACTION_BOOKMARK -> {
@@ -71,11 +79,19 @@ class PodcastSessionCallback : MediaSession.Callback {
             }
             else -> false
         }
-        val result = if (handled) SessionResult.RESULT_SUCCESS else SessionResult.RESULT_ERROR_NOT_SUPPORTED
+        val result = if (handled) SessionResult.RESULT_SUCCESS else SessionError.ERROR_BAD_VALUE
         return Futures.immediateFuture(SessionResult(result))
     }
 
-    private fun buildLayout(): CommandLayoutPair {
+    private fun buildLayout(player: Player): CommandLayoutPair {
+        val currentSpeedIcon = when (val currentSpeed = player.playbackParameters.speed) {
+            0.5f -> R.drawable.auto_0_5
+            1f -> R.drawable.auto_1
+            1.5f -> R.drawable.auto_1_5
+            2f -> R.drawable.auto_2
+            else -> throw IllegalStateException("Unhandled speed: $currentSpeed")
+        }
+
         val seekBackCommand = SessionCommand(ACTION_SEEK_BACK, Bundle.EMPTY)
         val seekBackButton = CommandButton.Builder()
             .setDisplayName("seek back")
@@ -104,7 +120,7 @@ class PodcastSessionCallback : MediaSession.Callback {
         val playbackSpeedButton = CommandButton.Builder()
             .setDisplayName("playback speed")
             .setSessionCommand(playbackSpeedCommand)
-            .setIconResId(R.drawable.auto_1)
+            .setIconResId(currentSpeedIcon)
             .build()
         val bookmarkCommand = SessionCommand(ACTION_BOOKMARK, Bundle.EMPTY)
         val bookmarkButton = CommandButton.Builder()
@@ -119,7 +135,7 @@ class PodcastSessionCallback : MediaSession.Callback {
             //nextCommand,
             seekForwardCommand,
             playbackSpeedCommand,
-            bookmarkCommand
+            //bookmarkCommand
         )
         val customLayout = ImmutableList.of(
             seekBackButton,
@@ -127,7 +143,7 @@ class PodcastSessionCallback : MediaSession.Callback {
             //nextButton,
             seekForwardButton,
             playbackSpeedButton,
-            bookmarkButton
+            //bookmarkButton
         )
 
         return sessionCommands to customLayout
