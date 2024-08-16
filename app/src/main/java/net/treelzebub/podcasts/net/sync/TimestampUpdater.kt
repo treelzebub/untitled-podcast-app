@@ -25,7 +25,7 @@ class TimestampUpdater @Inject constructor(
     fun update() {
         scope.launch {
             val podcasts = repo.getPodcasts().map {
-                val latest = repo.getUnplayedEpisodes(it.id).maxOf(Episode::date)
+                val latest = repo.getUnplayedEpisodes(it.id).maxOfOrNull(Episode::date) ?: Long.MAX_VALUE
                 it.copy(latest_episode_timestamp = latest)
             }
             repo.upsertPodcasts(podcasts)
