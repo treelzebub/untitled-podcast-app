@@ -34,10 +34,12 @@ class SubscriptionsViewModel @Inject constructor(
     )
 
     private val refreshErrorHandler: (SubscriptionDto, Call, IOException) -> Unit = { _, _, _ -> TODO() }
-    fun refresh() = subscriptionUpdater.updateAll(refreshErrorHandler) {
-        // TODO optimize. Should this happen whenever an episode is marked as played?
-        timestampUpdater.update()
-        loading(false)
+    fun refresh() {
+        subscriptionUpdater.updateAll(refreshErrorHandler) {
+            // TODO optimize. Should this happen whenever an episode is marked as played?
+            timestampUpdater.update()
+            loading(false)
+        }
     }
 
     private fun loading(loading: Boolean) = _state.update { it.copy(loading = loading) }

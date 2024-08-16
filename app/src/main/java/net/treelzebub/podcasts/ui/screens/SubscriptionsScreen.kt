@@ -35,6 +35,7 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.screens.destinations.PodcastDetailsScreenDestination
@@ -53,8 +54,15 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
     val refresh = {
         scope.launch {
             refreshing = true
+            val start = System.currentTimeMillis()
             vm.refresh()
+            val elapsed = System.currentTimeMillis() - start
+
+            // Show loading spinner for at least 1 second
+            // TODO abstract this out, make reusable
+            if (elapsed < 1_000) delay(1_000 - elapsed)
             refreshing = false
+            pullRefreshState.endRefresh()
         }
     }
 
@@ -92,7 +100,6 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
             if (pullRefreshState.isRefreshing) {
                 LaunchedEffect(true) {
                     refresh()
-                    pullRefreshState.endRefresh()
                 }
             }
 
