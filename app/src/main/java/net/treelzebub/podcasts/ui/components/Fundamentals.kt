@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
@@ -41,6 +42,7 @@ fun ItemCard(
 @Composable
 fun ButtonCircleBorderless(
     modifier: Modifier = Modifier,
+    size: Dp = 48.dp,
     @DrawableRes res: Int,
     contentDescription: String,
     tint: Color = Color.Black,
@@ -48,7 +50,7 @@ fun ButtonCircleBorderless(
 ) {
     OutlinedButton(
         modifier = Modifier
-            .size(48.dp)
+            .size(size)
             .then(modifier),
         shape = CircleShape,
         border = BorderStroke(0.dp, Color.White),
@@ -57,6 +59,7 @@ fun ButtonCircleBorderless(
 
     ) {
         Icon(
+            modifier = Modifier.size(size),
             painter = painterResource(id = res),
             tint = tint,
             contentDescription = contentDescription

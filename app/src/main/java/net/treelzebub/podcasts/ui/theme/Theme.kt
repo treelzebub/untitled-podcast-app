@@ -35,7 +35,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun PodcastsTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, // isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

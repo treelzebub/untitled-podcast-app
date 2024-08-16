@@ -7,15 +7,20 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.net.models.SubscriptionDto
 import net.treelzebub.podcasts.net.sync.SubscriptionUpdater
+import net.treelzebub.podcasts.net.sync.TimestampUpdater
 import net.treelzebub.podcasts.ui.models.PodcastUi
+import okhttp3.Call
+import java.io.IOException
 import javax.inject.Inject
 
 
 @HiltViewModel
 class SubscriptionsViewModel @Inject constructor(
     private val repo: PodcastsRepo,
-    private val subscriptionUpdater: SubscriptionUpdater
+    private val subscriptionUpdater: SubscriptionUpdater,
+    private val timestampUpdater: TimestampUpdater
 ) : StatefulViewModel<SubscriptionsViewModel.State>(State()) {
 
     init {
@@ -28,7 +33,14 @@ class SubscriptionsViewModel @Inject constructor(
         val podcasts: List<PodcastUi> = emptyList()
     )
 
-    fun refresh() = subscriptionUpdater.updateAll({ loading(false) }, { _, _, _ -> TODO() })
+    private val refreshErrorHandler: (SubscriptionDto, Call, IOException) -> Unit = { _, _, _ -> TODO() }
+    fun refresh() {
+        subscriptionUpdater.updateAll(refreshErrorHandler) {
+            // TODO optimize. Should this happen whenever an episode is marked as played?
+            timestampUpdater.update()
+            loading(false)
+        }
+    }
 
     private fun loading(loading: Boolean) = _state.update { it.copy(loading = loading) }
 

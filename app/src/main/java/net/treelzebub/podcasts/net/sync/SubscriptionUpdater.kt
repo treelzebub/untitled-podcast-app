@@ -33,7 +33,7 @@ class SubscriptionUpdater @Inject constructor(
     private val fetchedPodcasts = ConcurrentHashMap<String, Pair<Podcast, List<Episode>>>()
     private lateinit var latch: CountDownLatch
 
-    fun updateAll(onComplete: () -> Unit = {}, onFailure: (SubscriptionDto, Call, IOException) -> Unit) {
+    fun updateAll(onFailure: (SubscriptionDto, Call, IOException) -> Unit, onComplete: () -> Unit = {}) {
         scope.launch {
             val subs = repo.getAllRssLinks()
             latch = CountDownLatch(subs.size)
