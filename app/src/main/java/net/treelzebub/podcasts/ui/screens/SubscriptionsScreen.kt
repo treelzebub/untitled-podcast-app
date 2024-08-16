@@ -17,7 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,8 +34,7 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import net.treelzebub.podcasts.ui.behaviors.PullToRefreshLaunchedEffect
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.screens.destinations.PodcastDetailsScreenDestination
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
@@ -52,18 +50,10 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
     var refreshing by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullToRefreshState()
     val refresh = {
-        scope.launch {
-            refreshing = true
-            val start = System.currentTimeMillis()
-            vm.refresh()
-            val elapsed = System.currentTimeMillis() - start
-
-            // Show loading spinner for at least 1 second
-            // TODO abstract this out, make reusable
-            if (elapsed < 1_000) delay(1_000 - elapsed)
-            refreshing = false
-            pullRefreshState.endRefresh()
-        }
+        refreshing = true
+        vm.refresh()
+        refreshing = false
+        pullRefreshState.endRefresh()
     }
 
     if (state.loading) {
@@ -97,10 +87,8 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
                 }
             }
 
-            if (pullRefreshState.isRefreshing) {
-                LaunchedEffect(true) {
-                    refresh()
-                }
+            PullToRefreshLaunchedEffect(key = pullRefreshState.isRefreshing) {
+                if (pullRefreshState.isRefreshing) refresh()
             }
 
             PullToRefreshContainer(
