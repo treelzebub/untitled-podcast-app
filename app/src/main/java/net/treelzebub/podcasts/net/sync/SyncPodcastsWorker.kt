@@ -19,14 +19,16 @@ class SyncPodcastsWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val prefs: Prefs,
-    private val updater: SubscriptionUpdater,
+    private val subscriptionUpdater: SubscriptionUpdater,
+    private val timestampUpdater: TimestampUpdater
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         val onFailure: (SubscriptionDto, Call, IOException) -> Unit = { sub, _, e ->
             Timber.e("Error Updating Feed with url: ${sub.rssLink}", e) // TODO
         }
-        updater.updateAll(onFailure = onFailure)
+        subscriptionUpdater.updateAll(onFailure = onFailure)
+        timestampUpdater.update()
         prefs.putLong(PodcastPref.LastSyncTimestamp, System.currentTimeMillis())
         return Result.success()
     }

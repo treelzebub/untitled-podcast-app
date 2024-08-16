@@ -7,9 +7,7 @@ import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.Episode
@@ -30,8 +28,6 @@ class PodcastsRepo @Inject constructor(
     private val queueStore: QueueStore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
-
-    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
     /** RSS Feeds **/
     suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) = withIoContext {
@@ -55,11 +51,15 @@ class PodcastsRepo @Inject constructor(
 
     /** Podcasts **/
     suspend fun upsertPodcast(pair: Pair<Podcast, List<Episode>>) = withIoContext {
-        scope.launch {
-            db.transaction {
-                db.podcastsQueries.upsert(pair.first)
-                db.episodesQueries.upsert(pair.second, pair.first.image_url.orEmpty())
-            }
+        db.transaction {
+            db.podcastsQueries.upsert(pair.first)
+            db.episodesQueries.upsert(pair.second, pair.first.image_url.orEmpty())
+        }
+    }
+
+    suspend fun upsertPodcasts(podcasts: List<Podcast>) = withIoContext {
+        db.transaction {
+            podcasts.forEach { db.podcastsQueries.upsert(it) }
         }
     }
 
@@ -82,8 +82,12 @@ class PodcastsRepo @Inject constructor(
     }
 
     /** Episodes **/
-    suspend fun getAllEpisodesList(podcastId: String): List<Episode> = withIoContext {
+    suspend fun getEpisodesList(podcastId: String): List<Episode> = withIoContext {
         db.episodesQueries.get_by_podcast_id(podcastId).executeAsList()
+    }
+
+    suspend fun getUnplayedEpisodes(podcastId: String): List<Episode> = withIoContext {
+        db.episodesQueries.get_by_podcast_id_unplayed(podcastId).executeAsList()
     }
 
     fun getEpisodesFlow(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {
