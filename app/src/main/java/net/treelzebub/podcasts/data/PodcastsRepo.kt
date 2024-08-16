@@ -119,19 +119,6 @@ class PodcastsRepo @Inject constructor(
         db.episodesQueries.toggle_is_archived(episodeId)
     }
 
-    /** Queue **/
-    suspend fun addToQueue(id: String, errorHandler: ErrorHandler) = withIoContext {
-        queueStore.add(getEpisodeById(id), errorHandler)
-    }
-
-    suspend fun removeFromQueue(episodeId: String, errorHandler: ErrorHandler) = withIoContext {
-        queueStore.remove(episodeId, errorHandler)
-    }
-
-    suspend fun reorderQueue(from: Int, to: Int, errorHandler: ErrorHandler) = withIoContext {
-        queueStore.reorder(from, to, errorHandler)
-    }
-
     private suspend fun <T> withIoContext(block: suspend CoroutineScope.() -> T): T = withContext(ioDispatcher, block)
 
     companion object {

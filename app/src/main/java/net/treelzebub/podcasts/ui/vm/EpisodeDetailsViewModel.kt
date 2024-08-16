@@ -12,7 +12,6 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import androidx.media3.ui.PlayerNotificationManager
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -84,7 +83,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _positionState = MutableStateFlow("")
+    private val _positionState = MutableStateFlow("00:00")
     val positionState = _positionState.asStateFlow()
 
     val player = mutableStateOf<Player?>(null)
@@ -105,7 +104,6 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     private val controller: MediaController?
         get() = controllerFuture.let { if (it.isDone) it.get() else null }
     private val listener = PodcastPlayerListener()
-    private val notifListener = object : PlayerNotificationManager.NotificationListener {}
 
     init {
         init(episodeId)
@@ -164,7 +162,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                         addListener(listener)
                         sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeId)
                         setMediaItems(mediaItems, 0, queue[uiState.value.queueIndex].positionMillis) // TODO possible race condition?
-                        playWhenReady = true
+                        playWhenReady = false
                         prepare()
                     }
                 }
@@ -198,7 +196,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     private fun addToQueue(id: String) = viewModelScope.launch {
         // TODO UI State -> isInQueue
-        repo.addToQueue(id) { TODO() }
+        queueStore.add(repo.getEpisodeById(id)) { TODO() }
     }
 
     private inner class PodcastPlayerListener : Player.Listener {

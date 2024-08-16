@@ -2,12 +2,9 @@ package net.treelzebub.podcasts.ui.screens
 
 import android.annotation.SuppressLint
 import androidx.annotation.OptIn
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,13 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,10 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,12 +43,12 @@ import net.treelzebub.podcasts.ui.theme.TextStyles
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.AddToQueue
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Archive
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleHasPlayed
 import net.treelzebub.podcasts.util.DeviceApi
+import net.treelzebub.podcasts.util.toastNotImplemented
 
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -95,10 +86,8 @@ fun EpisodeContent(
     position: String,
     actionHandler: (Action) -> Unit
 ) {
-    // TODO move all to reusable theme values
-    val buttonPadding = 18.dp
+    // TODO handle with reusable theme values + contentPadding
     val outerPadding = 16.dp
-    val fontSize = 24.sp
 
     Scaffold(
         modifier = Modifier
@@ -121,48 +110,19 @@ fun EpisodeContent(
                 model = episode.imageUrl,
                 contentDescription = ""
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                ButtonCircleBorderless(
-                    res = R.drawable.notification_action_download,
-                    contentDescription = "Download episode button",
-                    onClick = { actionHandler(Download) }
-                )
-                ButtonCircleBorderless(
-                    res = R.drawable.discover_add,
-                    contentDescription = "Add episode to queue button",
-                    onClick = { actionHandler(AddToQueue) }
-                )
-                ButtonCircleBorderless(
-                    res = if (uiState.isPlaying) R.drawable.notif_pause else R.drawable.notif_play,
-                    contentDescription = if (uiState.isPlaying) "Pause button" else "Play button",
-                    onClick = { actionHandler(PlayPause) }
-                )
-                Text(
-                    text = "\u2714\uFE0F",
-                    modifier = Modifier
-                        .padding(buttonPadding)
-                        .clickable { actionHandler(ToggleHasPlayed) },
-                    fontStyle = if (uiState.hasPlayed) FontStyle.Italic else FontStyle.Normal,
-                    fontSize = fontSize
-                )
-                Text(
-                    text = "\uD83D\uDDC4\uFE0F",
-                    fontStyle = if (uiState.isArchived) FontStyle.Italic else FontStyle.Normal,
-                    modifier = Modifier
-                        .padding(buttonPadding)
-                        .clickable { actionHandler(Archive) },
-                    fontSize = fontSize + 2.sp
-                )
-            }
+
+            MediaButtons(
+                uiState = uiState,
+                outerPadding = outerPadding,
+                actionHandler = actionHandler
+            )
 
             Text(
                 modifier = Modifier
-                    .wrapContentWidth()
+                    .fillMaxWidth()
                     .padding(vertical = 4.dp, horizontal = outerPadding),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
                 style = TextStyles.CardTitle,
                 text = episode.title
             )
@@ -180,7 +140,7 @@ fun EpisodeContent(
                     text = position
                 )
             }
-            Spacer(modifier = Modifier.padding(vertical = 2.dp))
+            Spacer(modifier = Modifier.padding(vertical = 4.dp))
             Column(modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())) {
@@ -191,6 +151,54 @@ fun EpisodeContent(
                 )
             }
         }
+    }
+}
+
+@OptIn(UnstableApi::class)
+@Composable
+fun MediaButtons(
+    uiState: EpisodeDetailsViewModel.UiState,
+    outerPadding: Dp,
+    actionHandler: (Action) -> Unit
+) {
+    val context = LocalContext.current // TODO rm
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(outerPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        ButtonCircleBorderless(
+            modifier = Modifier
+                .weight(1.0f),
+            res = R.drawable.notification_action_download,
+            contentDescription = "Download episode button",
+            onClick = { actionHandler(Download); toastNotImplemented(context) }
+        )
+        ButtonCircleBorderless(
+            modifier = Modifier
+                .weight(1.0f),
+            res = R.drawable.notification_action_playnext,
+            contentDescription = "Add episode to queue button",
+            onClick = { actionHandler(AddToQueue); toastNotImplemented(context) }
+        )
+        ButtonCircleBorderless(
+            modifier = Modifier
+                .padding(6.dp)
+                .weight(1.0f),
+            res = if (uiState.isPlaying) R.drawable.notif_pause else R.drawable.notif_play,
+            contentDescription = if (uiState.isPlaying) "Pause button" else "Play button",
+            onClick = { actionHandler(PlayPause) }
+        )
+        ButtonCircleBorderless(
+            modifier = Modifier
+                .weight(1.0f),
+            res = if (uiState.hasPlayed) androidx.media3.session.R.drawable.media3_icon_check_circle_filled else androidx.media3.session.R.drawable.media3_icon_check_circle_unfilled,
+            contentDescription = if (uiState.hasPlayed) "Has played" else "Has not played",
+            onClick = { actionHandler(ToggleHasPlayed) }
+        )
     }
 }
 
