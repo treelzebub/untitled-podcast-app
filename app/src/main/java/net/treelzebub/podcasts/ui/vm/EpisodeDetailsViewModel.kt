@@ -196,7 +196,8 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     private fun addToQueue(id: String) = viewModelScope.launch {
         // TODO UI State -> isInQueue
-        queueStore.add(repo.getEpisodeById(id)) { TODO() }
+        // if id != the now playing episode id
+        //   queueStore.add(repo.getEpisodeById(id)) {}
     }
 
     private inner class PodcastPlayerListener : Player.Listener {

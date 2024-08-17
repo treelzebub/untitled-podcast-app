@@ -22,7 +22,11 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoadingBox(modifier: Modifier = Modifier) {
-    Box(modifier = Modifier.fillMaxSize().then(modifier)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(modifier)
+    ) {
         LoadingAnimation(modifier = Modifier.align(Alignment.Center))
     }
 }
@@ -44,7 +48,6 @@ fun LoadingAnimation(
         label = "circle_animation"
     )
 
-    // Called on app launch
     LaunchedEffect(Unit) { circleScale = 1f }
 
     Box(

@@ -1,5 +1,6 @@
 package net.treelzebub.podcasts.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
@@ -14,17 +15,22 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -34,17 +40,20 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import net.treelzebub.podcasts.BuildConfig
+import net.treelzebub.podcasts.data.DebugMenu
 import net.treelzebub.podcasts.ui.behaviors.PullToRefreshLaunchedEffect
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.screens.destinations.PodcastDetailsScreenDestination
+import net.treelzebub.podcasts.ui.theme.Purple40
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @RootNavGraph(start = true)
 @Destination
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun SubscriptionsScreen(navigator: DestinationsNavigator) {
-    val scope = rememberCoroutineScope()
     val vm = hiltViewModel<SubscriptionsViewModel>()
     val state by remember { vm.state }.collectAsStateWithLifecycle()
     var refreshing by remember { mutableStateOf(false) }
@@ -56,46 +65,66 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
         pullRefreshState.endRefresh()
     }
 
-    if (state.loading) {
-        LoadingBox()
-    } else {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(pullRefreshState.nestedScrollConnection)
-        ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(12.dp),
-                horizontalArrangement = Arrangement.Center,
-                state = rememberLazyGridState()
+//    Scaffold(
+//        modifier = Modifier.fillMaxSize(),
+//        topBar = { Topbar(state.loading) }
+//    ) { _ ->
+        if (state.loading) {
+            LoadingBox()
+        } else {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(pullRefreshState.nestedScrollConnection)
             ) {
-                items(state.podcasts) {
-                    AsyncImage(
-                        modifier = Modifier.animateItem(
-                            placementSpec = spring(
-                                stiffness = Spring.StiffnessMediumLow,
-                                visibilityThreshold = IntOffset.VisibilityThreshold)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(12.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    state = rememberLazyGridState()
+                ) {
+                    items(state.podcasts) {
+                        AsyncImage(
+                            modifier = Modifier.animateItem(
+                                placementSpec = spring(
+                                    stiffness = Spring.StiffnessMediumLow,
+                                    visibilityThreshold = IntOffset.VisibilityThreshold)
                             )
-                            .fillMaxSize()
-                            .padding(4.dp)
-                            .shadow(elevation = 4.dp)
-                            .clickable { navigator.navigate(PodcastDetailsScreenDestination(it.id)) },
-                        model = it.imageUrl,
-                        contentDescription = "Artwork for podcast ${it.title}"
-                    )
+                                .fillMaxSize()
+                                .padding(4.dp)
+                                .shadow(elevation = 4.dp)
+                                .clickable { navigator.navigate(PodcastDetailsScreenDestination(it.id)) },
+                            model = it.imageUrl,
+                            contentDescription = "Artwork for podcast ${it.title}"
+                        )
+                    }
                 }
-            }
 
-            PullToRefreshLaunchedEffect(key = pullRefreshState.isRefreshing) {
-                if (pullRefreshState.isRefreshing) refresh()
-            }
+                PullToRefreshLaunchedEffect(key = pullRefreshState.isRefreshing) {
+                    if (pullRefreshState.isRefreshing) refresh()
+                }
 
-            PullToRefreshContainer(
-                state = pullRefreshState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter),
-            )
+                PullToRefreshContainer(
+                    state = pullRefreshState,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter),
+                )
+            }
         }
+    }
+//}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun Topbar(isLoading: Boolean) {
+    Surface(shadowElevation = 4.dp) {
+        TopAppBar(
+            actions = {
+                if (BuildConfig.DEBUG) DebugMenu()
+                if (isLoading) LoadingBox()
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40, titleContentColor = Color.White),
+            title = { Text("Pod Dammit!") }
+        )
     }
 }

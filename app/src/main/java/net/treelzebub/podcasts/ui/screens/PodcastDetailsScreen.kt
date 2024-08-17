@@ -262,6 +262,7 @@ fun ExpandableSectionTitle(
     showPlayed: Boolean,
     actionHandler: (PodcastDetailsViewModel.Action) -> Unit
 ) {
+    //val topBarState by remember { topBarVm.state }.collectAsStateWithLifecycle()
     var dropdownExpanded by remember { mutableStateOf(false) }
     val toggleDropdown = { dropdownExpanded = !dropdownExpanded }
     val icon = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown
@@ -293,6 +294,12 @@ fun ExpandableSectionTitle(
                 contentDescription = "More menu"
             )
             DropdownMenu(expanded = dropdownExpanded, onDismissRequest = { dropdownExpanded = false }) {
+//                if (BuildConfig.DEBUG) {
+//                    DropdownMenuItem(
+//                        text = { Text(text = "Toggle Loading") },
+//                        onClick = { topBarVm.update(!topBarState.isLoading) }
+//                    )
+//                }
                 DropdownMenuItem(
                     text = { Text(text = if (showPlayed) "Hide Played" else "Show Played") },
                     onClick = {
