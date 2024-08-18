@@ -6,6 +6,7 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import dagger.assisted.Assisted
@@ -25,7 +26,6 @@ import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.media.PlayerManager
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.AddToQueue
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Archive
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.PlayPause
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Share
@@ -65,7 +65,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     )
 
     enum class Action {
-        ToggleBookmarked, Share, Download, AddToQueue, PlayPause, ToggleHasPlayed, Archive
+        ToggleBookmarked, Share, Download, AddToQueue, PlayPause, ToggleHasPlayed
     }
 
     val episode: Flow<EpisodeUi?> = flow {
@@ -83,16 +83,18 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
             AddToQueue -> addToQueue(episodeId)
             PlayPause -> playPause()
             ToggleHasPlayed -> toggleHasPlayed()
-            Archive -> toggleArchived()
         }
     }
-    private val listener = PodcastPlayerListener()
+    private val playerListener = PodcastPlayerListener()
+    private val positionListener: (Long, Long) -> Unit = { position, duration ->
+        _positionState.value = Strings.formatPosition(position, duration)
+    }
 
     init {
         viewModelScope.launch {
-            playerManager.init(getApplication(), listener)
+            playerManager.init(getApplication(), playerListener)
             episode.collect {
-                it?.let { playerManager.prepare(it, listener) }
+                it?.let { playerManager.prepare(it, playerListener) }
             }
             loadEpisode(episodeId)
         }
@@ -100,7 +102,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     override fun onCleared() {
         viewModelScope.launch {
-            playerManager.removeListener(listener)
+            playerManager.removeListener(playerListener)
         }
         super.onCleared()
     }
@@ -131,10 +133,6 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         viewModelScope.launch { repo.toggleHasPlayed(episodeId) }
     }
 
-    private fun toggleArchived() {
-        viewModelScope.launch { repo.toggleIsArchived(episodeId) }
-    }
-
     private fun share() {
         Timber.d("TODO: Share")
     }
@@ -157,9 +155,13 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.update { it.copy(isPlaying = isPlaying) }
             viewModelScope.launch {
-                playerManager.listenPosition { position, duration ->
-                    _positionState.value = Strings.formatPosition(position, duration)
-                }
+                playerManager.listenPosition(block = positionListener)
+            }
+        }
+
+        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
+            viewModelScope.launch {
+                playerManager.listenPosition(playbackParameters.speed, positionListener)
             }
         }
 

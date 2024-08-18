@@ -63,15 +63,25 @@ class PlayerManager @Inject constructor(
             }
     }
 
-    suspend fun listenPosition(block: CoroutineScope.(Long, Long) -> Unit) {
+    /**
+     * Update the [block] every second with the latest currentPosition of the player.
+     * [block] parameters are:
+     *   [Long] the current position in milliseconds, and
+     *   [Long] the duration of the episode in milliseconds.
+     *
+     * [Player]s can only be referenced on the main thread, but we ensure that all delay intervals are invoked
+     * in the background. The initial offset prevents janky ticks that would otherwise result from polling the
+     * Player's position.
+     */
+    suspend fun listenPosition(speed: Float = 1.0f, block: (Long, Long) -> Unit) {
         val player = controllerFuture.get()
+        val interval = speed / 1_000f
         if (player.isPlaying) {
             withContext(defaultDispatcher) {
-                val interval = 1000L
                 val offset = withContext(mainDispatcher) {
                     interval - (player.currentPosition % interval)
                 }
-                delay(offset)
+                delay(offset.toLong())
 
                 while (true) {
                     val pair = withContext(mainDispatcher) {
@@ -80,7 +90,7 @@ class PlayerManager @Inject constructor(
                         currentPosition to duration
                     }
                     block(pair.first, pair.second)
-                    delay(interval)
+                    delay(interval.toLong())
                 }
             }
         }
@@ -89,7 +99,7 @@ class PlayerManager @Inject constructor(
     suspend fun prepare(episodeUi: EpisodeUi, listener: Player.Listener) = withPlayer {
         sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeUi.id)
         addListener(listener)
-        setMediaItems(listOf(episodeUi.toMediaItem()), 0, episodeUi.positionMillis)
+        setMediaItem(episodeUi.toMediaItem(), episodeUi.positionMillis)
         playWhenReady = false
         prepare()
     }
