@@ -58,14 +58,13 @@ fun EpisodeDetailsScreen(episodeId: String) {
     val vm = hiltViewModel<EpisodeDetailsViewModel, EpisodeDetailsViewModel.Factory>(
         creationCallback = { factory -> factory.create(episodeId) }
     )
-    val episode by remember { vm.episode }.collectAsStateWithLifecycle(null)
     val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
-    val player by remember { vm.player }
+    val episode by remember { vm.episode }.collectAsStateWithLifecycle(null)
     val position by remember { vm.positionState }.collectAsStateWithLifecycle()
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
-    if (uiState.loading || episode == null || player == null) {
+    if (uiState.loading || episode == null) {
         LoadingBox()
     } else {
         EpisodeContent(

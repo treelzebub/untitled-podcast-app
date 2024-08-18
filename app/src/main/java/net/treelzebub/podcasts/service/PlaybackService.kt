@@ -9,12 +9,8 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,6 +21,7 @@ import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
+import net.treelzebub.podcasts.media.PlayerManager
 import net.treelzebub.podcasts.util.DeviceApi
 import timber.log.Timber
 import javax.inject.Inject
@@ -54,6 +51,10 @@ class PlaybackService : MediaSessionService() {
 
     @Inject
     lateinit var repo: PodcastsRepo
+
+    @Inject
+    lateinit var playerManager: PlayerManager
+
     private val scope by lazy { CoroutineScope(SupervisorJob() + ioDispatcher) }
     private var _session: MediaSession? = null
     private val session: MediaSession
@@ -66,19 +67,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        val player = buildPlayer()
-        val intent = packageManager!!.getLaunchIntentForPackage(packageName)!!
-            .let { sessionIntent ->
-                PendingIntent.getActivity(
-                    this, SESSION_INTENT_REQUEST_CODE, sessionIntent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
-                )
-            }
-        setListener(PlaybackServiceListener())
-        _session = MediaSession.Builder(this, player)
-            .setSessionActivity(intent)
-            .setSessionExtras(bundleOf())
-            .setCallback(PodcastSessionCallback()).build()
+        setUpSession()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _session
@@ -99,20 +88,21 @@ class PlaybackService : MediaSessionService() {
         super.onDestroy()
     }
 
-    private fun buildPlayer(): Player {
-        return ExoPlayer.Builder(this)
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
-                    .setUsage(C.USAGE_MEDIA)
-                    .build(), true
-            )
-            .setSeekBackIncrementMs(10_000L)
-            .setSeekForwardIncrementMs(5_000L)
-            .setHandleAudioBecomingNoisy(true)
-            .setSeekParameters(SeekParameters.CLOSEST_SYNC)
-            .build()
-            .also { it.addListener(isPlayingListener) }
+    private fun setUpSession() {
+        val player = playerManager.buildPlayer(this, isPlayingListener)
+
+        val intent = packageManager!!.getLaunchIntentForPackage(packageName)!!
+            .let { sessionIntent ->
+                PendingIntent.getActivity(
+                    this, SESSION_INTENT_REQUEST_CODE, sessionIntent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+                )
+            }
+        setListener(PlaybackServiceListener())
+        _session = MediaSession.Builder(this, player)
+            .setSessionActivity(intent)
+            .setSessionExtras(bundleOf())
+            .setCallback(PodcastSessionCallback()).build()
     }
 
     private fun persistPosition() {
