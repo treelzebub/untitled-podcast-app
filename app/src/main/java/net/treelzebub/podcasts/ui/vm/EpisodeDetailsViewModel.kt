@@ -14,10 +14,9 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
@@ -54,7 +53,13 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     @Stable
     @Immutable
-    data class UiState(
+    data class EpisodeState(
+        val episode: EpisodeUi? = null
+    )
+
+    @Stable
+    @Immutable
+    data class MutableEpisodeState(
         val loading: Boolean = true,
         val queueIndex: Int = 0,
         val bufferedPercentage: Int = 0,
@@ -68,11 +73,10 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         ToggleBookmarked, Share, Download, AddToQueue, PlayPause, ToggleHasPlayed
     }
 
-    val episode: Flow<EpisodeUi?> = flow {
-        emit(repo.getEpisodeById(episodeId))
-    }
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState = _uiState.asStateFlow()
+    private val _episodeState = MutableStateFlow(EpisodeState())
+    val episodeState = _episodeState.asStateFlow()
+    private val _uiState = MutableStateFlow(MutableEpisodeState())
+    val mutableState = _uiState.asStateFlow()
     private val _positionState = MutableStateFlow("00:00")
     val positionState = _positionState.asStateFlow()
     val actionHandler: OnClick<Action> = { action ->
@@ -93,10 +97,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch {
             playerManager.init(getApplication(), playerListener)
-            episode.collect {
-                it?.let { playerManager.prepare(it, playerListener) }
-            }
-            loadEpisode(episodeId)
+            loadEpisode()
         }
     }
 
@@ -107,9 +108,14 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         super.onCleared()
     }
 
-    private fun loadEpisode(episodeId: String) {
+    private fun loadEpisode() {
         viewModelScope.launch(ioDispatcher) {
-            repo.getEpisodeFlowById(episodeId).collect { updated ->
+            val episodeFlow = repo.getEpisodeFlowById(episodeId)
+            val episode = episodeFlow.first()
+            _episodeState.update {
+                it.copy(episode = episode)
+            }
+            episodeFlow.collect { updated ->
                 _uiState.update {
                     it.copy(
                         loading = false,
@@ -138,7 +144,10 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     }
 
     private fun playPause() {
-        viewModelScope.launch { playerManager.playPause() }
+        viewModelScope.launch {
+            playerManager.prepareIfNeeded(episodeState.value.episode!!, playerListener)
+            playerManager.playPause()
+        }
     }
 
     private fun download() {
@@ -151,6 +160,11 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     }
 
     private inner class PodcastPlayerListener : Player.Listener {
+
+        override fun onIsLoadingChanged(isLoading: Boolean) {
+            // TODO make this just change the play/pause button to a spinner
+            // uiState.update { it.copy(loading = isLoading) }
+        }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.update { it.copy(isPlaying = isPlaying) }

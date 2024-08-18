@@ -6,6 +6,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.common.Player.STATE_IDLE
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
@@ -34,15 +35,12 @@ class PlayerManager @Inject constructor(
     //private val queueStore: QueueStore
 ) {
 
-    private val scope = CoroutineScope(mainDispatcher)
     private lateinit var controllerFuture: ListenableFuture<MediaController>
 
     suspend fun init(@ApplicationContext context: Context, listener: Player.Listener) = onMain {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        withPlayer {
-            addListener(listener)
-        }
+        withPlayer { addListener(listener) }
     }
 
     fun buildPlayer(context: Context, listener: Player.Listener): Player {
@@ -96,9 +94,13 @@ class PlayerManager @Inject constructor(
         }
     }
 
-    suspend fun prepare(episodeUi: EpisodeUi, listener: Player.Listener) = withPlayer {
-        sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeUi.id)
+    suspend fun prepareIfNeeded(episodeUi: EpisodeUi, listener: Player.Listener) = withPlayer {
+        val currentEpisodeId = sessionExtras.getString(PlaybackService.KEY_EPISODE_ID)
+        val isSameEpisode = episodeUi.id == currentEpisodeId
+        if (playbackState != STATE_IDLE && isSameEpisode) return@withPlayer
+
         addListener(listener)
+        sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeUi.id)
         setMediaItem(episodeUi.toMediaItem(), episodeUi.positionMillis)
         playWhenReady = false
         prepare()
