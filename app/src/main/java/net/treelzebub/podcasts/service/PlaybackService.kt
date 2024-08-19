@@ -4,7 +4,6 @@ import android.Manifest.permission.POST_NOTIFICATIONS
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -67,15 +66,12 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        val notifManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notifManager
         setUpSession()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _session
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        val player = session.player
-        if (!player.playWhenReady || player.mediaItemCount == 0) stopSelf()
-    }
 
     override fun onDestroy() {
         session.run {
@@ -85,6 +81,7 @@ class PlaybackService : MediaSessionService() {
             _session = null
         }
         clearListener()
+        Timber.d("Service destroyed.")
         super.onDestroy()
     }
 
@@ -114,10 +111,11 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    // TODO real values
     private inner class PlaybackServiceListener : Listener {
 
         override fun onForegroundServiceStartNotAllowedException() {
-            Timber.d("onForegroundServiceStartNotAllowedException!")
+            Timber.e("Foreground Service Start Not Allowed Exception!")
             if (DeviceApi.isMinTiramisu && checkSelfPermission(POST_NOTIFICATIONS) != PERMISSION_GRANTED) {
                 Timber.e(IllegalStateException("Notif permission denied! No stairway!"))
                 return
@@ -127,7 +125,7 @@ class PlaybackService : MediaSessionService() {
             ensureNotificationChannel(notificationManagerCompat)
             val builder =
                 NotificationCompat.Builder(this@PlaybackService, NOTIF_CHANNEL)
-                    .setSmallIcon(R.drawable.ic_palette_white_24dp) // TODO logo
+                    .setSmallIcon(R.drawable.ic_palette_white_24dp)
                     .setContentTitle("TEMP Notif Name")
                     .setStyle(NotificationCompat.BigTextStyle().bigText("TEMP Content Text"))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
