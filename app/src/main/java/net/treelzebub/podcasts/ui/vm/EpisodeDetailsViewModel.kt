@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -161,7 +162,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                     with(controller!!) {
                         addListener(listener)
                         sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeId)
-                        setMediaItems(mediaItems, 0, queue[uiState.value.queueIndex].positionMillis) // TODO possible race condition?
+                        setMediaItem(mediaItems.first(), episode.first()!!.positionMillis)
                         playWhenReady = false
                         prepare()
                     }
@@ -201,7 +202,10 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     private inner class PodcastPlayerListener : Player.Listener {
 
+        private var updatePosition = false
+
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updatePosition = isPlaying
             _uiState.update { it.copy(isPlaying = isPlaying) }
 
             if (isPlaying) {
@@ -213,7 +217,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                     }
                     delay(offset)
 
-                    while (true) {
+                    while (updatePosition) {
                         val pair = withContext(mainDispatcher) {
                             val player = player.value!!
                             val currentPosition = player.currentPosition
@@ -222,7 +226,12 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                         }
                         _positionState.emit(Strings.formatPosition(pair.first, pair.second))
                         delay(interval)
+                        Timber.d("Tick...")
                     }
+                }
+            } else {
+                if (player.value!!.currentPosition <= 15_000L) {
+                    viewModelScope.launch { repo.markPlayed(episodeId) }
                 }
             }
         }
