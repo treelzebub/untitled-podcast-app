@@ -169,7 +169,15 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.update { it.copy(isPlaying = isPlaying) }
             viewModelScope.launch {
-                playerManager.listenPosition(block = positionListener)
+                if (isPlaying) {
+                    playerManager.listenPosition(block = positionListener)
+                } else {
+                    playerManager.withPlayer {
+                        if (currentPosition <= 15_000L) {
+                            viewModelScope.launch { repo.markPlayed(episodeId) }
+                        }
+                    }
+                }
             }
         }
 

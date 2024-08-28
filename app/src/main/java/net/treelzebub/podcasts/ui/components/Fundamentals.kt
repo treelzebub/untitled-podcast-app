@@ -19,8 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import net.treelzebub.podcasts.R
-import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
 
 
 @Composable

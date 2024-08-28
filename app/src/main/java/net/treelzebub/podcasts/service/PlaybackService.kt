@@ -32,9 +32,6 @@ class PlaybackService : MediaSessionService() {
 
     companion object {
         const val KEY_EPISODE_ID = "episode-id"
-        private const val NOTIF_ID = 0xd00d
-        private const val NOTIF_CHANNEL = "media.podspispops"
-        private const val SESSION_INTENT_REQUEST_CODE = 0xf00d
 
         const val ACTION_SEEK_BACK = "net.treelzebub.podcasts.action.seek_back"
         const val ACTION_PREVIOUS = "net.treelzebub.podcasts.action.previous"
@@ -42,6 +39,10 @@ class PlaybackService : MediaSessionService() {
         const val ACTION_SEEK_FORWARD = "net.treelzebub.podcasts.action.seek_forward"
         const val ACTION_PLAYBACK_SPEED = "net.treelzebub.podcasts.action.playback_speed"
         const val ACTION_BOOKMARK = "net.treelzebub.podcasts.action.bookmark"
+
+        private const val NOTIF_ID = 0xd00d
+        private const val NOTIF_CHANNEL = "media.podspispops"
+        private const val SESSION_INTENT_REQUEST_CODE = 0xf00d
     }
 
     @Inject

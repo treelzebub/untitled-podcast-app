@@ -61,6 +61,12 @@ class PlayerManager @Inject constructor(
             }
     }
 
+    suspend fun withPlayer(block: MediaController.() -> Unit) = onMain {
+        controllerFuture.addListener({
+            if (controllerFuture.isDone) controllerFuture.get().block()
+        }, MoreExecutors.directExecutor())
+    }
+
     /**
      * Update the [block] every second with the latest currentPosition of the player.
      * [block] parameters are:
@@ -74,22 +80,19 @@ class PlayerManager @Inject constructor(
     suspend fun listenPosition(speed: Float = 1.0f, block: (Long, Long) -> Unit) {
         val player = controllerFuture.get()
         val interval = speed / 1_000f
-        if (player.isPlaying) {
-            withContext(defaultDispatcher) {
-                val offset = withContext(mainDispatcher) {
-                    interval - (player.currentPosition % interval)
+        withContext(defaultDispatcher) {
+            val offset = withContext(mainDispatcher) {
+                interval - (player.currentPosition % interval)
+            }
+            delay(offset.toLong())
+            while (player.isPlaying) {
+                val pair = withContext(mainDispatcher) {
+                    val currentPosition = player.currentPosition
+                    val duration = player.contentDuration
+                    currentPosition to duration
                 }
-                delay(offset.toLong())
-
-                while (true) {
-                    val pair = withContext(mainDispatcher) {
-                        val currentPosition = player.currentPosition
-                        val duration = player.contentDuration
-                        currentPosition to duration
-                    }
-                    block(pair.first, pair.second)
-                    delay(interval.toLong())
-                }
+                block(pair.first, pair.second)
+                delay(interval.toLong())
             }
         }
     }
@@ -119,9 +122,4 @@ class PlayerManager @Inject constructor(
     }
 
     private suspend fun <T> onMain(block: suspend CoroutineScope.() -> T) = withContext(mainDispatcher, block)
-    private suspend fun withPlayer(block: MediaController.() -> Unit) = onMain {
-        controllerFuture.addListener({
-            if (controllerFuture.isDone) controllerFuture.get().block()
-        }, MoreExecutors.directExecutor())
-    }
 }

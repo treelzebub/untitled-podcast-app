@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +35,8 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import net.treelzebub.podcasts.ui.behaviors.PullToRefreshLaunchedEffect
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.screens.destinations.PodcastDetailsScreenDestination
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
@@ -50,10 +52,15 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
     var refreshing by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullToRefreshState()
     val refresh = {
-        refreshing = true
-        vm.refresh()
-        refreshing = false
-        pullRefreshState.endRefresh()
+        scope.launch {
+            val start = System.currentTimeMillis()
+            refreshing = true
+            vm.refresh()
+            refreshing = false
+            val elapsed = System.currentTimeMillis() - start
+            if (elapsed < 1000) delay(1000 - elapsed)
+            pullRefreshState.endRefresh()
+        }
     }
 
     if (state.loading) {
@@ -76,7 +83,7 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
                             placementSpec = spring(
                                 stiffness = Spring.StiffnessMediumLow,
                                 visibilityThreshold = IntOffset.VisibilityThreshold)
-                            )
+                        )
                             .fillMaxSize()
                             .padding(4.dp)
                             .shadow(elevation = 4.dp)
@@ -87,8 +94,10 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
                 }
             }
 
-            PullToRefreshLaunchedEffect(key = pullRefreshState.isRefreshing) {
-                if (pullRefreshState.isRefreshing) refresh()
+            if (pullRefreshState.isRefreshing) {
+                LaunchedEffect(Unit) {
+                    refresh()
+                }
             }
 
             PullToRefreshContainer(
