@@ -16,10 +16,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import net.treelzebub.podcasts.di.DefaultDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -31,16 +29,18 @@ import javax.inject.Singleton
 @OptIn(UnstableApi::class)
 class PlayerManager @Inject constructor(
     @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
-    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
     //private val queueStore: QueueStore
 ) {
 
     private lateinit var controllerFuture: ListenableFuture<MediaController>
 
-    suspend fun init(@ApplicationContext context: Context, listener: Player.Listener) = onMain {
+    suspend fun init(
+        @ApplicationContext context: Context, listener: Player.Listener) = withContext(mainDispatcher) {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        withPlayer { addListener(listener) }
+        controllerFuture.addListener({
+            controllerFuture.get().addListener(listener)
+        }, MoreExecutors.directExecutor())
     }
 
     fun buildPlayer(context: Context, listener: Player.Listener): Player {
@@ -61,10 +61,8 @@ class PlayerManager @Inject constructor(
             }
     }
 
-    suspend fun withPlayer(block: MediaController.() -> Unit) = onMain {
-        controllerFuture.addListener({
-            if (controllerFuture.isDone) controllerFuture.get().block()
-        }, MoreExecutors.directExecutor())
+    suspend fun <T> withPlayer(block: suspend MediaController.() -> T): T = withContext(mainDispatcher) {
+        controllerFuture.get().block()
     }
 
     /**
@@ -78,22 +76,18 @@ class PlayerManager @Inject constructor(
      * Player's position.
      */
     suspend fun listenPosition(speed: Float = 1.0f, block: (Long, Long) -> Unit) {
-        val player = controllerFuture.get()
-        val interval = speed / 1_000f
-        withContext(defaultDispatcher) {
-            val offset = withContext(mainDispatcher) {
-                interval - (player.currentPosition % interval)
+        var go = true
+        val interval = speed * 1_000f
+        val offset = withPlayer {
+            interval - (currentPosition % interval)
+        }
+        delay(offset.toLong())
+        while (go) {
+            withPlayer {
+                block(currentPosition, contentDuration)
+                go = isPlaying
             }
-            delay(offset.toLong())
-            while (player.isPlaying) {
-                val pair = withContext(mainDispatcher) {
-                    val currentPosition = player.currentPosition
-                    val duration = player.contentDuration
-                    currentPosition to duration
-                }
-                block(pair.first, pair.second)
-                delay(interval.toLong())
-            }
+            delay(interval.toLong())
         }
     }
 
@@ -120,6 +114,4 @@ class PlayerManager @Inject constructor(
     suspend fun removeListener(listener: Player.Listener) = withPlayer {
         removeListener(listener)
     }
-
-    private suspend fun <T> onMain(block: suspend CoroutineScope.() -> T) = withContext(mainDispatcher, block)
 }

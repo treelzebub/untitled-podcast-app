@@ -47,7 +47,6 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-
         fun create(episodeId: String): EpisodeDetailsViewModel
     }
 
@@ -173,7 +172,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                     playerManager.listenPosition(block = positionListener)
                 } else {
                     playerManager.withPlayer {
-                        if (currentPosition <= 15_000L) {
+                        if (contentDuration - currentPosition <= 15_000L) {
                             viewModelScope.launch { repo.markPlayed(episodeId) }
                         }
                     }
