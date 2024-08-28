@@ -31,25 +31,17 @@ object Strings {
     }
 
     fun formatPosition(current: Long, total: Long): String {
-        val cHours = (current / (1000 * 60 * 60)) % 24
-        val cMins = (current / (1000 * 60)) % 60
-        val cSecs = (current / 1000) % 60
-        val tHours = (total / (1000 * 60 * 60)) % 24
-        val tMins = (total / (1000 * 60)) % 60
-        val tSecs = (total / 1000) % 60
+        val remaining = total - current
+        val hours = (remaining / (1000 * 60 * 60)) % 24
+        val mins = (remaining / (1000 * 60)) % 60
+        val secs = (remaining / 1000) % 60
 
-        return when {
-            tHours > 0 -> String.format(
-                Locale.getDefault(), "%02d:%02d:%02d / %02d:%02d:%02d",
-                cHours, cMins, cSecs,
-                tHours, tMins, tSecs
-            )
-
-            else -> String.format(
-                Locale.getDefault(), "%02d:%02d / %02d:%02d",
-                cMins, cSecs, tMins, tSecs
-            )
-        }
+        return if (hours > 0) String.format(
+            Locale.getDefault(), "-%02d:%02d:%02d",
+            hours, mins, secs
+        ) else String.format(
+            Locale.getDefault(), "-%02d:%02d",
+            mins, secs
+        )
     }
-
 }

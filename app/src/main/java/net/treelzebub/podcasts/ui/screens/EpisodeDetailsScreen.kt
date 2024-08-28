@@ -58,19 +58,18 @@ fun EpisodeDetailsScreen(episodeId: String) {
     val vm = hiltViewModel<EpisodeDetailsViewModel, EpisodeDetailsViewModel.Factory>(
         creationCallback = { factory -> factory.create(episodeId) }
     )
-    val episode by remember { vm.episode }.collectAsStateWithLifecycle(null)
-    val uiState by remember { vm.uiState }.collectAsStateWithLifecycle()
-    val player by remember { vm.player }
+    val episodeState by remember { vm.episodeState }.collectAsStateWithLifecycle()
+    val mutableState by remember { vm.mutableState }.collectAsStateWithLifecycle()
     val position by remember { vm.positionState }.collectAsStateWithLifecycle()
 
     if (DeviceApi.isMinTiramisu) RequestNotificationPermission()
 
-    if (uiState.loading || episode == null || player == null) {
+    if (mutableState.loading || episodeState.episode == null) {
         LoadingBox()
     } else {
         EpisodeContent(
-            episode = episode!!,
-            uiState = uiState,
+            episode = episodeState.episode!!,
+            uiState = mutableState,
             position = position,
             actionHandler = vm.actionHandler
         )
@@ -82,7 +81,7 @@ fun EpisodeDetailsScreen(episodeId: String) {
 fun EpisodeContent(
     modifier: Modifier = Modifier,
     episode: EpisodeUi,
-    uiState: EpisodeDetailsViewModel.UiState,
+    uiState: EpisodeDetailsViewModel.MutableEpisodeState,
     position: String,
     actionHandler: (Action) -> Unit
 ) {
@@ -157,7 +156,7 @@ fun EpisodeContent(
 @OptIn(UnstableApi::class)
 @Composable
 fun MediaButtons(
-    uiState: EpisodeDetailsViewModel.UiState,
+    uiState: EpisodeDetailsViewModel.MutableEpisodeState,
     outerPadding: Dp,
     actionHandler: (Action) -> Unit
 ) {

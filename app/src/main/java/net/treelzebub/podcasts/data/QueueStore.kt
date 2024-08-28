@@ -2,9 +2,6 @@ package net.treelzebub.podcasts.data
 
 import android.app.Application
 import android.content.Context
-import android.net.Uri
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,31 +15,8 @@ import javax.inject.Inject
 
 
 data class PodcastQueue(val list: List<EpisodeUi> = emptyList()) {
-
     operator fun get(i: Int) = list[i]
-
-    fun asMediaItems(): List<MediaItem> {
-        return list.map { item ->
-            val mediaMetaData = MediaMetadata.Builder()
-                .setArtworkUri(Uri.parse(item.imageUrl))
-                .setTitle(item.title)
-                .setAlbumArtist(item.podcastTitle)
-                .setMediaType(MediaMetadata.MEDIA_TYPE_PODCAST)
-                .build()
-            val trackUri = Uri.parse(item.streamingLink)
-            val builder = MediaItem.Builder()
-                .setUri(trackUri)
-                .setMediaId(item.id)
-                .setMediaMetadata(mediaMetaData)
-                .setMimeType("audio/mpeg")
-            if (item.positionMillis > 0) {
-                builder.setClippingConfiguration(
-                    MediaItem.ClippingConfiguration.Builder().setStartPositionMs(item.positionMillis).build()
-                )
-            }
-            builder.build()
-        }
-    }
+    operator fun plus(episodeUi: EpisodeUi) = copy(list = list + episodeUi)
 }
 
 // TODO all signatures of add() need to account for "episode exists in queue"
