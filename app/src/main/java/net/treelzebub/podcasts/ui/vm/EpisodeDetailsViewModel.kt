@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -161,7 +162,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                     with(controller!!) {
                         addListener(listener)
                         sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeId)
-                        setMediaItems(mediaItems, 0, queue[uiState.value.queueIndex].positionMillis) // TODO possible race condition?
+                        setMediaItem(mediaItems.first(), episode.first()!!.positionMillis)
                         playWhenReady = false
                         prepare()
                     }
