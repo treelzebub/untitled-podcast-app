@@ -103,6 +103,11 @@ UPDATE episode
 SET position_millis = :position_millis
 WHERE episode.id = :id;
 
+set_has_played:
+UPDATE episode
+SET has_played = :has_played
+WHERE id = :episode_id;
+
 toggle_has_played:
 UPDATE episode
 SET has_played = CASE WHEN has_played = 0 THEN 1 ELSE 0 END

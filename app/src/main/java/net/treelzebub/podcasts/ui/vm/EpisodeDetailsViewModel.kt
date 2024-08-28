@@ -202,7 +202,10 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     private inner class PodcastPlayerListener : Player.Listener {
 
+        private var updatePosition = false
+
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updatePosition = isPlaying
             _uiState.update { it.copy(isPlaying = isPlaying) }
 
             if (isPlaying) {
@@ -214,7 +217,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                     }
                     delay(offset)
 
-                    while (true) {
+                    while (updatePosition) {
                         val pair = withContext(mainDispatcher) {
                             val player = player.value!!
                             val currentPosition = player.currentPosition
@@ -223,7 +226,12 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                         }
                         _positionState.emit(Strings.formatPosition(pair.first, pair.second))
                         delay(interval)
+                        Timber.d("Tick...")
                     }
+                }
+            } else {
+                if (player.value!!.currentPosition <= 15_000L) {
+                    viewModelScope.launch { repo.markPlayed(episodeId) }
                 }
             }
         }

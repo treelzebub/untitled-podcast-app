@@ -115,6 +115,10 @@ class PodcastsRepo @Inject constructor(
         db.episodesQueries.toggle_is_bookmarked(episodeId)
     }
 
+    suspend fun markPlayed(episodeId: String, hasPlayed: Boolean = true) = withIoContext {
+        db.episodesQueries.set_has_played(hasPlayed, episodeId)
+    }
+
     suspend fun toggleHasPlayed(episodeId: String) = withIoContext {
         db.episodesQueries.toggle_has_played(episodeId)
     }
