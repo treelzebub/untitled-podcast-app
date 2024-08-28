@@ -14,10 +14,9 @@ class MediaModule {
 
     @Provides
     fun providePlayerManager(
-        @MainDispatcher mainDispatcher: CoroutineDispatcher,
-        @DefaultDispatcher defaultDispatcher: CoroutineDispatcher
+        @MainDispatcher mainDispatcher: CoroutineDispatcher
         //queueStore: QueueStore
     ): PlayerManager {
-        return PlayerManager(mainDispatcher, defaultDispatcher)
+        return PlayerManager(mainDispatcher)
     }
 }
