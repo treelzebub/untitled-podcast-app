@@ -212,8 +212,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                 viewModelScope.launch(defaultDispatcher) {
                     val interval = 1000L
                     val offset = withContext(mainDispatcher) {
-                        val player = player.value!!
-                        interval - (player.currentPosition % interval)
+                        interval - (player.value!!.currentPosition % interval)
                     }
                     delay(offset)
 
@@ -226,7 +225,6 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                         }
                         _positionState.emit(Strings.formatPosition(pair.first, pair.second))
                         delay(interval)
-                        Timber.d("Tick...")
                     }
                 }
             } else {
