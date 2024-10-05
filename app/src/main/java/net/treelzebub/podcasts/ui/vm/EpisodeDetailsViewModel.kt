@@ -95,6 +95,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch {
+            _uiState.update { it.copy(loading = true) }
             playerManager.init(getApplication(), playerListener)
             loadEpisode()
         }
@@ -102,7 +103,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     override fun onCleared() {
         viewModelScope.launch {
-            playerManager.removeListener(playerListener)
+            playerManager.unlisten(playerListener)
         }
         super.onCleared()
     }
@@ -144,7 +145,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     private fun playPause() {
         viewModelScope.launch {
-            playerManager.prepareIfNeeded(episodeState.value.episode!!, playerListener)
+            playerManager.prepareIfNeeded(episodeState.value.episode!!, playerListener) // FIXME this is hacky
             playerManager.playPause()
         }
     }

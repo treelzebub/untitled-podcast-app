@@ -67,8 +67,6 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        val notifManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notifManager
         setUpSession()
     }
 
@@ -88,7 +86,6 @@ class PlaybackService : MediaSessionService() {
 
     private fun setUpSession() {
         val player = playerManager.buildPlayer(this, isPlayingListener)
-
         val intent = packageManager!!.getLaunchIntentForPackage(packageName)!!
             .let { sessionIntent ->
                 PendingIntent.getActivity(

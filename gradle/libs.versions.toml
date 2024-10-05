@@ -1,5 +1,5 @@
 [versions]
-android-application = "8.5.2"
+android-application = "8.7.0"
 kotlin = "2.0.10"
 kotlinCompilerExtension = "1.5.15"
 ksp = "2.0.10-1.0.24"

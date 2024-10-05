@@ -12,12 +12,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -29,18 +29,24 @@ import javax.inject.Singleton
 @OptIn(UnstableApi::class)
 class PlayerManager @Inject constructor(
     @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     //private val queueStore: QueueStore
 ) {
 
-    private lateinit var controllerFuture: ListenableFuture<MediaController>
+    private lateinit var controller: MediaController
 
     suspend fun init(
-        @ApplicationContext context: Context, listener: Player.Listener) = withContext(mainDispatcher) {
+        @ApplicationContext context: Context,
+        listener: Player.Listener
+    ) {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
-        controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        controllerFuture.addListener({
-            controllerFuture.get().addListener(listener)
-        }, MoreExecutors.directExecutor())
+        val future = withContext(mainDispatcher) {
+            MediaController.Builder(context, sessionToken).buildAsync()
+        }
+        withContext(ioDispatcher) {
+            controller = async { future.get() }.await()
+            controller.addListener(listener)
+        }
     }
 
     fun buildPlayer(context: Context, listener: Player.Listener): Player {
@@ -62,7 +68,7 @@ class PlayerManager @Inject constructor(
     }
 
     suspend fun <T> withPlayer(block: suspend MediaController.() -> T): T = withContext(mainDispatcher) {
-        controllerFuture.get().block()
+        controller.block()
     }
 
     /**
@@ -96,7 +102,7 @@ class PlayerManager @Inject constructor(
         val isSameEpisode = episodeUi.id == currentEpisodeId
         if (playbackState != STATE_IDLE && isSameEpisode) return@withPlayer
 
-        addListener(listener)
+        listen(listener)
         sessionExtras.putString(PlaybackService.KEY_EPISODE_ID, episodeUi.id)
         setMediaItem(episodeUi.toMediaItem(), episodeUi.positionMillis)
         playWhenReady = false
@@ -107,11 +113,11 @@ class PlayerManager @Inject constructor(
         if (isPlaying) pause() else play()
     }
 
-    suspend fun addListener(listener: Player.Listener) = withPlayer {
+    suspend fun listen(listener: Player.Listener) = withPlayer {
         addListener(listener)
     }
 
-    suspend fun removeListener(listener: Player.Listener) = withPlayer {
+    suspend fun unlisten(listener: Player.Listener) = withPlayer {
         removeListener(listener)
     }
 }
