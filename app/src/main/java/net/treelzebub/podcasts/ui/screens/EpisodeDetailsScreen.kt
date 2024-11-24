@@ -2,6 +2,7 @@ package net.treelzebub.podcasts.ui.screens
 
 import android.annotation.SuppressLint
 import androidx.annotation.OptIn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -45,6 +48,7 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.PlayPause
+import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Share
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleHasPlayed
 import net.treelzebub.podcasts.util.DeviceApi
@@ -92,7 +96,13 @@ fun EpisodeContent(
         modifier = Modifier
             .fillMaxSize()
             .then(modifier),
-        topBar = { EpisodeDetailTopBar(modifier = Modifier, actionHandler = actionHandler) },
+        topBar = {
+            EpisodeDetailTopBar(
+                modifier = Modifier,
+                actionHandler = actionHandler,
+                episode.isBookmarked
+            )
+        },
         bottomBar = {}
     ) { contentPadding ->
         Column(
@@ -203,27 +213,37 @@ fun MediaButtons(
 
 @OptIn(UnstableApi::class)
 @Composable
-fun EpisodeDetailTopBar(modifier: Modifier = Modifier, actionHandler: (Action) -> Unit) {
+fun EpisodeDetailTopBar(
+    modifier: Modifier = Modifier,
+    actionHandler: (Action) -> Unit,
+    isBookmarked: Boolean
+) {
+    val bookmarkIcon = if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_empty
+    val bookmarkDescription = "Bookmark button: " +
+        if (isBookmarked) "episode is bookmarked" else "episode is not bookmarked"
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(end = 12.dp, top = 6.dp)
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.Right
     ) {
-        Text(
+        Image(
             modifier = Modifier
-                .padding(16.dp)
+                .size(32.dp)
                 .clickable { actionHandler(ToggleBookmarked) },
-            fontSize = 24.sp,
-            text = "♥"
+            painter = painterResource(bookmarkIcon),
+            contentDescription = bookmarkDescription
         )
-        Text(
+        Spacer(Modifier.width(12.dp))
+        Image(
             modifier = Modifier
-                .padding(16.dp)
-                .clickable { actionHandler(Action.Share) },
-            fontSize = 24.sp,
-            text = "\uD83D\uDCE4"
+                .size(32.dp)
+                .clickable { actionHandler(Share) },
+            painter = painterResource(R.drawable.share),
+            contentDescription = "Share button"
         )
     }
 }
