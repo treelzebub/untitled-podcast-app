@@ -52,7 +52,6 @@ import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Share
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleBookmarked
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.ToggleHasPlayed
 import net.treelzebub.podcasts.util.DeviceApi
-import net.treelzebub.podcasts.util.toastNotImplemented
 
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -170,8 +169,6 @@ fun MediaButtons(
     outerPadding: Dp,
     actionHandler: (Action) -> Unit
 ) {
-    val context = LocalContext.current // TODO rm
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,14 +181,14 @@ fun MediaButtons(
                 .weight(1.0f),
             res = R.drawable.notification_action_download,
             contentDescription = "Download episode button",
-            onClick = { actionHandler(Download); toastNotImplemented(context) }
+            onClick = { actionHandler(Download) }
         )
         ButtonCircleBorderless(
             modifier = Modifier
                 .weight(1.0f),
             res = R.drawable.notification_action_playnext,
             contentDescription = "Add episode to queue button",
-            onClick = { actionHandler(AddToQueue); toastNotImplemented(context) }
+            onClick = { actionHandler(AddToQueue) }
         )
         ButtonCircleBorderless(
             modifier = Modifier
@@ -218,6 +215,7 @@ fun EpisodeDetailTopBar(
     actionHandler: (Action) -> Unit,
     isBookmarked: Boolean
 ) {
+    val context = LocalContext.current
     val bookmarkIcon = if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_empty
     val bookmarkDescription = "Bookmark button: " +
         if (isBookmarked) "episode is bookmarked" else "episode is not bookmarked"
@@ -241,7 +239,7 @@ fun EpisodeDetailTopBar(
         Image(
             modifier = Modifier
                 .size(32.dp)
-                .clickable { actionHandler(Share) },
+                .clickable { actionHandler(Share(context)) },
             painter = painterResource(R.drawable.share),
             contentDescription = "Share button"
         )
