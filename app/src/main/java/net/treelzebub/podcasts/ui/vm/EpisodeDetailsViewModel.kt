@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -49,6 +50,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
+
         fun create(episodeId: String): EpisodeDetailsViewModel
     }
 
@@ -62,7 +64,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     @Immutable
     data class MutableEpisodeState(
         val loading: Boolean = true,
-        val queueIndex: Int = 0,
+        val isInQueue: Boolean = false,
         val bufferedPercentage: Int = 0,
         val isPlaying: Boolean = false,
         val hasPlayed: Boolean = false,
@@ -71,12 +73,12 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     )
 
     sealed class Action {
-        data object ToggleBookmarked: Action()
-        data class Share(val context: Context): Action()
-        data object Download: Action()
-        data object AddToQueue: Action()
-        data object PlayPause: Action()
-        data object ToggleHasPlayed: Action()
+        data object ToggleBookmarked : Action()
+        data class Share(val context: Context) : Action()
+        data object Download : Action()
+        data object AddToQueue : Action()
+        data object PlayPause : Action()
+        data object ToggleHasPlayed : Action()
     }
 
     private val _episodeState = MutableStateFlow(EpisodeState())
@@ -126,7 +128,6 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                 _uiState.update {
                     it.copy(
                         loading = false,
-                        queueIndex = playerManager.indexOf(updated.id),
                         hasPlayed = updated.hasPlayed,
                         isBookmarked = updated.isBookmarked,
                         isArchived = updated.isArchived
@@ -198,6 +199,18 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
             viewModelScope.launch {
                 playerManager.listenPosition(playbackParameters.speed, positionListener)
+            }
+        }
+
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
+                viewModelScope.launch {
+                    _uiState.update {
+                        it.copy(
+                            isInQueue = playerManager.indexOf(episodeId) > -1
+                        )
+                    }
+                }
             }
         }
 

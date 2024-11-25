@@ -24,6 +24,7 @@ import net.treelzebub.podcasts.service.PlaybackService
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.util.indexOf
 import net.treelzebub.podcasts.util.mediaItems
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -101,7 +102,11 @@ class PlayerManager @Inject constructor(
     }
 
     suspend fun addToQueue(episodeUi: EpisodeUi) = withPlayer {
-        addMediaItem(episodeUi.toMediaItem())
+        if (indexOf(episodeUi.id) == -1) {
+            addMediaItem(episodeUi.toMediaItem())
+        } else {
+            Timber.d("Episode is already in queue.")
+        }
     }
 
     suspend fun indexOf(id: String): Int = withPlayer {
