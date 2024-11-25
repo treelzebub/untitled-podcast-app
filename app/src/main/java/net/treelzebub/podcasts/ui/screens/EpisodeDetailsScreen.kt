@@ -79,6 +79,44 @@ fun EpisodeDetailsScreen(episodeId: String) {
     }
 }
 
+@OptIn(UnstableApi::class)
+@Composable
+fun EpisodeDetailTopBar(
+    modifier: Modifier = Modifier,
+    actionHandler: (Action) -> Unit,
+    isBookmarked: Boolean
+) {
+    val context = LocalContext.current
+    val bookmarkIcon = if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_empty
+    val bookmarkDescription = "Bookmark button: " +
+        if (isBookmarked) "episode is bookmarked" else "episode is not bookmarked"
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 12.dp, top = 6.dp)
+            .then(modifier),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Absolute.Right
+    ) {
+        Image(
+            modifier = Modifier
+                .size(32.dp)
+                .clickable { actionHandler(ToggleBookmarked) },
+            painter = painterResource(bookmarkIcon),
+            contentDescription = bookmarkDescription
+        )
+        Spacer(Modifier.width(12.dp))
+        Image(
+            modifier = Modifier
+                .size(32.dp)
+                .clickable { actionHandler(Share(context)) },
+            painter = painterResource(R.drawable.share),
+            contentDescription = "Share button"
+        )
+    }
+}
+
 @SuppressLint("UnsafeOptInUsageError")
 @Composable
 fun EpisodeContent(
@@ -99,7 +137,7 @@ fun EpisodeContent(
             EpisodeDetailTopBar(
                 modifier = Modifier,
                 actionHandler = actionHandler,
-                episode.isBookmarked
+                uiState.isBookmarked
             )
         },
         bottomBar = {}
@@ -204,44 +242,6 @@ fun MediaButtons(
             res = if (uiState.hasPlayed) androidx.media3.session.R.drawable.media3_icon_check_circle_filled else androidx.media3.session.R.drawable.media3_icon_check_circle_unfilled,
             contentDescription = if (uiState.hasPlayed) "Has played" else "Has not played",
             onClick = { actionHandler(ToggleHasPlayed) }
-        )
-    }
-}
-
-@OptIn(UnstableApi::class)
-@Composable
-fun EpisodeDetailTopBar(
-    modifier: Modifier = Modifier,
-    actionHandler: (Action) -> Unit,
-    isBookmarked: Boolean
-) {
-    val context = LocalContext.current
-    val bookmarkIcon = if (isBookmarked) R.drawable.bookmark_filled else R.drawable.bookmark_empty
-    val bookmarkDescription = "Bookmark button: " +
-        if (isBookmarked) "episode is bookmarked" else "episode is not bookmarked"
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(end = 12.dp, top = 6.dp)
-            .then(modifier),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Absolute.Right
-    ) {
-        Image(
-            modifier = Modifier
-                .size(32.dp)
-                .clickable { actionHandler(ToggleBookmarked) },
-            painter = painterResource(bookmarkIcon),
-            contentDescription = bookmarkDescription
-        )
-        Spacer(Modifier.width(12.dp))
-        Image(
-            modifier = Modifier
-                .size(32.dp)
-                .clickable { actionHandler(Share(context)) },
-            painter = painterResource(R.drawable.share),
-            contentDescription = "Share button"
         )
     }
 }
