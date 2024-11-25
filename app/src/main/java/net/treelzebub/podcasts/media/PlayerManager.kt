@@ -17,10 +17,13 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import net.treelzebub.podcasts.PodcastsQueries
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
 import net.treelzebub.podcasts.service.PlaybackService
 import net.treelzebub.podcasts.ui.models.EpisodeUi
+import net.treelzebub.podcasts.util.indexOf
+import net.treelzebub.podcasts.util.mediaItems
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +33,7 @@ import javax.inject.Singleton
 class PlayerManager @Inject constructor(
     @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    //private val queueStore: QueueStore
+    private val podcastQueries: PodcastsQueries
 ) {
 
     private lateinit var controller: MediaController
@@ -95,6 +98,14 @@ class PlayerManager @Inject constructor(
             }
             delay(interval.toLong())
         }
+    }
+
+    suspend fun addToQueue(episodeUi: EpisodeUi) = withPlayer {
+        addMediaItem(episodeUi.toMediaItem())
+    }
+
+    suspend fun indexOf(id: String): Int = withPlayer {
+        mediaItems.indexOf(id)
     }
 
     suspend fun prepareIfNeeded(episodeUi: EpisodeUi, listener: Player.Listener) = withPlayer {

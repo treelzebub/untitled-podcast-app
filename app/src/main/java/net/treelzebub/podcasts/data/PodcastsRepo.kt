@@ -25,7 +25,6 @@ import javax.inject.Inject
 class PodcastsRepo @Inject constructor(
     private val rssHandler: RssHandler,
     private val db: Database,
-    private val queueStore: QueueStore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
@@ -77,7 +76,6 @@ class PodcastsRepo @Inject constructor(
 
     // Cascading delete of episodes declared in episodes.sq
     suspend fun deletePodcastById(podcastId: String) = withIoContext {
-        queueStore.removeByPodcastId(podcastId) {}
         db.podcastsQueries.delete(podcastId)
     }
 

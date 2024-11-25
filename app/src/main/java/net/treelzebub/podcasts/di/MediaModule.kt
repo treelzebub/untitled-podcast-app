@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
+import net.treelzebub.podcasts.PodcastsQueries
 import net.treelzebub.podcasts.media.PlayerManager
 
 
@@ -15,9 +16,9 @@ class MediaModule {
     @Provides
     fun providePlayerManager(
         @MainDispatcher mainDispatcher: CoroutineDispatcher,
-        @IoDispatcher ioDispatcher: CoroutineDispatcher
-        //queueStore: QueueStore
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        podcastQueries: PodcastsQueries
     ): PlayerManager {
-        return PlayerManager(mainDispatcher, ioDispatcher)
+        return PlayerManager(mainDispatcher, ioDispatcher, podcastQueries)
     }
 }

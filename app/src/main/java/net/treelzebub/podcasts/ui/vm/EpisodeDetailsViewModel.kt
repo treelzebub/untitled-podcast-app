@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.media.PlayerManager
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -45,8 +44,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     app: Application,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val playerManager: PlayerManager,
-    private val repo: PodcastsRepo,
-    private val queueStore: QueueStore
+    private val repo: PodcastsRepo
 ) : AndroidViewModel(app) {
 
     @AssistedFactory
@@ -92,7 +90,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
             ToggleBookmarked -> toggleBookmarked()
             is Share -> share(action.context)
             Download -> download()
-            AddToQueue -> addToQueue(episodeId)
+            AddToQueue -> addToQueue()
             PlayPause -> playPause()
             ToggleHasPlayed -> toggleHasPlayed()
         }
@@ -128,7 +126,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                 _uiState.update {
                     it.copy(
                         loading = false,
-                        queueIndex = queueStore.indexFor(updated.id),
+                        queueIndex = playerManager.indexOf(updated.id),
                         hasPlayed = updated.hasPlayed,
                         isBookmarked = updated.isBookmarked,
                         isArchived = updated.isArchived
@@ -169,9 +167,10 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         Timber.d("TODO: Download")
     }
 
-    private fun addToQueue(id: String) = viewModelScope.launch {
+    private fun addToQueue() = viewModelScope.launch {
         // TODO UI State -> isInQueue
-        queueStore.add(repo.getEpisodeById(id)) { TODO() }
+        val episode = episodeState.value.episode ?: return@launch
+        playerManager.addToQueue(episode)
     }
 
     private inner class PodcastPlayerListener : Player.Listener {
