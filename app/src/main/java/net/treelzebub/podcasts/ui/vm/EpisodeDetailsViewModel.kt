@@ -1,8 +1,12 @@
 package net.treelzebub.podcasts.ui.vm
 
 import android.app.Application
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.PlaybackException
@@ -68,8 +72,13 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         val isArchived: Boolean = false
     )
 
-    enum class Action {
-        ToggleBookmarked, Share, Download, AddToQueue, PlayPause, ToggleHasPlayed
+    sealed class Action {
+        data object ToggleBookmarked: Action()
+        data class Share(val context: Context): Action()
+        data object Download: Action()
+        data object AddToQueue: Action()
+        data object PlayPause: Action()
+        data object ToggleHasPlayed: Action()
     }
 
     private val _episodeState = MutableStateFlow(EpisodeState())
@@ -81,7 +90,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     val actionHandler: OnClick<Action> = { action ->
         when (action) {
             ToggleBookmarked -> toggleBookmarked()
-            Share -> share()
+            is Share -> share(action.context)
             Download -> download()
             AddToQueue -> addToQueue(episodeId)
             PlayPause -> playPause()
@@ -139,8 +148,14 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         viewModelScope.launch { repo.toggleHasPlayed(episodeId) }
     }
 
-    private fun share() {
-        Timber.d("TODO: Share")
+    private fun share(c: Context) {
+        val url = episodeState.value.episode?.streamingLink ?: return
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, url)
+            type = "text/plain"
+        }
+        startActivity(c, Intent.createChooser(shareIntent, null), Bundle.EMPTY)
     }
 
     private fun playPause() {
