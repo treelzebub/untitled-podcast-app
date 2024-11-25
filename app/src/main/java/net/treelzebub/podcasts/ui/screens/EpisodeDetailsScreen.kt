@@ -1,12 +1,14 @@
 package net.treelzebub.podcasts.ui.screens
 
 import android.annotation.SuppressLint
+import androidx.annotation.DrawableRes
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -214,36 +216,42 @@ fun MediaButtons(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        ButtonCircleBorderless(
-            modifier = Modifier
-                .weight(1.0f),
-            res = R.drawable.notification_action_download,
+        MediaButton(
+            res = R.drawable.icon_download,
             contentDescription = "Download episode button",
             onClick = { actionHandler(Download) }
         )
-        ButtonCircleBorderless(
-            modifier = Modifier
-                .weight(1.0f),
-            res = R.drawable.notification_action_playnext,
+        MediaButton(
+            res = if (uiState.isInQueue) R.drawable.icon_queue_added else R.drawable.icon_queue_add,
             contentDescription = "Add episode to queue button",
             onClick = { actionHandler(AddToQueue) }
         )
-        ButtonCircleBorderless(
-            modifier = Modifier
-                .padding(6.dp)
-                .weight(1.0f),
+        MediaButton(
             res = if (uiState.isPlaying) R.drawable.notif_pause else R.drawable.notif_play,
             contentDescription = if (uiState.isPlaying) "Pause button" else "Play button",
             onClick = { actionHandler(PlayPause) }
         )
-        ButtonCircleBorderless(
-            modifier = Modifier
-                .weight(1.0f),
+        MediaButton(
             res = if (uiState.hasPlayed) androidx.media3.session.R.drawable.media3_icon_check_circle_filled else androidx.media3.session.R.drawable.media3_icon_check_circle_unfilled,
             contentDescription = if (uiState.hasPlayed) "Has played" else "Has not played",
             onClick = { actionHandler(ToggleHasPlayed) }
         )
     }
+}
+
+@Composable
+private fun RowScope.MediaButton(
+    @DrawableRes res: Int,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    ButtonCircleBorderless(
+        modifier = Modifier.weight(1.0f),
+        size = 32.dp,
+        res = res,
+        contentDescription = contentDescription,
+        onClick = onClick
+    )
 }
 
 private operator fun TextUnit.plus(other: TextUnit): TextUnit {

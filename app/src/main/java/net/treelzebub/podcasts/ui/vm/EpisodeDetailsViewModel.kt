@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -24,7 +25,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.data.QueueStore
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.media.PlayerManager
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -45,12 +45,12 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     app: Application,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val playerManager: PlayerManager,
-    private val repo: PodcastsRepo,
-    private val queueStore: QueueStore
+    private val repo: PodcastsRepo
 ) : AndroidViewModel(app) {
 
     @AssistedFactory
     interface Factory {
+
         fun create(episodeId: String): EpisodeDetailsViewModel
     }
 
@@ -64,7 +64,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     @Immutable
     data class MutableEpisodeState(
         val loading: Boolean = true,
-        val queueIndex: Int = 0,
+        val isInQueue: Boolean = false,
         val bufferedPercentage: Int = 0,
         val isPlaying: Boolean = false,
         val hasPlayed: Boolean = false,
@@ -73,12 +73,12 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     )
 
     sealed class Action {
-        data object ToggleBookmarked: Action()
-        data class Share(val context: Context): Action()
-        data object Download: Action()
-        data object AddToQueue: Action()
-        data object PlayPause: Action()
-        data object ToggleHasPlayed: Action()
+        data object ToggleBookmarked : Action()
+        data class Share(val context: Context) : Action()
+        data object Download : Action()
+        data object AddToQueue : Action()
+        data object PlayPause : Action()
+        data object ToggleHasPlayed : Action()
     }
 
     private val _episodeState = MutableStateFlow(EpisodeState())
@@ -92,7 +92,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
             ToggleBookmarked -> toggleBookmarked()
             is Share -> share(action.context)
             Download -> download()
-            AddToQueue -> addToQueue(episodeId)
+            AddToQueue -> addToQueue()
             PlayPause -> playPause()
             ToggleHasPlayed -> toggleHasPlayed()
         }
@@ -128,7 +128,6 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
                 _uiState.update {
                     it.copy(
                         loading = false,
-                        queueIndex = queueStore.indexFor(updated.id),
                         hasPlayed = updated.hasPlayed,
                         isBookmarked = updated.isBookmarked,
                         isArchived = updated.isArchived
@@ -169,9 +168,10 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         Timber.d("TODO: Download")
     }
 
-    private fun addToQueue(id: String) = viewModelScope.launch {
+    private fun addToQueue() = viewModelScope.launch {
         // TODO UI State -> isInQueue
-        queueStore.add(repo.getEpisodeById(id)) { TODO() }
+        val episode = episodeState.value.episode ?: return@launch
+        playerManager.addToQueue(episode)
     }
 
     private inner class PodcastPlayerListener : Player.Listener {
@@ -199,6 +199,18 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
             viewModelScope.launch {
                 playerManager.listenPosition(playbackParameters.speed, positionListener)
+            }
+        }
+
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
+                viewModelScope.launch {
+                    _uiState.update {
+                        it.copy(
+                            isInQueue = playerManager.indexOf(episodeId) > -1
+                        )
+                    }
+                }
             }
         }
 
