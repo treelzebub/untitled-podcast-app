@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Player.STATE_IDLE
 import androidx.media3.common.util.UnstableApi
@@ -102,15 +103,24 @@ class PlayerManager @Inject constructor(
     }
 
     suspend fun addToQueue(episodeUi: EpisodeUi) = withPlayer {
-        if (indexOf(episodeUi.id) == -1) {
+        if (playlistIndexOf(episodeUi.id) == -1) {
             addMediaItem(episodeUi.toMediaItem())
         } else {
             Timber.d("Episode is already in queue.")
         }
     }
 
-    suspend fun indexOf(id: String): Int = withPlayer {
-        mediaItems.indexOf(id)
+    suspend fun playlist(): List<MediaItem> = withPlayer {
+        try {
+            controller.mediaItems
+        } catch (e: Exception) {
+            Timber.e(e)
+            listOf()
+        }
+    }
+
+    suspend fun playlistIndexOf(id: String): Int = withPlayer {
+        playlist().indexOf(id)
     }
 
     suspend fun prepareIfNeeded(episodeUi: EpisodeUi, listener: Player.Listener) = withPlayer {

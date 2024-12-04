@@ -33,12 +33,12 @@ fun RssChannel.podcast(rssLink: String): Podcast {
     val latestEpisodeTimestamp = this.items
         .maxOfOrNull { Time.zonedEpochSeconds(it.pubDate) } ?: -1L
     return Podcast(
-        id = link!!, // Public link to Podcast will be unique, so it's our ID.
-        link = link!!,
+        id = rssLink,
+        link = link!!   ,
         title = title!!,
         description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml()
             .orEmpty(),
-        email = itunesChannelData?.owner?.email.orEmpty(),
+        email = itunesChannelData?.owner?.email ?: items.firstOrNull()?.author.orEmpty(),
         image_url = safeImage,
         last_build_date = Time.zonedEpochSeconds(lastBuildDate),
         rss_link = rssLink,
@@ -48,7 +48,7 @@ fun RssChannel.podcast(rssLink: String): Podcast {
 }
 
 fun RssChannel.podcastEpisodesPair(rssLink: String): Pair<Podcast, List<Episode>> {
-    val podcast = podcast(rssLink)
+    val podcast = podcast(itunesChannelData?.newsFeedUrl ?: rssLink)
     val episodes = items.map { it.episode(podcast.id) }
     return podcast to episodes
 }

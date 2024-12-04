@@ -51,19 +51,29 @@ class SubscriptionUpdater @Inject constructor(
         }
     }
 
-    private fun idsForUpdate(old: Map<String, Podcast>, new: Map<String, Pair<Podcast, List<Episode>>>): List<String> {
+    private fun idsForUpdate(
+        old: Map<String, Podcast>,
+        new: Map<String, Pair<Podcast, List<Episode>>>
+    ): List<String> {
         val podcastIdToLatestTimestamp = new.map {
             // Null maxOf means we have an empty episodes list, and should update db accordingly.
-            it.key to (it.value.second.maxOfOrNull { episode -> episode.date } ?: Long.MAX_VALUE)
+            it.key to it.value.second.maxOfOrNull { episode -> episode.date }
         }.toMap()
         return podcastIdToLatestTimestamp.mapNotNull {
-            if (old[it.key]!!.latest_episode_timestamp < it.value) {
-                it.key
-            } else null
+            // TODO:
+            //   If local latest_episode_timestamp < remote latest_episode_timestamp, update
+            //   If old[it.key] is null or it.value == null, we need to delete from DB and alert the user.
+            if (old[it.key] == null) {
+                Timber.e("Podcast ${it.key} not found in DB")
+                null
+            } else if (it.value == null) {
+                Timber.e("Podcast ${it.key} has fetched 0 episodes")
+                null
+            } else if ((old[it.key]!!.latest_episode_timestamp) < it.value!!) it.key else null
         }
     }
 
-    private suspend fun update(
+    private fun update(
         sub: SubscriptionDto,
         onFailure: (SubscriptionDto, Call, IOException) -> Unit
     ) {
