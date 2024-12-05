@@ -205,10 +205,10 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
                 viewModelScope.launch {
-                    _uiState.update {
-                        it.copy(
-                            isInQueue = playerManager.indexOf(episodeId) > -1
-                        )
+                    if (playerManager.playlist().size > 1) {
+                        _uiState.update {
+                            it.copy(isInQueue = playerManager.playlistIndexOf(episodeId) > -1)
+                        }
                     }
                 }
             }

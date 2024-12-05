@@ -42,6 +42,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.platform.RequestNotificationPermission
 import net.treelzebub.podcasts.ui.components.ButtonCircleBorderless
+import net.treelzebub.podcasts.ui.components.FullWidthSingleButtonBar
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.theme.TextStyles
@@ -103,7 +104,7 @@ fun EpisodeDetailTopBar(
     ) {
         Image(
             modifier = Modifier
-                .size(32.dp)
+                .size(28.dp)
                 .clickable { actionHandler(ToggleBookmarked) },
             painter = painterResource(bookmarkIcon),
             contentDescription = bookmarkDescription
@@ -111,7 +112,7 @@ fun EpisodeDetailTopBar(
         Spacer(Modifier.width(12.dp))
         Image(
             modifier = Modifier
-                .size(32.dp)
+                .size(28.dp)
                 .clickable { actionHandler(Share(context)) },
             painter = painterResource(R.drawable.share),
             contentDescription = "Share button"
@@ -157,6 +158,12 @@ fun EpisodeContent(
                     ),
                 model = episode.imageUrl,
                 contentDescription = ""
+            )
+
+            FullWidthSingleButtonBar(
+                res = if (uiState.isPlaying) R.drawable.notif_pause else R.drawable.notif_play,
+                contentDescription = if (uiState.isPlaying) "Pause button" else "Play button",
+                onClick = { actionHandler(PlayPause) }
             )
 
             MediaButtons(
@@ -225,11 +232,6 @@ fun MediaButtons(
             res = if (uiState.isInQueue) R.drawable.icon_queue_added else R.drawable.icon_queue_add,
             contentDescription = "Add episode to queue button",
             onClick = { actionHandler(AddToQueue) }
-        )
-        MediaButton(
-            res = if (uiState.isPlaying) R.drawable.notif_pause else R.drawable.notif_play,
-            contentDescription = if (uiState.isPlaying) "Pause button" else "Play button",
-            onClick = { actionHandler(PlayPause) }
         )
         MediaButton(
             res = if (uiState.hasPlayed) androidx.media3.session.R.drawable.media3_icon_check_circle_filled else androidx.media3.session.R.drawable.media3_icon_check_circle_unfilled,

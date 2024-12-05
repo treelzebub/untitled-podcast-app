@@ -5,7 +5,6 @@ import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,19 +13,16 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,24 +47,25 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
     val state by remember { vm.state }.collectAsStateWithLifecycle()
     var refreshing by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullToRefreshState()
-    val refresh = {
+    val refresh: () -> Unit = {
+        refreshing = true
         scope.launch {
             val start = System.currentTimeMillis()
-            refreshing = true
             vm.refresh()
-            refreshing = false
             val elapsed = System.currentTimeMillis() - start
             if (elapsed < 1000) delay(1000 - elapsed)
-            pullRefreshState.endRefresh()
+            refreshing = false
         }
     }
-
     if (state.loading) {
         LoadingBox()
     } else {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(pullRefreshState.nestedScrollConnection)
+        PullToRefreshBox(
+            modifier = Modifier
+            .fillMaxSize(),
+            state = pullRefreshState,
+            isRefreshing = refreshing,
+            onRefresh = refresh
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -93,18 +90,6 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
                     )
                 }
             }
-
-            if (pullRefreshState.isRefreshing) {
-                LaunchedEffect(Unit) {
-                    refresh()
-                }
-            }
-
-            PullToRefreshContainer(
-                state = pullRefreshState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter),
-            )
         }
     }
 }
