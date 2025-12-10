@@ -119,9 +119,7 @@ class PlayerManager @Inject constructor(
         }
     }
 
-    suspend fun playlistIndexOf(id: String): Int = withPlayer {
-        playlist().indexOf(id)
-    }
+    suspend fun playlistIndexOf(id: String): Int = playlist().indexOf(id)
 
     suspend fun prepareIfNeeded(episodeUi: EpisodeUi, listener: Player.Listener) = withPlayer {
         val currentEpisodeId = sessionExtras.getString(PlaybackService.KEY_EPISODE_ID)
