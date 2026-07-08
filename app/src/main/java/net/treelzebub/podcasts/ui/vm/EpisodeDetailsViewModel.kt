@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
-import net.treelzebub.podcasts.media.PlayerManager
+import net.treelzebub.podcasts.media.manager.MediaManagerInterface
 import net.treelzebub.podcasts.ui.models.EpisodeUi
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.AddToQueue
 import net.treelzebub.podcasts.ui.vm.EpisodeDetailsViewModel.Action.Download
@@ -44,7 +44,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     @Assisted private val episodeId: String,
     app: Application,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    private val playerManager: PlayerManager,
+    private val mediaManager: MediaManagerInterface,
     private val repo: PodcastsRepo
 ) : AndroidViewModel(app) {
 
@@ -105,14 +105,14 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
-            playerManager.init(getApplication(), playerListener)
+            mediaManager.initialize(getApplication(), playerListener)
             loadEpisode()
         }
     }
 
     override fun onCleared() {
         viewModelScope.launch {
-            playerManager.unlisten(playerListener)
+            mediaManager.removeListener(playerListener)
         }
         super.onCleared()
     }
@@ -159,8 +159,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     private fun playPause() {
         viewModelScope.launch {
-            playerManager.prepareIfNeeded(episodeState.value.episode!!, playerListener) // FIXME this is hacky
-            playerManager.playPause()
+            mediaManager.prepareAndPlay(episodeState.value.episode!!)
         }
     }
 
@@ -171,7 +170,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     private fun addToQueue() = viewModelScope.launch {
         // TODO UI State -> isInQueue
         val episode = episodeState.value.episode ?: return@launch
-        playerManager.addToQueue(episode)
+        mediaManager.addToQueue(episode)
     }
 
     private inner class PodcastPlayerListener : Player.Listener {
@@ -185,12 +184,12 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
             _uiState.update { it.copy(isPlaying = isPlaying) }
             viewModelScope.launch {
                 if (isPlaying) {
-                    playerManager.listenPosition(block = positionListener)
+                    mediaManager.listenPosition(block = positionListener)
                 } else {
-                    playerManager.withPlayer {
-                        if (contentDuration - currentPosition <= 15_000L) {
-                            viewModelScope.launch { repo.markPlayed(episodeId) }
-                        }
+                    val duration = mediaManager.getDuration()
+                    val position = mediaManager.getCurrentPosition()
+                    if (duration - position <= 15_000L) {
+                        viewModelScope.launch { repo.markPlayed(episodeId) }
                     }
                 }
             }
@@ -198,16 +197,16 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
             viewModelScope.launch {
-                playerManager.listenPosition(playbackParameters.speed, positionListener)
+                mediaManager.listenPosition(playbackParameters.speed, positionListener)
             }
         }
 
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED) {
                 viewModelScope.launch {
-                    if (playerManager.playlist().size > 1) {
+                    if (mediaManager.getPlaylist().size > 1) {
                         _uiState.update {
-                            it.copy(isInQueue = playerManager.playlistIndexOf(episodeId) > -1)
+                            it.copy(isInQueue = mediaManager.isInQueue(episodeId))
                         }
                     }
                 }

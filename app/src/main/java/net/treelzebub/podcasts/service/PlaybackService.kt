@@ -20,7 +20,8 @@ import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
-import net.treelzebub.podcasts.media.PlayerManager
+import net.treelzebub.podcasts.media.manager.MediaManagerInterface
+import net.treelzebub.podcasts.media.player.PlayerBuilder
 import net.treelzebub.podcasts.util.DeviceApi
 import timber.log.Timber
 import javax.inject.Inject
@@ -53,7 +54,7 @@ class PlaybackService : MediaSessionService() {
     lateinit var repo: PodcastsRepo
 
     @Inject
-    lateinit var playerManager: PlayerManager
+    lateinit var mediaManager: MediaManagerInterface
 
     private val scope by lazy { CoroutineScope(SupervisorJob() + ioDispatcher) }
     private var _session: MediaSession? = null
@@ -85,7 +86,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun setUpSession() {
-        val player = playerManager.buildPlayer(this, isPlayingListener)
+        val player = PlayerBuilder.buildPlayer(this, isPlayingListener)
         val intent = packageManager!!.getLaunchIntentForPackage(packageName)!!
             .let { sessionIntent ->
                 PendingIntent.getActivity(
