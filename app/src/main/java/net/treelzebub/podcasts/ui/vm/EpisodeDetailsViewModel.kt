@@ -19,6 +19,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -101,6 +102,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
     private val positionListener: (Long, Long) -> Unit = { position, duration ->
         _positionState.value = Strings.formatPosition(position, duration)
     }
+    private var positionJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -191,10 +193,11 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.update { it.copy(isPlaying = isPlaying) }
-            viewModelScope.launch {
-                if (isPlaying) {
-                    mediaManager.listenPosition(block = positionListener)
-                } else {
+            if (isPlaying) {
+                startListeningToPosition()
+            } else {
+                positionJob?.cancel()
+                viewModelScope.launch {
                     val duration = mediaManager.getDuration()
                     val position = mediaManager.getCurrentPosition()
                     if (duration - position <= 15_000L) {
@@ -205,9 +208,7 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         }
 
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-            viewModelScope.launch {
-                mediaManager.listenPosition(playbackParameters.speed, positionListener)
-            }
+            startListeningToPosition(playbackParameters.speed)
         }
 
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -225,6 +226,13 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
         override fun onPlayerError(error: PlaybackException) {
             Timber.e("Error: ${error.message}")
             super.onPlayerError(error)
+        }
+    }
+
+    private fun startListeningToPosition(speed: Float = 1.0f) {
+        positionJob?.cancel()
+        positionJob = viewModelScope.launch {
+            mediaManager.listenPosition(speed, positionListener)
         }
     }
 }
