@@ -159,7 +159,16 @@ class EpisodeDetailsViewModel @AssistedInject constructor(
 
     private fun playPause() {
         viewModelScope.launch {
-            mediaManager.prepareAndPlay(episodeState.value.episode!!)
+            val episode = episodeState.value.episode
+            if (episode == null) {
+                Timber.e("playPause called with no episode loaded")
+                return@launch
+            }
+            if (mediaManager.getCurrentEpisodeId() == episode.id) {
+                mediaManager.playPause()
+            } else {
+                mediaManager.prepareAndPlay(episode)
+            }
         }
     }
 
