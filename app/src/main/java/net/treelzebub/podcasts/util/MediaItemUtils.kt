@@ -13,15 +13,10 @@ fun EpisodeUi.toMediaItem(): MediaItem {
         .setMediaType(MediaMetadata.MEDIA_TYPE_PODCAST)
         .build()
     val trackUri = Uri.parse(streamingLink)
-    val builder = MediaItem.Builder()
+    return MediaItem.Builder()
         .setUri(trackUri)
         .setMediaId(id)
         .setMediaMetadata(mediaMetaData)
         .setMimeType("audio/mpeg")
-    if (positionMillis > 0) {
-        builder.setClippingConfiguration(
-            MediaItem.ClippingConfiguration.Builder().setStartPositionMs(positionMillis).build()
-        )
-    }
-    return builder.build()
+        .build()
 }
