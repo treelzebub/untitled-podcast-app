@@ -17,6 +17,5 @@ fun EpisodeUi.toMediaItem(): MediaItem {
         .setUri(trackUri)
         .setMediaId(id)
         .setMediaMetadata(mediaMetaData)
-        .setMimeType("audio/mpeg")
         .build()
 }
