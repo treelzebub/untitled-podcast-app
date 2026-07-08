@@ -17,10 +17,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.IntOffset
@@ -31,8 +28,6 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.screens.destinations.PodcastDetailsScreenDestination
 import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
@@ -42,21 +37,9 @@ import net.treelzebub.podcasts.ui.vm.SubscriptionsViewModel
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun SubscriptionsScreen(navigator: DestinationsNavigator) {
-    val scope = rememberCoroutineScope()
     val vm = hiltViewModel<SubscriptionsViewModel>()
     val state by remember { vm.state }.collectAsStateWithLifecycle()
-    var refreshing by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullToRefreshState()
-    val refresh: () -> Unit = {
-        refreshing = true
-        scope.launch {
-            val start = System.currentTimeMillis()
-            vm.refresh()
-            val elapsed = System.currentTimeMillis() - start
-            if (elapsed < 1000) delay(1000 - elapsed)
-            refreshing = false
-        }
-    }
     if (state.loading) {
         LoadingBox()
     } else {
@@ -64,8 +47,8 @@ fun SubscriptionsScreen(navigator: DestinationsNavigator) {
             modifier = Modifier
             .fillMaxSize(),
             state = pullRefreshState,
-            isRefreshing = refreshing,
-            onRefresh = refresh
+            isRefreshing = state.refreshing,
+            onRefresh = vm::refresh
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),

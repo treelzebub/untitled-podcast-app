@@ -1,9 +1,7 @@
 package net.treelzebub.podcasts.net.sync
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.Episode
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.DefaultDispatcher
@@ -20,15 +18,12 @@ class TimestampUpdater @Inject constructor(
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     private val repo: PodcastsRepo
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + defaultDispatcher)
 
-    fun update() {
-        scope.launch {
-            val podcasts = repo.getPodcasts().map {
-                val latest = repo.getUnplayedEpisodes(it.id).maxOfOrNull(Episode::date) ?: Long.MIN_VALUE
-                it.copy(latest_episode_timestamp = latest)
-            }
-            repo.upsertPodcasts(podcasts)
+    suspend fun update() = withContext(defaultDispatcher) {
+        val podcasts = repo.getPodcasts().map {
+            val latest = repo.getUnplayedEpisodes(it.id).maxOfOrNull(Episode::date) ?: Long.MIN_VALUE
+            it.copy(latest_episode_timestamp = latest)
         }
+        repo.upsertPodcasts(podcasts)
     }
 }

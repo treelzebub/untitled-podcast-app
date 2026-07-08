@@ -1,26 +1,22 @@
 package net.treelzebub.podcasts.net.sync
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import net.treelzebub.podcasts.Episode
-import net.treelzebub.podcasts.Podcast
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.net.models.SubscriptionDto
+import net.treelzebub.podcasts.util.await
 import net.treelzebub.podcasts.util.request
-import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import timber.log.Timber
-import java.io.IOException
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CountDownLatch
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
+data class SyncResult(val total: Int, val succeeded: Int)
 
 @Singleton
 class SubscriptionUpdater @Inject constructor(
@@ -29,78 +25,33 @@ class SubscriptionUpdater @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
-    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
-    private val fetchedPodcasts = ConcurrentHashMap<String, Pair<Podcast, List<Episode>>>()
-    private lateinit var latch: CountDownLatch
-
-    fun updateAll(onFailure: (SubscriptionDto, Call, IOException) -> Unit, onComplete: () -> Unit = {}) {
-        scope.launch {
-            val subs = repo.getAllRssLinks()
-            latch = CountDownLatch(subs.size)
-            subs.forEach { update(it, onFailure) }
-            latch.await()
-
-            val old = repo.getPodcasts().associateBy { it.id }.toMap()
-            val new = fetchedPodcasts.toMap()
-            val podcastsForUpdate = idsForUpdate(old, new).mapNotNull { new[it] }
-            podcastsForUpdate.forEach { repo.upsertPodcast(it) }
-
-            Timber.d("Updated ${podcastsForUpdate.size} of ${subs.size} podcasts.")
-            fetchedPodcasts.clear()
-            onComplete()
+    suspend fun updateAll(): SyncResult = withContext(ioDispatcher) {
+        val subs = repo.getAllRssLinks()
+        val results = coroutineScope {
+            subs.map { sub -> async { fetchAndUpsert(sub) } }.awaitAll()
         }
+        val succeeded = results.count { it }
+        Timber.d("Updated $succeeded of ${subs.size} podcasts.")
+        SyncResult(subs.size, succeeded)
     }
 
-    private fun idsForUpdate(
-        old: Map<String, Podcast>,
-        new: Map<String, Pair<Podcast, List<Episode>>>
-    ): List<String> {
-        val podcastIdToLatestTimestamp = new.map {
-            // Null maxOf means we have an empty episodes list, and should update db accordingly.
-            it.key to it.value.second.maxOfOrNull { episode -> episode.date }
-        }.toMap()
-        return podcastIdToLatestTimestamp.mapNotNull {
-            // TODO:
-            //   If local latest_episode_timestamp < remote latest_episode_timestamp, update
-            //   If old[it.key] is null or it.value == null, we need to delete from DB and alert the user.
-            if (old[it.key] == null) {
-                Timber.e("Podcast ${it.key} not found in DB")
-                null
-            } else if (it.value == null) {
-                Timber.e("Podcast ${it.key} has fetched 0 episodes")
-                null
-            } else if ((old[it.key]!!.latest_episode_timestamp) < it.value!!) it.key else null
-        }
-    }
-
-    private fun update(
-        sub: SubscriptionDto,
-        onFailure: (SubscriptionDto, Call, IOException) -> Unit
-    ) {
-        val request = request {
-            get()
-            url(sub.rssLink)
-        }
-        val callback = object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                scope.launch {
-                    response.body?.let {
-                        val pair = repo.parseRssFeed(sub.rssLink, it.string())
-                        fetchedPodcasts += pair.first.id to pair
-                    }
-                    response.close()
-                    latch.countDown()
+    private suspend fun fetchAndUpsert(sub: SubscriptionDto): Boolean {
+        return try {
+            val response = client.newCall(request { get(); url(sub.rssLink) }).await()
+            response.use { r ->
+                val body = r.body?.string()
+                if (body == null) {
+                    Timber.e("Empty response body for feed: ${sub.rssLink}")
+                    false
+                } else {
+                    val pair = repo.parseRssFeed(sub.rssLink, body)
+                    repo.upsertPodcast(pair)
+                    true
                 }
             }
-
-            override fun onFailure(call: Call, e: IOException) {
-                latch.countDown()
-                Timber.e(e)
-                onFailure(sub, call, e)
-            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error updating feed: ${sub.rssLink}")
+            false
         }
-        client.newCall(request).enqueue(callback)
     }
-
-    fun cancelAll() = client.dispatcher.cancelAll()
 }
