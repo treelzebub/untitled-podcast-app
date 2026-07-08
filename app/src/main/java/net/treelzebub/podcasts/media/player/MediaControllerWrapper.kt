@@ -9,7 +9,6 @@ import androidx.media3.common.Player.STATE_IDLE
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.sync.Mutex
@@ -32,19 +31,22 @@ class MediaControllerWrapper @Inject constructor(
 ) : PlayerControllerInterface {
     
     private lateinit var controller: MediaController
-    private var currentEpisodeId: String? = null
     private val controllerBuildLock = Mutex()
-    
-    override suspend fun initialize(listener: Player.Listener) {}
-    
+
+    override suspend fun initialize(context: Context, listener: Player.Listener) {
+        ensureControllerBuilt(context)
+        withContext(mainDispatcher) {
+            controller.addListener(listener)
+        }
+    }
+
     override suspend fun prepareAndPlay(mediaItem: MediaItem, positionMs: Long) = onPlayer {
-        val shouldPrepare = currentEpisodeId != mediaItem.mediaId ||
+        val shouldPrepare = currentMediaItem?.mediaId != mediaItem.mediaId ||
                           !isPlaying && playbackState == STATE_IDLE
 
         if (shouldPrepare) {
             setMediaItem(mediaItem, positionMs)
             prepare()
-            currentEpisodeId = mediaItem.mediaId
         }
 
         play()
@@ -98,14 +100,7 @@ class MediaControllerWrapper @Inject constructor(
 
     private suspend fun ensureControllerInitialized() {
         if (!::controller.isInitialized) {
-            throw IllegalStateException("Controller not initialized. Call initController first.")
-        }
-    }
-    
-    suspend fun initController(@ApplicationContext context: Context, listener: Player.Listener) {
-        ensureControllerBuilt(context)
-        withContext(mainDispatcher) {
-            controller.addListener(listener)
+            throw IllegalStateException("Controller not initialized. Call initialize first.")
         }
     }
 

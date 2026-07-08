@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -24,9 +23,7 @@ class MediaManager @Inject constructor(
 ) : MediaManagerInterface {
     
     override suspend fun initialize(context: Context, listener: Player.Listener) {
-        if (playerController is net.treelzebub.podcasts.media.player.MediaControllerWrapper) {
-            playerController.initController(context, listener)
-        }
+        playerController.initialize(context, listener)
     }
     
     override suspend fun prepareAndPlay(episode: EpisodeUi) {
@@ -83,10 +80,6 @@ class MediaManager @Inject constructor(
         return playerController.getDuration()
     }
     
-    override suspend fun setCurrentEpisodeId(episodeId: String) {
-        // This is handled internally by the controller
-    }
-    
     override suspend fun addListener(listener: Player.Listener) {
         playerController.addListener(listener)
     }
@@ -97,11 +90,5 @@ class MediaManager @Inject constructor(
     
     override suspend fun cleanup() {
         // Cleanup is handled by the service
-    }
-    
-    suspend fun initController(@ApplicationContext context: Context, listener: Player.Listener) {
-        if (playerController is net.treelzebub.podcasts.media.player.MediaControllerWrapper) {
-            playerController.initController(context, listener)
-        }
     }
 }

@@ -1,11 +1,12 @@
 package net.treelzebub.podcasts.media.player
 
+import android.content.Context
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 
 interface PlayerControllerInterface {
 
-    suspend fun initialize(listener: Player.Listener)
+    suspend fun initialize(context: Context, listener: Player.Listener)
 
     suspend fun prepareAndPlay(mediaItem: MediaItem, positionMs: Long = 0L)
 

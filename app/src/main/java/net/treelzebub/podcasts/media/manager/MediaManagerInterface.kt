@@ -27,8 +27,6 @@ interface MediaManagerInterface {
 
     suspend fun getDuration(): Long
 
-    suspend fun setCurrentEpisodeId(episodeId: String)
-
     suspend fun addListener(listener: Player.Listener)
 
     suspend fun removeListener(listener: Player.Listener)
