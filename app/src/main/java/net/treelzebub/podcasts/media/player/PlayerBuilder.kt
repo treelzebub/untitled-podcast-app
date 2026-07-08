@@ -9,9 +9,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 
-/**
- * Utility class to build ExoPlayer instances with standard configuration
- */
 @OptIn(UnstableApi::class)
 object PlayerBuilder {
     

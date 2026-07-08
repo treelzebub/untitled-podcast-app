@@ -22,9 +22,6 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * MediaController wrapper that follows the proper Media3 pattern
- */
 @Singleton
 @OptIn(UnstableApi::class)
 class MediaControllerWrapper @Inject constructor(
@@ -35,10 +32,7 @@ class MediaControllerWrapper @Inject constructor(
     private lateinit var controller: MediaController
     private var currentEpisodeId: String? = null
     
-    override suspend fun initialize(listener: Player.Listener) {
-        // This will be called with context from the ViewModel
-        // The actual initialization happens in prepareAndPlay
-    }
+    override suspend fun initialize(listener: Player.Listener) {}
     
     override suspend fun prepareAndPlay(mediaItem: MediaItem, positionMs: Long) = onPlayer {
         val shouldPrepare = currentEpisodeId != mediaItem.mediaId ||
@@ -94,10 +88,6 @@ class MediaControllerWrapper @Inject constructor(
         return withContext(mainDispatcher) { controller.block() }
     }
 
-    /**
-     * MediaController, like ExoPlayer, throws if touched off the thread it was built on, so
-     * every controller access must funnel through here instead of calling `controller` directly.
-     */
     private suspend fun <T> onPlayer(block: Player.() -> T): T {
         ensureControllerInitialized()
         return withContext(mainDispatcher) { controller.block() }
@@ -109,9 +99,6 @@ class MediaControllerWrapper @Inject constructor(
         }
     }
     
-    /**
-     * Initialize the controller with context (called from ViewModel)
-     */
     suspend fun initController(@ApplicationContext context: Context, listener: Player.Listener) {
         if (::controller.isInitialized) return
         

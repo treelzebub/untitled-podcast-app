@@ -16,9 +16,6 @@ import net.treelzebub.podcasts.util.toMediaItem
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Main media manager that orchestrates media operations
- */
 @Singleton
 @OptIn(UnstableApi::class)
 class MediaManager @Inject constructor(
@@ -102,9 +99,6 @@ class MediaManager @Inject constructor(
         // Cleanup is handled by the service
     }
     
-    /**
-     * Initialize the controller with context (called from ViewModel)
-     */
     suspend fun initController(@ApplicationContext context: Context, listener: Player.Listener) {
         if (playerController is net.treelzebub.podcasts.media.player.MediaControllerWrapper) {
             playerController.initController(context, listener)
