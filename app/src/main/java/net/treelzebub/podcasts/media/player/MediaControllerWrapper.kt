@@ -12,6 +12,8 @@ import androidx.media3.session.SessionToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.di.MainDispatcher
@@ -31,6 +33,7 @@ class MediaControllerWrapper @Inject constructor(
     
     private lateinit var controller: MediaController
     private var currentEpisodeId: String? = null
+    private val controllerBuildLock = Mutex()
     
     override suspend fun initialize(listener: Player.Listener) {}
     
@@ -100,19 +103,25 @@ class MediaControllerWrapper @Inject constructor(
     }
     
     suspend fun initController(@ApplicationContext context: Context, listener: Player.Listener) {
-        if (::controller.isInitialized) return
-        
-        val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
-        val future = withContext(mainDispatcher) {
-            MediaController.Builder(context, sessionToken).buildAsync()
-        }
-        
-        controller = withContext(ioDispatcher) {
-            async { future.get() }.await()
-        }
-
+        ensureControllerBuilt(context)
         withContext(mainDispatcher) {
             controller.addListener(listener)
+        }
+    }
+
+    private suspend fun ensureControllerBuilt(context: Context) {
+        if (::controller.isInitialized) return
+        controllerBuildLock.withLock {
+            if (::controller.isInitialized) return@withLock
+
+            val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+            val future = withContext(mainDispatcher) {
+                MediaController.Builder(context, sessionToken).buildAsync()
+            }
+
+            controller = withContext(ioDispatcher) {
+                async { future.get() }.await()
+            }
         }
     }
 }
