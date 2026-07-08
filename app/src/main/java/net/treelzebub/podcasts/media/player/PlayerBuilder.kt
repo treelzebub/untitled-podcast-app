@@ -24,6 +24,7 @@ object PlayerBuilder {
             .setSeekForwardIncrementMs(5_000L)
             .setHandleAudioBecomingNoisy(true)
             .setSeekParameters(SeekParameters.CLOSEST_SYNC)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
             .also { player ->
                 player.addListener(listener)
