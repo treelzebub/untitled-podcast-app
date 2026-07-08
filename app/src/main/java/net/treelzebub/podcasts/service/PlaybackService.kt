@@ -8,18 +8,15 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.data.PodcastsRepo
-import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.media.manager.MediaManagerInterface
 import net.treelzebub.podcasts.media.player.PlayerBuilder
 import net.treelzebub.podcasts.util.DeviceApi
@@ -47,22 +44,21 @@ class PlaybackService : MediaSessionService() {
     }
 
     @Inject
-    @IoDispatcher
-    lateinit var ioDispatcher: CoroutineDispatcher
-
-    @Inject
     lateinit var repo: PodcastsRepo
 
     @Inject
     lateinit var mediaManager: MediaManagerInterface
 
-    private val scope by lazy { CoroutineScope(SupervisorJob() + ioDispatcher) }
     private var _session: MediaSession? = null
     private val session: MediaSession
         get() = _session!!
     private val isPlayingListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             if (!isPlaying) persistPosition()
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            session.setSessionExtras(bundleOf(KEY_EPISODE_ID to mediaItem?.mediaId))
         }
     }
 
@@ -103,9 +99,12 @@ class PlaybackService : MediaSessionService() {
 
     private fun persistPosition() {
         val episodeId = session.sessionExtras.getString(KEY_EPISODE_ID)
-            ?: throw IllegalStateException("Session has no episodeId in extras")
+        if (episodeId == null) {
+            Timber.e("persistPosition called with no episodeId in session extras")
+            return
+        }
         val position = session.player.currentPosition
-        scope.launch {
+        runBlocking {
             repo.updatePosition(episodeId, position)
         }
     }
