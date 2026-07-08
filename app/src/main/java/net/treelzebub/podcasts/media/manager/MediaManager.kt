@@ -80,10 +80,6 @@ class MediaManager @Inject constructor(
         return playerController.getDuration()
     }
     
-    override suspend fun setCurrentEpisodeId(episodeId: String) {
-        // This is handled internally by the controller
-    }
-    
     override suspend fun addListener(listener: Player.Listener) {
         playerController.addListener(listener)
     }
