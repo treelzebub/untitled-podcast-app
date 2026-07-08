@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -42,7 +43,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -52,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import net.treelzebub.podcasts.R
 import net.treelzebub.podcasts.ui.components.ItemCard
 import net.treelzebub.podcasts.ui.components.LoadingBox
 import net.treelzebub.podcasts.ui.models.EpisodeUi
@@ -101,7 +109,7 @@ private fun PodcastDetails(
         modifier = Modifier.fillMaxSize()
     ) {
         item {
-            PodcastHeader(
+            PodcastExpandableHeader(
                 navigator = navigator,
                 podcast = state.podcast!!,
                 showPlayed = state.showPlayed,
@@ -110,52 +118,6 @@ private fun PodcastDetails(
         }
         items(items = state.episodes, key = { it.id }) {
             EpisodeItem(navigator, it)
-        }
-    }
-}
-
-@Composable
-private fun PodcastHeader(
-    navigator: DestinationsNavigator,
-    podcast: PodcastUi,
-    showPlayed: Boolean,
-    actionHandler: OnClick<Action>
-) {
-    ExpandableSection(
-        title = podcast.title,
-        navigator = navigator,
-        showPlayed = showPlayed,
-        actionHandler = actionHandler
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .animateContentSize(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        easing = LinearOutSlowInEasing
-                    )
-                )
-        ) {
-            AsyncImage(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .weight(1.0f)
-                    .padding(12.dp),
-                model = podcast.imageUrl,
-                contentDescription = "Podcast Logo"
-            )
-            Column(
-                modifier = Modifier.weight(3.0f).padding(vertical = 12.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                BasicText(
-                    modifier = Modifier.wrapContentHeight(),
-                    style = TextStyle(textAlign = TextAlign.Start),
-                    overflow = TextOverflow.Ellipsis,
-                    text = podcast.description
-                )
-            }
         }
     }
 }
@@ -210,24 +172,26 @@ private fun LazyItemScope.EpisodeItem(navigator: DestinationsNavigator, episode:
                     text = episode.duration
                 )
             }
-            BasicText(
-                modifier = Modifier
-                    .align(Alignment.End),
-                style = TextStyles.CardTitle,
-                text = if (episode.hasPlayed) "✅" else ""
-            )
+            if (episode.hasPlayed) {
+                Image(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .size(20.dp),
+                    painter = painterResource(R.drawable.ic_has_played),
+                    contentDescription = "Episode has played"
+                )
+            }
         }
     }
 }
 
 @Composable
-fun ExpandableSection(
+private fun PodcastExpandableHeader(
     modifier: Modifier = Modifier,
-    title: String,
+    podcast: PodcastUi,
     navigator: DestinationsNavigator,
     showPlayed: Boolean,
-    actionHandler: OnClick<Action>,
-    content: @Composable () -> Unit
+    actionHandler: OnClick<Action>
 ) {
     var expanded by rememberSaveable { mutableStateOf(true) }
 
@@ -239,7 +203,7 @@ fun ExpandableSection(
         ExpandableSectionTitle(
             expanded = expanded,
             navigator = navigator,
-            title = title,
+            title = podcast.title,
             showPlayed = showPlayed,
             actionHandler = actionHandler
         )
@@ -248,13 +212,47 @@ fun ExpandableSection(
             modifier = Modifier.fillMaxWidth(),
             visible = expanded
         ) {
-            content()
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 12.dp)
+                    .animateContentSize(
+                        animationSpec = tween(
+                            durationMillis = 300,
+                            easing = LinearOutSlowInEasing
+                        )
+                    )
+            ) {
+                AsyncImage(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .weight(1.0f)
+                        .padding(end = 12.dp),
+                    model = podcast.imageUrl,
+                    contentDescription = podcast.title + " logo"
+                )
+                Column(
+                    modifier = Modifier.weight(3.0f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        modifier = Modifier.wrapContentHeight().width(256.dp),
+                        style = TextStyle(
+                            textAlign = TextAlign.Start,
+                            hyphens = Hyphens.Auto,
+                            lineBreak = LineBreak.Simple
+                        ),
+                        text = podcast.description
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun ExpandableSectionTitle(
+private fun ExpandableSectionTitle(
     modifier: Modifier = Modifier,
     navigator: DestinationsNavigator,
     expanded: Boolean,

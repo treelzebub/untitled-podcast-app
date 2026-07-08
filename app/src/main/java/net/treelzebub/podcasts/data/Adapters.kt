@@ -34,7 +34,7 @@ fun RssChannel.podcast(rssLink: String): Podcast {
         .maxOfOrNull { Time.zonedEpochSeconds(it.pubDate) } ?: -1L
     return Podcast(
         id = rssLink,
-        link = link!!   ,
+        link = link!!,
         title = title!!,
         description = description?.sanitizeHtml() ?: itunesChannelData?.subtitle.sanitizeHtml()
             .orEmpty(),

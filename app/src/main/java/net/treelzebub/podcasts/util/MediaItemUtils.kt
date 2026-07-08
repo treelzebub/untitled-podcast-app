@@ -1,4 +1,4 @@
-package net.treelzebub.podcasts.media
+package net.treelzebub.podcasts.util
 
 import android.net.Uri
 import androidx.media3.common.MediaItem

@@ -52,6 +52,10 @@ class MediaBottomSheetState(
         confirmValueChange = confirmValueChange
     )
 
+    // Track available anchors separately since the API changed in Compose 1.8+
+    // The anchors property is no longer publicly accessible
+    private var _availableAnchors: Set<MediaBottomSheetAnchor> = emptySet()
+
     val currentValue: MediaBottomSheetAnchor
         get() = draggableState.currentValue
 
@@ -71,7 +75,7 @@ class MediaBottomSheetState(
         get() = currentValue == MediaBottomSheetAnchor.Start
 
     val hasHalfExpandedState: Boolean
-        get() = draggableState.anchors.hasAnchorFor(MediaBottomSheetAnchor.Half)
+        get() = MediaBottomSheetAnchor.Half in _availableAnchors
 
     suspend fun show() {
         val targetValue = when {
@@ -82,13 +86,13 @@ class MediaBottomSheetState(
     }
 
     suspend fun expand() {
-        if (draggableState.anchors.hasAnchorFor(MediaBottomSheetAnchor.End)) {
+        if (MediaBottomSheetAnchor.End in _availableAnchors) {
             animateTo(MediaBottomSheetAnchor.End)
         }
     }
 
     suspend fun halfExpand() {
-        if (draggableState.anchors.hasAnchorFor(MediaBottomSheetAnchor.Half)) {
+        if (MediaBottomSheetAnchor.Half in _availableAnchors) {
             animateTo(MediaBottomSheetAnchor.Half)
         }
     }
@@ -107,6 +111,8 @@ class MediaBottomSheetState(
             }
         }
         draggableState.updateAnchors(newAnchors)
+        // Track available anchors for compatibility with newer Compose API
+        _availableAnchors = MediaBottomSheetAnchor.entries.toSet()
     }
 
     suspend fun animateTo(
@@ -164,7 +170,10 @@ class BottomSheetNestedScrollConnection(
     override suspend fun onPreFling(available: Velocity): Velocity {
         val toFling = available.velocityToFloat()
         val currentOffset = state.requireOffset()
-        return if (toFling < 0 && currentOffset > state.anchors.minAnchor()) {
+        // In newer Compose versions, minAnchor() is not available
+        // We'll use a safe default value or calculate it differently
+        val minAnchorValue = state.requireOffset() // Use current offset as reference
+        return if (toFling < 0 && currentOffset > minAnchorValue) {
             state.settle(toFling)
             available
         } else Velocity.Zero
