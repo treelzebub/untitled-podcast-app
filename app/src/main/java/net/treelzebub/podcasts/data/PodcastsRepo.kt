@@ -30,15 +30,22 @@ class PodcastsRepo @Inject constructor(
 
     /** RSS Feeds **/
     suspend fun fetchRssFeed(rssLink: String, onError: ErrorHandler) = withIoContext {
-        try {
-            Timber.d("Fetching RSS Feed: $rssLink")
-            val pair = rssHandler.fetch(rssLink).podcastEpisodesPair(rssLink)
-            upsertPodcast(pair)
-        } catch (e: Exception) {
-            Timber.e("Error parsing RSS Feed", e)
-            onError(e)
-        }
+        fetchAndParseRssFeed(rssLink, onError)?.let { upsertPodcast(it) }
     }
+
+    // Like fetchRssFeed, but returns the parsed result instead of writing it, so callers
+    // fetching many feeds at once can write them all in a single syncSubscriptions transaction.
+    suspend fun fetchAndParseRssFeed(rssLink: String, onError: ErrorHandler): Pair<Podcast, List<Episode>>? =
+        withIoContext {
+            try {
+                Timber.d("Fetching RSS Feed: $rssLink")
+                rssHandler.fetch(rssLink).podcastEpisodesPair(rssLink)
+            } catch (e: Exception) {
+                Timber.e("Error parsing RSS Feed", e)
+                onError(e)
+                null
+            }
+        }
 
     suspend fun parseRssFeed(rssLink: String, raw: String): Pair<Podcast, List<Episode>> =
         rssHandler.parse(raw).podcastEpisodesPair(rssLink)

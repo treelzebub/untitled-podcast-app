@@ -16,9 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.BuildConfig
 import net.treelzebub.podcasts.Database
@@ -48,11 +51,15 @@ private class _DebugViewModel @Inject constructor(
     }
 
     private fun fetch(file: String) {
-        val scope = CoroutineScope(ioDispatcher)
-        app.assets.open(file).bufferedReader().use {
-            it.forEachLine {
-                scope.launch { repo.fetchRssFeed(it) {} }
-            }
+        val urls = app.assets.open(file).bufferedReader().useLines { it.toList() }
+        viewModelScope.launch(ioDispatcher) {
+            // Fetch every feed concurrently, then write them all in one transaction, mirroring
+            // SubscriptionUpdater.updateAll() so this tool actually exercises the same code path
+            // real syncs use, instead of trickling one podcast into the UI at a time.
+            val fetched = coroutineScope {
+                urls.map { url -> async { repo.fetchAndParseRssFeed(url) {} } }.awaitAll()
+            }.filterNotNull()
+            repo.syncSubscriptions(fetched)
         }
     }
 }
