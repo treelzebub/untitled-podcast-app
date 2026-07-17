@@ -6,11 +6,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import net.treelzebub.podcasts.Database
 import net.treelzebub.podcasts.data.PodcastsRepo
+import net.treelzebub.podcasts.data.RssHandler
 import java.util.Properties
 
 
-fun podcastRepo(): PodcastsRepo {
-    return PodcastsRepo(StubRssHandler(), getDb(), TestCoroutines.dispatcher)
+fun podcastRepo(rssHandler: RssHandler = StubRssHandler()): PodcastsRepo {
+    return PodcastsRepo(rssHandler, getDb(), TestCoroutines.dispatcher)
 }
 
 fun getDb(): Database = TestDb.instance

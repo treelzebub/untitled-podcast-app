@@ -50,6 +50,7 @@ hilt-navigation = { group = "androidx.hilt", name = "hilt-navigation-compose", v
 okhttp-bom  = { group = "com.squareup.okhttp3", name = "okhttp-bom", version.ref = "okhttp" }
 okhttp  = { group = "com.squareup.okhttp3", name = "okhttp" }
 okhttp-logging  = { group = "com.squareup.okhttp3", name = "logging-interceptor" }
+okhttp-mockwebserver  = { group = "com.squareup.okhttp3", name = "mockwebserver" }
 moshi  = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 retrofit  = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-moshi  = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
