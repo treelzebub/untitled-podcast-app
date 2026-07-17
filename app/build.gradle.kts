@@ -186,6 +186,8 @@ dependencies {
     testImplementation(libs.hilt.test) // For Robolectric
     testImplementation(libs.sqldelight.test)
     testImplementation(libs.slf4j) // to shut SqlDelight logs up under test
+    testImplementation(platform(libs.okhttp.bom))
+    testImplementation(libs.okhttp.mockwebserver)
 
 //    androidTestImplementation("androidx.test.ext:junit:1.1.5")
 //    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
