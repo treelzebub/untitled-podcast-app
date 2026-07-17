@@ -5,6 +5,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import net.treelzebub.podcasts.Episode
+import net.treelzebub.podcasts.Podcast
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.di.IoDispatcher
 import net.treelzebub.podcasts.net.models.SubscriptionDto
@@ -27,31 +29,31 @@ class SubscriptionUpdater @Inject constructor(
 
     suspend fun updateAll(): SyncResult = withContext(ioDispatcher) {
         val subs = repo.getAllRssLinks()
-        val results = coroutineScope {
-            subs.map { sub -> async { fetchAndUpsert(sub) } }.awaitAll()
-        }
-        val succeeded = results.count { it }
-        Timber.d("Updated $succeeded of ${subs.size} podcasts.")
-        SyncResult(subs.size, succeeded)
+        // Fetch concurrently, but hold results in memory: writing them all in one
+        // transaction means the UI settles once, fully sorted, instead of once per feed.
+        val fetched = coroutineScope {
+            subs.map { sub -> async { fetchFeed(sub) } }.awaitAll()
+        }.filterNotNull()
+        repo.syncSubscriptions(fetched)
+        Timber.d("Updated ${fetched.size} of ${subs.size} podcasts.")
+        SyncResult(subs.size, fetched.size)
     }
 
-    private suspend fun fetchAndUpsert(sub: SubscriptionDto): Boolean {
+    private suspend fun fetchFeed(sub: SubscriptionDto): Pair<Podcast, List<Episode>>? {
         return try {
             val response = client.newCall(request { get(); url(sub.rssLink) }).await()
             response.use { r ->
                 val body = r.body?.string()
                 if (body == null) {
                     Timber.e("Empty response body for feed: ${sub.rssLink}")
-                    false
+                    null
                 } else {
-                    val pair = repo.parseRssFeed(sub.rssLink, body)
-                    repo.upsertPodcast(pair)
-                    true
+                    repo.parseRssFeed(sub.rssLink, body)
                 }
             }
         } catch (e: Exception) {
             Timber.e(e, "Error updating feed: ${sub.rssLink}")
-            false
+            null
         }
     }
 }
