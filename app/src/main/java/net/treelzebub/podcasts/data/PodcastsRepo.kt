@@ -56,9 +56,30 @@ class PodcastsRepo @Inject constructor(
         }
     }
 
-    suspend fun upsertPodcasts(podcasts: List<Podcast>) = withIoContext {
+    /**
+     * Writes every fetched feed and recomputes latest_episode_timestamp for all podcasts in a
+     * single transaction, so [getPodcastUis] emits once with the fully-settled, sorted list
+     * instead of once per feed as a sync trickles in.
+     */
+    suspend fun syncSubscriptions(fetched: List<Pair<Podcast, List<Episode>>>) = withIoContext {
         db.transaction {
-            podcasts.forEach { db.podcastsQueries.upsert(it) }
+            fetched.forEach { (podcast, episodes) ->
+                db.podcastsQueries.upsert(podcast)
+                db.episodesQueries.upsert(episodes, podcast.image_url.orEmpty())
+            }
+            recomputeLatestEpisodeTimestamps()
+        }
+    }
+
+    suspend fun refreshLatestEpisodeTimestamps() = withIoContext {
+        db.transaction { recomputeLatestEpisodeTimestamps() }
+    }
+
+    private fun recomputeLatestEpisodeTimestamps() {
+        db.podcastsQueries.get_all().executeAsList().forEach { podcast ->
+            val latest = db.episodesQueries.get_by_podcast_id_unplayed(podcast.id).executeAsList()
+                .maxOfOrNull(Episode::date) ?: Long.MIN_VALUE
+            db.podcastsQueries.upsert(podcast.copy(latest_episode_timestamp = latest))
         }
     }
 
@@ -82,10 +103,6 @@ class PodcastsRepo @Inject constructor(
     /** Episodes **/
     suspend fun getEpisodesList(podcastId: String): List<Episode> = withIoContext {
         db.episodesQueries.get_by_podcast_id(podcastId).executeAsList()
-    }
-
-    suspend fun getUnplayedEpisodes(podcastId: String): List<Episode> = withIoContext {
-        db.episodesQueries.get_by_podcast_id_unplayed(podcastId).executeAsList()
     }
 
     fun getEpisodesFlow(podcastId: String, showPlayed: Boolean): Flow<List<EpisodeUi>> {

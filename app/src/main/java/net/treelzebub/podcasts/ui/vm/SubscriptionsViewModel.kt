@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.treelzebub.podcasts.data.PodcastsRepo
 import net.treelzebub.podcasts.net.sync.SubscriptionUpdater
-import net.treelzebub.podcasts.net.sync.TimestampUpdater
 import net.treelzebub.podcasts.ui.models.PodcastUi
 import javax.inject.Inject
 
@@ -16,8 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SubscriptionsViewModel @Inject constructor(
     private val repo: PodcastsRepo,
-    private val subscriptionUpdater: SubscriptionUpdater,
-    private val timestampUpdater: TimestampUpdater
+    private val subscriptionUpdater: SubscriptionUpdater
 ) : StatefulViewModel<SubscriptionsViewModel.State>(State()) {
 
     init {
@@ -35,8 +33,6 @@ class SubscriptionsViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(refreshing = true) }
             subscriptionUpdater.updateAll()
-            // TODO optimize. Should this happen whenever an episode is marked as played?
-            timestampUpdater.update()
             _state.update { it.copy(refreshing = false) }
         }
     }

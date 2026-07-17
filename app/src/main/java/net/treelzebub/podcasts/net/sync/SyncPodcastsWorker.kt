@@ -15,13 +15,11 @@ class SyncPodcastsWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val prefs: Prefs,
-    private val subscriptionUpdater: SubscriptionUpdater,
-    private val timestampUpdater: TimestampUpdater
+    private val subscriptionUpdater: SubscriptionUpdater
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         subscriptionUpdater.updateAll()
-        timestampUpdater.update()
         prefs.putLong(PodcastPref.LastSyncTimestamp, System.currentTimeMillis())
         return Result.success()
     }
